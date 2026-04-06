@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "email": { "type": "string", "description": "User's email address" },
+        "photoURL": { "type": "string", "description": "URL to user's profile photo" },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "User's role in the platform" },
+        "bio": { "type": "string", "description": "User's biography" },
+        "friends": { "type": "array", "items": { "type": "string" }, "description": "List of friend UIDs" },
+        "friendRequests": { "type": "array", "items": { "type": "string" }, "description": "List of incoming friend request UIDs" }
+      },
+      "required": ["uid", "displayName", "email", "role"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "A social media post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique post ID" },
+        "authorId": { "type": "string", "description": "UID of the post author" },
+        "authorName": { "type": "string", "description": "Name of the post author" },
+        "authorPhoto": { "type": "string", "description": "Photo URL of the post author" },
+        "content": { "type": "string", "description": "Text content of the post" },
+        "mediaUrl": { "type": "string", "description": "URL to attached photo or video" },
+        "mediaType": { "type": "string", "enum": ["image", "video"], "description": "Type of attached media" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the post was created" },
+        "likes": { "type": "array", "items": { "type": "string" }, "description": "List of UIDs who liked the post" }
+      },
+      "required": ["id", "authorId", "authorName", "content", "createdAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A comment on a post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique comment ID" },
+        "postId": { "type": "string", "description": "ID of the parent post" },
+        "authorId": { "type": "string", "description": "UID of the comment author" },
+        "authorName": { "type": "string", "description": "Name of the comment author" },
+        "content": { "type": "string", "description": "Text content of the comment" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the comment was created" }
+      },
+      "required": ["id", "postId", "authorId", "authorName", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Social media posts"
+    },
+    "/posts/{postId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Comments on a post"
+    }
+  }
+}

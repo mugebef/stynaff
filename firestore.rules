@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - Unique user ID
+    //   - displayName: string (required) - User's display name
+    //   - email: string (required) - User's email address
+    //   - photoURL: string (optional) - URL to user's profile photo
+    //   - role: string (required, 'user'|'admin') - User's role
+    //   - bio: string (optional) - User's biography
+    //   - friends: list (required) - List of friend UIDs
+    //   - friendRequests: list (required) - List of incoming friend request UIDs
+    //
+    // Collection: posts
+    // Document ID: {postId}
+    // Fields:
+    //   - id: string (required) - Unique post ID
+    //   - authorId: string (required) - UID of the post author
+    //   - authorName: string (required) - Name of the post author
+    //   - authorPhoto: string (optional) - Photo URL of the post author
+    //   - content: string (required) - Text content of the post
+    //   - mediaUrl: string (optional) - URL to attached photo or video
+    //   - mediaType: string (optional, 'image'|'video') - Type of attached media
+    //   - createdAt: timestamp (required) - Timestamp when the post was created
+    //   - likes: list (required) - List of UIDs who liked the post
+    //
+    // Collection: posts/{postId}/comments
+    // Document ID: {commentId}
+    // Fields:
+    //   - id: string (required) - Unique comment ID
+    //   - postId: string (required) - ID of the parent post
+    //   - authorId: string (required) - UID of the comment author
+    //   - authorName: string (required) - Name of the comment author
+    //   - content: string (required) - Text content of the comment
+    //   - createdAt: timestamp (required) - Timestamp when the comment was created
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "datingwithbounce@gmail.com" && request.auth.token.email_verified == true));
+    }
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'friends', 'friendRequests']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 128 &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
+             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             data.role in ['user', 'admin'] &&
+             data.friends is list && data.friends.size() <= 5000 &&
+             data.friendRequests is list && data.friendRequests.size() <= 1000;
+    }
+    function isValidPost(data) {
+      return data.keys().hasAll(['id', 'authorId', 'authorName', 'content', 'createdAt', 'likes']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.authorId is string && data.authorId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() < 100 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
+             data.createdAt is timestamp &&
+             data.likes is list && data.likes.size() <= 1000000;
+    }
+    function isValidComment(data) {
+      return data.keys().hasAll(['id', 'postId', 'authorId', 'authorName', 'content', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.postId is string && data.postId.size() > 0 &&
+             data.authorId is string && data.authorId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() < 100 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin())) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPost(request.resource.data);
+      allow update: if (isAuthenticated() && (
+        (request.auth.uid == resource.data.authorId && isValidPost(request.resource.data)) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) && request.resource.data.likes.size() <= 1000000)
+      )) || isAdmin();
+      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.authorId) || isAdmin();
+
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isValidComment(request.resource.data);
+        allow update: if (isAuthenticated() && request.auth.uid == resource.data.authorId && isValidComment(request.resource.data)) || isAdmin();
+        allow delete: if (isAuthenticated() && request.auth.uid == resource.data.authorId) || isAdmin();
+      }
+    }
+  }
+}
