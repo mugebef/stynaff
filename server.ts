@@ -28,19 +28,30 @@ async function startServer() {
     });
     app.use(vite.middlewares);
     console.log("Vite development middleware loaded.");
-  } else {
-    // 3. Static Files for Production
+  // 3. Static Files for Production
+  if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");
+    
+    // Check if dist exists to prevent crash
+    import("fs").then((fs) => {
+      if (!fs.existsSync(distPath)) {
+        console.warn("WARNING: 'dist' directory not found. Did you run 'npm run build'?");
+      }
+    });
+
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      res.sendFile(path.join(distPath, "index.html"), (err) => {
+        if (err) {
+          res.status(500).send("Server Error: Static files missing. Please run build.");
+        }
+      });
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`>>> Styn Africa Server running at http://localhost:${PORT}`);
+  app.listen(PORT, "127.0.0.1", () => {
+    console.log(`>>> Styn Africa Server running at http://127.0.0.1:${PORT}`);
     console.log(`>>> Domain: ray.styni.com`);
-    console.log(`>>> IP: 129.121.73.168`);
   });
 }
 
