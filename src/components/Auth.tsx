@@ -12,7 +12,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) 
   const [isLogin, setIsLogin] = React.useState(true);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [name, setName] = React.useState('');
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
@@ -24,7 +25,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) 
       if (isLogin) {
         await onLogin(email, password);
       } else {
-        await onSignup(email, password, name);
+        await onSignup(email, password, `${firstName} ${lastName}`);
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
@@ -52,18 +53,33 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) 
         {/* Form */}
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
-                <User size={20} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
+                  <User size={20} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="block w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm placeholder-neutral-400 focus:border-orange-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
+                  placeholder="Name"
+                />
               </div>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="block w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm placeholder-neutral-400 focus:border-orange-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
-                placeholder="Full Name"
-              />
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
+                  <User size={20} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="block w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm placeholder-neutral-400 focus:border-orange-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
+                  placeholder="Surname"
+                />
+              </div>
             </div>
           )}
           <div className="relative">

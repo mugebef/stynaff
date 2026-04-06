@@ -1,6 +1,7 @@
 import React from 'react';
 import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X } from 'lucide-react';
 import { APP_NAME } from '../constants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
   user: any;
@@ -88,30 +89,63 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, act
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="border-t border-neutral-200 bg-white p-4 md:hidden">
-          <div className="flex flex-col gap-2">
-            {menus.map((menu) => (
-              <button
-                key={menu.id}
-                onClick={() => {
-                  onMenuClick(menu.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-all ${
-                  activeMenu === menu.id
-                    ? 'bg-orange-50 text-orange-600'
-                    : 'text-neutral-600 hover:bg-neutral-100'
-                }`}
-              >
-                {menu.icon}
-                {menu.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-neutral-900/40 backdrop-blur-sm md:hidden"
+            />
+            {/* Menu Content */}
+            <motion.div 
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              className="absolute left-0 right-0 top-full z-50 border-t border-neutral-200 bg-white p-4 shadow-2xl md:hidden"
+            >
+              <div className="flex flex-col gap-2">
+                {menus.map((menu) => (
+                  <button
+                    key={menu.id}
+                    onClick={() => {
+                      onMenuClick(menu.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-bold transition-all ${
+                      activeMenu === menu.id
+                        ? 'bg-orange-50 text-orange-600'
+                        : 'text-neutral-600 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <span className={activeMenu === menu.id ? 'text-orange-600' : 'text-neutral-400'}>
+                      {menu.icon}
+                    </span>
+                    {menu.label}
+                  </button>
+                ))}
+                
+                {user && (
+                  <button
+                    onClick={() => {
+                      onLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="mt-2 flex items-center gap-3 rounded-xl px-4 py-3 text-base font-bold text-red-600 hover:bg-red-50 transition-all"
+                  >
+                    <LogOut size={20} />
+                    Logout
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
