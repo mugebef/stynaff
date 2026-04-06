@@ -34,7 +34,8 @@ import {
   createUserWithEmailAndPassword, 
   signInWithPopup, 
   signOut, 
-  updateProfile 
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { 
   collection, 
@@ -155,9 +156,11 @@ export default function App() {
             }
           } else {
             // Create user profile if it doesn't exist
+            const username = (firebaseUser.email || 'user').split('@')[0] + Math.floor(Math.random() * 1000);
             const newUser: UserType = {
               uid: firebaseUser.uid,
               displayName: firebaseUser.displayName || 'Anonymous',
+              username: username,
               email: firebaseUser.email || '',
               photoURL: firebaseUser.photoURL || undefined,
               role: firebaseUser.email === ADMIN_EMAIL ? 'admin' : 'user',
@@ -256,9 +259,12 @@ export default function App() {
     const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(firebaseUser, { displayName: name });
     
+    const username = email.split('@')[0] + Math.floor(Math.random() * 1000);
+
     const newUser: UserType = {
       uid: firebaseUser.uid,
       displayName: name,
+      username: username,
       email: email,
       role: email === ADMIN_EMAIL ? 'admin' : 'user',
       tier: 'General',
@@ -277,6 +283,10 @@ export default function App() {
     };
     await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
     setUser(newUser);
+  };
+
+  const handleResetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
   };
 
   const handleGoogleLogin = async () => {
@@ -315,6 +325,9 @@ export default function App() {
       let isReel = false;
 
       if (mediaFile) {
+        if (mediaFile.size > 800000) {
+          throw new Error('File size too large. Please upload a file smaller than 800KB for now.');
+        }
         // Simulate upload by using base64 for small files
         const reader = new FileReader();
         mediaUrl = await new Promise<string>((resolve) => {
@@ -356,7 +369,7 @@ export default function App() {
 
   const handleBoost = async (postId: string) => {
     if (!user) return;
-    const boostPrice = appConfig?.boostPrice || 5.00;
+    const boostPrice = appConfig?.boostPricePerDay || 5.00;
     if ((user.walletBalance || 0) < boostPrice) {
       alert(`Insufficient funds. Boosting costs $${boostPrice.toFixed(2)}.`);
       setActiveMenu('wallet');
@@ -495,7 +508,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <Auth onLogin={handleLogin} onSignup={handleSignup} onGoogleLogin={handleGoogleLogin} />;
+    return <Auth onLogin={handleLogin} onSignup={handleSignup} onGoogleLogin={handleGoogleLogin} onResetPassword={handleResetPassword} />;
   }
 
   return (

@@ -104,8 +104,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
               <input 
                 type="number" 
                 step="0.001"
-                value={appConfig.pointRate || 0.01}
-                onChange={(e) => setAppConfig({ ...appConfig, pointRate: parseFloat(e.target.value) })}
+                value={appConfig.pointsToCashRate || 0.01}
+                onChange={(e) => setAppConfig({ ...appConfig, pointsToCashRate: parseFloat(e.target.value) })}
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
               />
             </div>
@@ -114,8 +114,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
               <input 
                 type="number" 
                 step="0.01"
-                value={appConfig.boostPrice || 5.00}
-                onChange={(e) => setAppConfig({ ...appConfig, boostPrice: parseFloat(e.target.value) })}
+                value={appConfig.boostPricePerDay || 5.00}
+                onChange={(e) => setAppConfig({ ...appConfig, boostPricePerDay: parseFloat(e.target.value) })}
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
               />
             </div>
@@ -124,8 +124,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
               <input 
                 type="number" 
                 step="0.01"
-                value={appConfig.verificationFee || 10.00}
-                onChange={(e) => setAppConfig({ ...appConfig, verificationFee: parseFloat(e.target.value) })}
+                value={appConfig.verificationPrice || 10.00}
+                onChange={(e) => setAppConfig({ ...appConfig, verificationPrice: parseFloat(e.target.value) })}
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
               />
             </div>

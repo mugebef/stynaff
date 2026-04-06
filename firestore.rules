@@ -97,6 +97,30 @@ service cloud.firestore {
              data.isPrivate is bool &&
              data.createdAt is timestamp;
     }
+    function isValidComment(data) {
+      return data.keys().hasAll(['authorId', 'authorName', 'content', 'createdAt']) &&
+             data.authorId is string &&
+             data.authorName is string &&
+             data.content is string &&
+             data.createdAt is timestamp;
+    }
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderId', 'receiverId', 'content', 'createdAt', 'read']) &&
+             data.senderId is string &&
+             data.receiverId is string &&
+             data.content is string &&
+             data.createdAt is timestamp &&
+             data.read is bool;
+    }
+    function isValidStatus(data) {
+      return data.keys().hasAll(['userId', 'userName', 'mediaUrl', 'mediaType', 'createdAt', 'expiresAt']) &&
+             data.userId is string &&
+             data.userName is string &&
+             data.mediaUrl is string &&
+             data.mediaType in ['image', 'video'] &&
+             data.createdAt is timestamp &&
+             data.expiresAt is timestamp;
+    }
 
     // ===============================================================
     // Rules
@@ -163,6 +187,19 @@ service cloud.firestore {
     match /appConfig/{configId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.senderId && isValidMessage(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.receiverId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.senderId;
+    }
+
+    match /statuses/{statusId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId && isValidStatus(request.resource.data);
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
     }
   }
 }

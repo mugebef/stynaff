@@ -6,9 +6,10 @@ interface AuthProps {
   onLogin: (email: string, pass: string) => Promise<void>;
   onSignup: (email: string, pass: string, name: string) => Promise<void>;
   onGoogleLogin: () => Promise<void>;
+  onResetPassword: (email: string) => Promise<void>;
 }
 
-export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) => {
+export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin, onResetPassword }) => {
   const [isLogin, setIsLogin] = React.useState(true);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -16,6 +17,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) 
   const [lastName, setLastName] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [message, setMessage] = React.useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,24 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) 
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await onResetPassword(email);
+      setMessage('Password reset email sent! Check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email');
     } finally {
       setLoading(false);
     }
@@ -109,7 +129,20 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin }) 
             />
           </div>
 
+          {isLogin && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
+
           {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+          {message && <p className="text-xs font-medium text-green-600">{message}</p>}
 
           <button
             type="submit"

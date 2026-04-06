@@ -19,6 +19,7 @@ export const Footer: React.FC = () => {
             <p className="text-sm leading-relaxed text-neutral-500">
               Empowering Africa's digital future through connection, entertainment, and innovation.
             </p>
+            <p className="text-sm font-black italic text-orange-600">"Our Motto Is Unique Experience"</p>
           </div>
           
           <div>
@@ -64,7 +65,9 @@ export const Footer: React.FC = () => {
           <div className="mt-4 flex items-center gap-4 text-sm font-bold text-orange-600 md:mt-0">
             <span>{FOOTER_TEXT}</span>
             <span className="h-4 w-px bg-neutral-200"></span>
-            <span className="text-neutral-400">Powered by <span className="text-blue-500">Google AI Studio</span></span>
+            <a href="https://ai.studio" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-blue-500 transition-colors">
+              Powered by <span className="text-blue-500">Google AI Studio</span>
+            </a>
           </div>
         </div>
       </div>

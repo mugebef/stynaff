@@ -1,6 +1,7 @@
 export interface User {
   uid: string;
   displayName: string;
+  username?: string;
   email: string;
   photoURL?: string;
   role: 'user' | 'admin';
@@ -109,4 +110,24 @@ export interface AppConfig {
   pointsToCashRate: number; // e.g., 0.01
   boostPricePerDay: number; // e.g., 5.00
   verificationPrice: number; // e.g., 10.00
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  createdAt: any;
+  read: boolean;
+}
+
+export interface Status {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  createdAt: any;
+  expiresAt: any;
 }

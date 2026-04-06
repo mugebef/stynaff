@@ -1,22 +1,86 @@
 import React from 'react';
-import { MessageSquare, Search, User, Send, Phone, Video, MoreVertical, Check, CheckCheck } from 'lucide-react';
+import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare } from 'lucide-react';
+import { User as UserType, Message as MessageType } from '../types';
+import { db } from '../firebase';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 
-export const Chat: React.FC = () => {
-  const [activeChat, setActiveChat] = React.useState<number | null>(null);
-  const [message, setMessage] = React.useState('');
+interface ChatProps {
+  currentUser: UserType;
+  users: UserType[];
+}
 
-  const chats = [
-    { id: 1, name: 'John Doe', lastMsg: 'Hey, how are you?', time: '12:45 PM', unread: 2, online: true },
-    { id: 2, name: 'Jane Smith', lastMsg: 'See you tomorrow!', time: '11:20 AM', unread: 0, online: false },
-    { id: 3, name: 'Alex Mugebe', lastMsg: 'The project is ready.', time: 'Yesterday', unread: 0, online: true },
-    { id: 4, name: 'Sarah Wilson', lastMsg: 'Thanks for the help!', time: 'Monday', unread: 5, online: false },
-  ];
+export const Chat: React.FC<ChatProps> = ({ currentUser, users }) => {
+  const [selectedUser, setSelectedUser] = React.useState<UserType | null>(null);
+  const [messages, setMessages] = React.useState<MessageType[]>([]);
+  const [newMessage, setNewMessage] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  // Filter out current user and apply search
+  const chatUsers = users.filter(u => 
+    u.uid !== currentUser.uid && 
+    (u.displayName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+     u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  React.useEffect(() => {
+    if (!selectedUser) return;
+
+    const q = query(
+      collection(db, 'messages'),
+      or(
+        and(where('senderId', '==', currentUser.uid), where('receiverId', '==', selectedUser.uid)),
+        and(where('senderId', '==', selectedUser.uid), where('receiverId', '==', currentUser.uid))
+      ),
+      orderBy('createdAt', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as MessageType));
+      setMessages(msgs);
+      
+      // Mark received messages as read
+      msgs.forEach(m => {
+        if (m.receiverId === currentUser.uid && !m.read) {
+          updateDoc(doc(db, 'messages', m.id), { read: true });
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, [selectedUser, currentUser.uid]);
+
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedUser) return;
+
+    const msg = newMessage;
+    setNewMessage('');
+
+    try {
+      await addDoc(collection(db, 'messages'), {
+        senderId: currentUser.uid,
+        receiverId: selectedUser.uid,
+        content: msg,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="mx-auto flex h-[calc(100vh-140px)] max-w-6xl overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-2xl ring-1 ring-neutral-200">
       {/* Sidebar */}
-      <div className="hidden w-96 flex-col border-r border-neutral-200 md:flex">
+      <div className={`w-full flex-col border-r border-neutral-200 md:flex md:w-80 lg:w-96 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
         <div className="bg-neutral-50 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-neutral-900">Messenger</h2>
@@ -29,42 +93,39 @@ export const Chat: React.FC = () => {
             <input
               type="text"
               placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-2xl border border-neutral-200 bg-white py-3 pl-12 pr-4 text-sm font-bold text-neutral-900 focus:border-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-600/10"
             />
           </div>
         </div>
+
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {chats.map((chat) => (
-            <div 
-              key={chat.id} 
-              onClick={() => setActiveChat(chat.id)}
+          {chatUsers.map((user) => (
+            <div
+              key={user.uid}
+              onClick={() => setSelectedUser(user)}
               className={`flex cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all ${
-                activeChat === chat.id ? 'bg-orange-50' : 'hover:bg-neutral-50'
+                selectedUser?.uid === user.uid ? 'bg-orange-50' : 'hover:bg-neutral-50'
               }`}
             >
               <div className="relative">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 ring-2 ring-white shadow-sm">
-                  <User size={28} />
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 ring-2 ring-white shadow-sm overflow-hidden">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <User size={28} />
+                  )}
                 </div>
-                {chat.online && (
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-500"></div>
-                )}
+                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-500"></div>
               </div>
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-center justify-between mb-1">
-                  <h4 className={`text-sm font-bold truncate ${activeChat === chat.id ? 'text-orange-600' : 'text-neutral-900'}`}>
-                    {chat.name}
+                  <h4 className={`text-sm font-bold truncate ${selectedUser?.uid === user.uid ? 'text-orange-600' : 'text-neutral-900'}`}>
+                    {user.displayName}
                   </h4>
-                  <span className="text-[10px] font-bold text-neutral-400">{chat.time}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <p className="line-clamp-1 text-xs text-neutral-500 font-medium">{chat.lastMsg}</p>
-                  {chat.unread > 0 && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-[10px] font-bold text-white">
-                      {chat.unread}
-                    </span>
-                  )}
-                </div>
+                <p className="line-clamp-1 text-xs text-neutral-500 font-medium">{user.bio || 'Available'}</p>
               </div>
             </div>
           ))}
@@ -72,17 +133,24 @@ export const Chat: React.FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex flex-1 flex-col bg-[#f0f2f5]">
-        {activeChat ? (
+      <div className={`flex flex-1 flex-col bg-[#f0f2f5] ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
+        {selectedUser ? (
           <>
             {/* Chat Header */}
             <div className="flex items-center justify-between border-b border-neutral-200 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 shadow-sm">
-                  <User size={24} />
+                <button onClick={() => setSelectedUser(null)} className="md:hidden text-neutral-500">
+                  <ArrowLeft size={24} />
+                </button>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 shadow-sm overflow-hidden">
+                  {selectedUser.photoURL ? (
+                    <img src={selectedUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <User size={24} />
+                  )}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-neutral-900">{chats.find(c => c.id === activeChat)?.name}</h4>
+                  <h4 className="text-sm font-bold text-neutral-900">{selectedUser.displayName}</h4>
                   <p className="text-xs font-bold text-green-600 uppercase tracking-widest">Online</p>
                 </div>
               </div>
@@ -100,40 +168,53 @@ export const Chat: React.FC = () => {
             </div>
             
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="flex justify-start">
-                <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-white p-4 shadow-sm ring-1 ring-neutral-200">
-                  <p className="text-sm text-neutral-800">Hey! Did you see the new reels on STYN AFRICA?</p>
-                  <div className="mt-1 flex items-center justify-end gap-1">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase">12:45 PM</span>
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[70%] rounded-2xl p-4 shadow-sm ${
+                      msg.senderId === currentUser.uid
+                        ? 'bg-orange-600 text-white rounded-tr-none shadow-xl shadow-orange-200'
+                        : 'bg-white text-neutral-800 rounded-tl-none ring-1 ring-neutral-200'
+                    }`}
+                  >
+                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                    <div className={`mt-1 flex items-center justify-end gap-1 text-[10px] font-bold uppercase ${
+                      msg.senderId === currentUser.uid ? 'text-orange-100' : 'text-neutral-400'
+                    }`}>
+                      <span>
+                        {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                      </span>
+                      {msg.senderId === currentUser.uid && (
+                        msg.read ? <CheckCheck size={12} /> : <Check size={12} />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-orange-600 p-4 text-white shadow-xl shadow-orange-200">
-                  <p className="text-sm">Yes! They are amazing. The scroll is so smooth now! 🚀</p>
-                  <div className="mt-1 flex items-center justify-end gap-1">
-                    <span className="text-[10px] font-bold text-orange-100 uppercase">12:46 PM</span>
-                    <CheckCheck size={12} />
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Input Area */}
             <div className="bg-white p-4 border-t border-neutral-200">
-              <div className="flex gap-3">
+              <form onSubmit={handleSendMessage} className="flex gap-3">
                 <input
                   type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   className="flex-1 rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-3 text-sm font-bold text-neutral-900 focus:border-orange-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-orange-600/10"
                 />
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95">
+                <button 
+                  type="submit"
+                  disabled={!newMessage.trim()}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                >
                   <Send size={20} />
                 </button>
-              </div>
+              </form>
             </div>
           </>
         ) : (
