@@ -118,11 +118,16 @@ export default function App() {
   const [appConfig, setAppConfig] = React.useState<any>(null);
   const [users, setUsers] = React.useState<UserType[]>([]);
 
+  const [selectedChatUser, setSelectedChatUser] = React.useState<UserType | null>(null);
+
   // Listen for menu changes from other components
   React.useEffect(() => {
     const handleMenuChange = (e: any) => {
       setActiveMenu(e.detail);
       if (e.detail === 'profile') setProfileUser(user);
+      if (e.detail === 'chat' && e.detail.targetUser) {
+        setSelectedChatUser(e.detail.targetUser);
+      }
     };
     window.addEventListener('changeMenu', handleMenuChange);
     return () => window.removeEventListener('changeMenu', handleMenuChange);
@@ -152,6 +157,8 @@ export default function App() {
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserType;
             setUser(userData);
+            // Update online status
+            await updateDoc(userDocRef, { isOnline: true, lastSeen: serverTimestamp() });
             if (activeMenu === 'profile' && profileUser?.uid === firebaseUser.uid) {
               setProfileUser(userData);
             }
@@ -172,12 +179,17 @@ export default function App() {
               friendRequests: [],
               followers: [],
               following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
               joinedGroups: [],
               followedPages: [],
               walletBalance: 0,
               points: 0,
               profileViews: 0,
               createdAt: serverTimestamp(),
+              isOnline: true,
+              lastSeen: serverTimestamp()
             };
             await setDoc(userDocRef, newUser);
             setUser(newUser);
@@ -186,12 +198,87 @@ export default function App() {
           handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
         }
       } else {
+        if (user) {
+          // Set offline
+          const userDocRef = doc(db, 'users', user.uid);
+          updateDoc(userDocRef, { isOnline: false, lastSeen: serverTimestamp() });
+        }
         setUser(null);
       }
       setIsAuthReady(true);
     });
     return () => unsubscribe();
   }, [activeMenu, profileUser?.uid]);
+
+  // Handle Online/Offline on window focus/blur
+  React.useEffect(() => {
+    if (!user) return;
+
+    const handleFocus = () => updateDoc(doc(db, 'users', user.uid), { isOnline: true, lastSeen: serverTimestamp() });
+    const handleBlur = () => updateDoc(doc(db, 'users', user.uid), { isOnline: false, lastSeen: serverTimestamp() });
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [user]);
+
+  // Fetch all users for chat/dating
+  React.useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'users'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setUsers(snap.docs.map(d => d.data() as UserType));
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleSwipe = async (targetUid: string, direction: 'left' | 'right') => {
+    if (!user) return;
+
+    const userRef = doc(db, 'users', user.uid);
+    const targetRef = doc(db, 'users', targetUid);
+
+    if (direction === 'left') {
+      await updateDoc(userRef, { swipedLeft: arrayUnion(targetUid) });
+    } else {
+      await updateDoc(userRef, { swipedRight: arrayUnion(targetUid) });
+
+      // Check for mutual match
+      const targetSnap = await getDoc(targetRef);
+      const targetData = targetSnap.data() as UserType;
+
+      if (targetData.swipedRight?.includes(user.uid)) {
+        // It's a match!
+        const matchId = [user.uid, targetUid].sort().join('_');
+        await setDoc(doc(db, 'matches', matchId), {
+          id: matchId,
+          users: [user.uid, targetUid],
+          createdAt: serverTimestamp()
+        });
+
+        // Add to user match lists
+        await updateDoc(userRef, { matches: arrayUnion(targetUid) });
+        await updateDoc(targetRef, { matches: arrayUnion(user.uid) });
+
+        // Create notification
+        await addDoc(collection(db, 'notifications'), {
+          type: 'match',
+          fromId: user.uid,
+          fromName: user.displayName,
+          toId: targetUid,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+
+        return true; // Match found
+      }
+    }
+    return false;
+  };
 
   // Posts Listener (Verified & Liked first)
   React.useEffect(() => {
@@ -270,7 +357,7 @@ export default function App() {
       displayName: name,
       username: username,
       email: email,
-      gender: gender,
+      gender: gender as any,
       role: email === ADMIN_EMAIL ? 'admin' : 'user',
       tier: 'General',
       isVerified: false,
@@ -284,6 +371,9 @@ export default function App() {
       walletBalance: 0,
       points: 0,
       profileViews: 0,
+      swipedLeft: [],
+      swipedRight: [],
+      matches: [],
       createdAt: serverTimestamp(),
     };
     await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
@@ -596,8 +686,8 @@ export default function App() {
                       onBoost={handleBoost}
                     />
                   )}
-                  {activeMenu === 'chat' && <Chat currentUser={user} users={users} />}
-                  {activeMenu === 'dating' && <Dating />}
+                  {activeMenu === 'chat' && <Chat currentUser={user} users={users} initialSelectedUser={selectedChatUser} />}
+                  {activeMenu === 'dating' && <Dating currentUser={user} onSwipe={handleSwipe} />}
                   {activeMenu === 'blockbuster' && <Blockbuster />}
                 </motion.div>
               </AnimatePresence>

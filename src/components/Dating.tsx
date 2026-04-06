@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, X, MapPin, User as UserIcon, CheckCircle, Info, Star, ShieldCheck, Loader2 } from 'lucide-react';
+import { Heart, X, MapPin, User as UserIcon, CheckCircle, Info, Star, ShieldCheck, Loader2, MessageSquare, Sparkles } from 'lucide-react';
 import { User } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
@@ -7,29 +7,35 @@ import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 interface DatingProps {
   currentUser: User;
+  onSwipe: (targetUid: string, direction: 'left' | 'right') => Promise<boolean>;
 }
 
-export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
+export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
   const [matches, setMatches] = React.useState<User[]>([]);
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [direction, setDirection] = React.useState<null | 'left' | 'right'>(null);
+  const [showMatchModal, setShowMatchModal] = React.useState<User | null>(null);
 
   React.useEffect(() => {
     const fetchMatches = async () => {
       try {
-        // Simple matching logic: different gender, similar age, nearby (if location exists)
+        // Filter out users already swiped
+        const swiped = [...(currentUser.swipedLeft || []), ...(currentUser.swipedRight || [])];
+        
         const q = query(
           collection(db, 'users'),
           where('uid', '!=', currentUser.uid),
-          limit(20)
+          limit(50)
         );
         const snap = await getDocs(q);
-        const potentialMatches = snap.docs.map(d => d.data() as User)
+        const potentialMatches = snap.docs
+          .map(d => d.data() as User)
+          .filter(u => !swiped.includes(u.uid))
           .filter(u => {
             // Basic filtering
-            const genderMatch = !currentUser.interestedIn || u.gender === currentUser.interestedIn;
-            const ageMatch = !currentUser.age || !u.age || Math.abs(u.age - currentUser.age) <= 10;
+            const genderMatch = !currentUser.interestedIn || currentUser.interestedIn === 'Everyone' || u.gender === currentUser.interestedIn;
+            const ageMatch = !currentUser.age || !u.age || Math.abs(u.age - currentUser.age) <= 15;
             return genderMatch && ageMatch;
           });
         setMatches(potentialMatches);
@@ -42,15 +48,29 @@ export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
     fetchMatches();
   }, [currentUser]);
 
-  const handleSwipe = (dir: 'left' | 'right') => {
+  const handleSwipeAction = async (dir: 'left' | 'right') => {
+    const target = matches[currentIndex];
+    if (!target) return;
+
     setDirection(dir);
+    const isMatch = await onSwipe(target.uid, dir);
+    
+    if (isMatch) {
+      setShowMatchModal(target);
+    }
+
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
       setDirection(null);
     }, 300);
   };
 
-  if (loading) return <div className="p-12 text-center">Finding your matches...</div>;
+  if (loading) return (
+    <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
+      <Loader2 className="h-12 w-12 animate-spin text-orange-600" />
+      <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">Finding your perfect match...</p>
+    </div>
+  );
 
   if (currentIndex >= matches.length) {
     return (
@@ -79,8 +99,8 @@ export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
       <div className="flex items-center justify-between px-4">
         <h1 className="text-3xl font-bold text-neutral-900">Dating</h1>
         <div className="flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-bold text-orange-600">
-          <Star size={18} />
-          Premium Match
+          <Sparkles size={18} />
+          AI Compatibility
         </div>
       </div>
 
@@ -101,7 +121,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
             className="absolute inset-0"
           >
             {currentMatch.photoURL ? (
-              <img src={currentMatch.photoURL} alt="" className="h-full w-full object-cover" />
+              <img src={currentMatch.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-neutral-200 text-neutral-400">
                 <UserIcon size={120} />
@@ -121,6 +141,18 @@ export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
                 <MapPin size={16} />
                 <span>{currentMatch.location?.city || 'Nearby'}, {currentMatch.location?.country || 'SA'}</span>
               </div>
+              
+              {/* Interests */}
+              {currentMatch.interests && currentMatch.interests.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {currentMatch.interests.slice(0, 3).map((interest, i) => (
+                    <span key={i} className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase backdrop-blur-md">
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
               <p className="mt-4 text-sm line-clamp-2 text-white/90">{currentMatch.bio || "No bio provided."}</p>
             </div>
           </motion.div>
@@ -130,7 +162,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
       {/* Action Buttons */}
       <div className="flex items-center justify-center gap-6">
         <button 
-          onClick={() => handleSwipe('left')}
+          onClick={() => handleSwipeAction('left')}
           className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-red-500 shadow-xl ring-1 ring-neutral-200 hover:bg-red-50 transition-all active:scale-90"
         >
           <X size={32} />
@@ -139,12 +171,73 @@ export const Dating: React.FC<DatingProps> = ({ currentUser }) => {
           <Info size={24} />
         </button>
         <button 
-          onClick={() => handleSwipe('right')}
+          onClick={() => handleSwipeAction('right')}
           className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-green-500 shadow-xl ring-1 ring-neutral-200 hover:bg-green-50 transition-all active:scale-90"
         >
           <Heart size={32} className="fill-current" />
         </button>
       </div>
+
+      {/* Match Modal */}
+      <AnimatePresence>
+        {showMatchModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-6 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ scale: 0.5, y: 100 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-sm text-center"
+            >
+              <div className="mb-8 flex justify-center -space-x-8">
+                <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white shadow-2xl">
+                  <img src={currentUser.photoURL} alt="" className="h-full w-full object-cover" />
+                </div>
+                <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white shadow-2xl">
+                  <img src={showMatchModal.photoURL} alt="" className="h-full w-full object-cover" />
+                </div>
+              </div>
+              
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="mb-6 inline-block rounded-full bg-orange-600 px-6 py-2 text-sm font-bold text-white shadow-xl shadow-orange-600/20"
+              >
+                IT'S A MATCH!
+              </motion.div>
+              
+              <h2 className="mb-4 text-3xl font-bold text-white">You and {showMatchModal.displayName} liked each other!</h2>
+              <p className="mb-8 text-white/60">Start a conversation now and see where it leads.</p>
+              
+              <div className="space-y-4">
+                <button 
+                  onClick={() => {
+                    setShowMatchModal(null);
+                    // Trigger menu change to chat with target user
+                    window.dispatchEvent(new CustomEvent('changeMenu', { 
+                      detail: 'chat',
+                      targetUser: showMatchModal 
+                    } as any));
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95"
+                >
+                  <MessageSquare size={20} />
+                  Send a Message
+                </button>
+                <button 
+                  onClick={() => setShowMatchModal(null)}
+                  className="w-full rounded-2xl bg-white/10 py-4 text-sm font-bold text-white hover:bg-white/20 transition-all"
+                >
+                  Keep Swiping
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

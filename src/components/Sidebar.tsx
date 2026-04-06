@@ -1,6 +1,7 @@
 import React from 'react';
-import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle } from 'lucide-react';
+import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle, ShoppingBag, Calendar, Briefcase, Sparkles } from 'lucide-react';
 import { User as UserType } from '../types';
+import { motion } from 'framer-motion';
 
 const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
   switch (tier) {
@@ -33,9 +34,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'feed', label: 'News Feed', icon: <Globe size={20} className="text-blue-500" /> },
     { id: 'reels', label: 'Reels', icon: <Video size={20} className="text-pink-500" /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={20} className="text-red-500" /> },
-    { id: 'pages', label: 'Pages', icon: <Flag size={20} className="text-orange-500" /> },
-    { id: 'groups', label: 'Groups', icon: <Users size={20} className="text-blue-600" /> },
     { id: 'chat', label: 'Messenger', icon: <MessageSquare size={20} className="text-indigo-500" /> },
+    { id: 'marketplace', label: 'Marketplace', icon: <ShoppingBag size={20} className="text-orange-500" /> },
+    { id: 'events', label: 'Events', icon: <Calendar size={20} className="text-red-400" /> },
+    { id: 'jobs', label: 'Jobs', icon: <Briefcase size={20} className="text-blue-600" /> },
+    { id: 'pages', label: 'Pages', icon: <Flag size={20} className="text-orange-600" /> },
+    { id: 'groups', label: 'Groups', icon: <Users size={20} className="text-indigo-600" /> },
     { id: 'wallet', label: 'Wallet & Points', icon: <Wallet size={20} className="text-green-500" /> },
   ];
 
@@ -53,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 overflow-hidden rounded-2xl bg-neutral-100 ring-2 ring-orange-100 transition-all group-hover:ring-orange-200">
             {user?.photoURL ? (
-              <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" />
+              <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-neutral-400">
                 <User size={24} />
@@ -91,6 +95,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
+      {/* STYN Premium Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 p-6 text-white shadow-xl shadow-indigo-200">
+        <div className="relative z-10">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
+            <Sparkles size={20} className="text-yellow-300" />
+          </div>
+          <h4 className="mb-1 text-lg font-bold">STYN Premium</h4>
+          <p className="mb-4 text-xs font-medium text-indigo-100">Unlock exclusive features, boost your profile, and more!</p>
+          <button className="w-full rounded-xl bg-white py-2.5 text-xs font-bold text-indigo-600 shadow-lg transition-all hover:bg-indigo-50 active:scale-95">
+            Upgrade Now
+          </button>
+        </div>
+        <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
+        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-indigo-400/20 blur-3xl"></div>
+      </div>
+
       {/* Friend Requests */}
       {friendRequests.length > 0 && (
         <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
@@ -126,25 +146,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       )}
-
-      {/* Suggested Pages */}
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
-        <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-900">Suggested Pages</h4>
-        <div className="space-y-4 text-sm font-bold text-neutral-600">
-          <div className="flex items-center gap-3 cursor-pointer hover:text-orange-600 transition-colors" onClick={() => onMenuClick('pages')}>
-            <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-              <Flag size={16} />
-            </div>
-            <span>STYN News</span>
-          </div>
-          <div className="flex items-center gap-3 cursor-pointer hover:text-orange-600 transition-colors" onClick={() => onMenuClick('pages')}>
-            <div className="h-8 w-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
-              <Flag size={16} />
-            </div>
-            <span>Africa Tech</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
