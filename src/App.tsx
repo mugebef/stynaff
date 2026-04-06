@@ -15,9 +15,12 @@ import { Profile } from './components/Profile';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Wallet } from './components/Wallet';
 import { Reels } from './components/Reels';
+import { Pages } from './components/Pages';
+import { Groups } from './components/Groups';
+import { Status } from './components/Status';
 import { Footer } from './components/Footer';
-import { Post, User as UserType, Notification } from './types';
-import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell } from 'lucide-react';
+import { Post, User as UserType, Notification, Page, Group } from './types';
+import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -109,6 +112,19 @@ export default function App() {
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
   const [profileUser, setProfileUser] = React.useState<UserType | null>(null);
+  const [pages, setPages] = React.useState<Page[]>([]);
+  const [groups, setGroups] = React.useState<Group[]>([]);
+  const [appConfig, setAppConfig] = React.useState<any>(null);
+
+  // Listen for menu changes from other components
+  React.useEffect(() => {
+    const handleMenuChange = (e: any) => {
+      setActiveMenu(e.detail);
+      if (e.detail === 'profile') setProfileUser(user);
+    };
+    window.addEventListener('changeMenu', handleMenuChange);
+    return () => window.removeEventListener('changeMenu', handleMenuChange);
+  }, [user]);
 
   // Test connection to Firestore
   React.useEffect(() => {
@@ -150,6 +166,10 @@ export default function App() {
               verificationRequested: false,
               friends: [],
               friendRequests: [],
+              followers: [],
+              following: [],
+              joinedGroups: [],
+              followedPages: [],
               walletBalance: 0,
               points: 0,
               profileViews: 0,
@@ -208,6 +228,26 @@ export default function App() {
     });
   }, [user]);
 
+  // Pages & Groups Listeners
+  React.useEffect(() => {
+    if (!user) return;
+    const unsubPages = onSnapshot(collection(db, 'pages'), (snap) => {
+      setPages(snap.docs.map(d => ({ id: d.id, ...d.data() } as Page)));
+    });
+    const unsubGroups = onSnapshot(collection(db, 'groups'), (snap) => {
+      setGroups(snap.docs.map(d => ({ id: d.id, ...d.data() } as Group)));
+    });
+    return () => { unsubPages(); unsubGroups(); };
+  }, [user]);
+
+  // App Config Listener
+  React.useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'appConfig', 'main'), (snap) => {
+      if (snap.exists()) setAppConfig(snap.data());
+    });
+    return () => unsub();
+  }, []);
+
   const handleLogin = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
   };
@@ -226,6 +266,10 @@ export default function App() {
       verificationRequested: false,
       friends: [],
       friendRequests: [],
+      followers: [],
+      following: [],
+      joinedGroups: [],
+      followedPages: [],
       walletBalance: 0,
       points: 0,
       profileViews: 0,
@@ -307,6 +351,37 @@ export default function App() {
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'posts');
+    }
+  };
+
+  const handleBoost = async (postId: string) => {
+    if (!user) return;
+    const boostPrice = appConfig?.boostPrice || 5.00;
+    if ((user.walletBalance || 0) < boostPrice) {
+      alert(`Insufficient funds. Boosting costs $${boostPrice.toFixed(2)}.`);
+      setActiveMenu('wallet');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'posts', postId), {
+        isBoosted: true,
+        boostBudget: boostPrice
+      });
+      await updateDoc(doc(db, 'users', user.uid), {
+        walletBalance: (user.walletBalance || 0) - boostPrice
+      });
+      await addDoc(collection(db, 'transactions'), {
+        userId: user.uid,
+        amount: boostPrice,
+        type: 'boost_post',
+        status: 'completed',
+        method: 'wallet',
+        createdAt: serverTimestamp()
+      });
+      alert('Post boosted successfully!');
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -453,6 +528,10 @@ export default function App() {
           <Wallet user={user} onUpdateUser={handleUpdateProfile} />
         ) : activeMenu === 'reels' ? (
           <Reels posts={posts} currentUser={user} onLike={handleLike} onComment={handleComment} />
+        ) : activeMenu === 'pages' ? (
+          <Pages pages={pages} currentUser={user} />
+        ) : activeMenu === 'groups' ? (
+          <Groups groups={groups} currentUser={user} />
         ) : (
           <div className="flex gap-8">
             {/* Left Sidebar - Profile & Requests */}
@@ -465,10 +544,12 @@ export default function App() {
                 setActiveMenu('profile');
                 setProfileUser(user);
               }}
+              onMenuClick={setActiveMenu}
             />
 
             {/* Main Content Area */}
             <div className="flex-1">
+              <Status user={user} />
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeMenu}
@@ -485,6 +566,7 @@ export default function App() {
                       onLike={handleLike} 
                       onDelete={handleDelete} 
                       onComment={handleComment} 
+                      onBoost={handleBoost}
                     />
                   )}
                   {activeMenu === 'chat' && <Chat />}

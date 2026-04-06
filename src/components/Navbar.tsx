@@ -13,12 +13,12 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, activeMenu, notificationCount }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
 
   const menus = [
     { id: 'feed', label: 'Home', icon: <Globe size={20} /> },
     { id: 'reels', label: 'Reels', icon: <Video size={20} /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={20} /> },
-    { id: 'wallet', label: 'Wallet', icon: <WalletIcon size={20} /> },
     { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
   ];
 
@@ -69,26 +69,66 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, act
                   </span>
                 )}
               </button>
-              <div 
-                onClick={() => onMenuClick('profile')}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-neutral-100 px-3 py-1.5 hover:bg-neutral-200 transition-all"
-              >
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName} className="h-6 w-6 rounded-full object-cover" />
-                ) : (
-                  <User size={16} className="text-neutral-500" />
-                )}
-                <span className="text-sm font-bold text-neutral-700 hidden sm:block">
-                  {user.displayName.split(' ')[0]}
-                </span>
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <div 
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="flex cursor-pointer items-center gap-2 rounded-full bg-neutral-100 px-3 py-1.5 hover:bg-neutral-200 transition-all"
+                >
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName} className="h-6 w-6 rounded-full object-cover" />
+                  ) : (
+                    <User size={16} className="text-neutral-500" />
+                  )}
+                  <span className="text-sm font-bold text-neutral-700 hidden sm:block">
+                    {user.displayName.split(' ')[0]}
+                  </span>
+                </div>
+
+                <AnimatePresence>
+                  {isProfileDropdownOpen && (
+                    <>
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="fixed inset-0 z-40"
+                      />
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-neutral-200 bg-white p-2 shadow-2xl ring-1 ring-neutral-200 z-50"
+                      >
+                        <button 
+                          onClick={() => { onMenuClick('profile'); setIsProfileDropdownOpen(false); }}
+                          className="flex w-full items-center gap-3 rounded-xl px-4 py-2 text-sm font-bold text-neutral-700 hover:bg-neutral-50 transition-all"
+                        >
+                          <User size={18} />
+                          My Profile
+                        </button>
+                        <button 
+                          onClick={() => { onMenuClick('wallet'); setIsProfileDropdownOpen(false); }}
+                          className="flex w-full items-center gap-3 rounded-xl px-4 py-2 text-sm font-bold text-neutral-700 hover:bg-neutral-50 transition-all"
+                        >
+                          <WalletIcon size={18} />
+                          Wallet & Points
+                        </button>
+                        <div className="my-2 border-t border-neutral-100"></div>
+                        <button
+                          onClick={() => { onLogout(); setIsProfileDropdownOpen(false); }}
+                          className="flex w-full items-center gap-3 rounded-xl px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 transition-all"
+                        >
+                          <LogOut size={18} />
+                          Logout
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
-              <button
-                onClick={onLogout}
-                className="rounded-full bg-red-50 p-2 text-red-500 hover:bg-red-100 transition-all"
-                title="Logout"
-              >
-                <LogOut size={20} />
-              </button>
             </>
           ) : (
             <button className="rounded-full bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 transition-all active:scale-95">

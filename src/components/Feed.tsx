@@ -10,9 +10,10 @@ interface FeedProps {
   onLike: (postId: string) => void;
   onDelete: (postId: string) => void;
   onComment: (postId: string, content: string) => void;
+  onBoost?: (postId: string) => void;
 }
 
-export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, onDelete, onComment }) => {
+export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, onDelete, onComment, onBoost }) => {
   const [content, setContent] = React.useState('');
   const [mediaFile, setMediaFile] = React.useState<File | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -123,6 +124,7 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
               onLike={onLike}
               onDelete={onDelete}
               onComment={onComment}
+              onBoost={onBoost}
             />
           ))
         )}

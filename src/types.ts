@@ -19,10 +19,14 @@ export interface User {
   interestedIn?: string;
   friends: string[]; // Array of UIDs
   friendRequests: string[]; // Array of UIDs
+  followers: string[]; // Array of UIDs
+  following: string[]; // Array of UIDs
   walletBalance: number;
   points: number;
   profileViews: number;
   createdAt: any;
+  joinedGroups: string[]; // Array of Group IDs
+  followedPages: string[]; // Array of Page IDs
 }
 
 export interface Post {
@@ -41,6 +45,35 @@ export interface Post {
   comments: Comment[];
   shares: number;
   isSponsored?: boolean;
+  isBoosted?: boolean;
+  boostBudget?: number;
+  targetAudience?: string;
+  pageId?: string; // If posted by a page
+  groupId?: string; // If posted in a group
+}
+
+export interface Page {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  ownerId: string;
+  photoURL?: string;
+  coverURL?: string;
+  isVerified: boolean;
+  followers: string[]; // Array of UIDs
+  createdAt: any;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  photoURL?: string;
+  members: string[]; // Array of UIDs
+  isPrivate: boolean;
+  createdAt: any;
 }
 
 export interface Comment {
@@ -53,7 +86,7 @@ export interface Comment {
 
 export interface Notification {
   id: string;
-  type: 'friend_request' | 'friend_accepted' | 'profile_view' | 'like' | 'comment';
+  type: 'friend_request' | 'friend_accepted' | 'profile_view' | 'like' | 'comment' | 'group_invite' | 'page_post';
   fromId: string;
   fromName: string;
   toId: string;
@@ -65,8 +98,15 @@ export interface Transaction {
   id: string;
   userId: string;
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'points_conversion' | 'ad_payment' | 'verification_payment';
+  type: 'deposit' | 'withdrawal' | 'points_conversion' | 'ad_payment' | 'verification_payment' | 'boost_payment';
   status: 'pending' | 'completed' | 'failed';
   method: 'manual' | 'wallet';
   createdAt: any;
+}
+
+export interface AppConfig {
+  id: 'main';
+  pointsToCashRate: number; // e.g., 0.01
+  boostPricePerDay: number; // e.g., 5.00
+  verificationPrice: number; // e.g., 10.00
 }

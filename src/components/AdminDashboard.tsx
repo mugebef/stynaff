@@ -1,8 +1,8 @@
 import React from 'react';
-import { Users, FileText, CheckCircle, TrendingUp, DollarSign, Award, Edit, Trash2, Search } from 'lucide-react';
+import { Users, FileText, CheckCircle, TrendingUp, DollarSign, Award, Edit, Trash2, Search, Settings, Zap } from 'lucide-react';
 import { User, Post, Transaction } from '../types';
 import { db } from '../firebase';
-import { collection, query, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, getDocs, updateDoc, doc, deleteDoc, onSnapshot, setDoc } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   currentUser: User;
@@ -14,6 +14,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   const [posts, setPosts] = React.useState<Post[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [appConfig, setAppConfig] = React.useState<any>(null);
+  const [isSavingConfig, setIsSavingConfig] = React.useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +32,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       }
     };
     fetchData();
+
+    const unsubConfig = onSnapshot(doc(db, 'appConfig', 'main'), (snap) => {
+      if (snap.exists()) setAppConfig(snap.data());
+    });
+    return () => unsubConfig();
   }, []);
+
+  const handleUpdateConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingConfig(true);
+    try {
+      await setDoc(doc(db, 'appConfig', 'main'), appConfig);
+      alert('Configuration updated successfully!');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
 
   const filteredUsers = users.filter(u => 
     u.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,6 +88,59 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
           </div>
         ))}
       </div>
+
+      {/* App Configuration */}
+      {appConfig && (
+        <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-xl ring-1 ring-neutral-200">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+              <Settings size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-neutral-900">App Configuration</h2>
+          </div>
+          <form onSubmit={handleUpdateConfig} className="grid gap-6 md:grid-cols-3">
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Point Conversion Rate ($ per point)</label>
+              <input 
+                type="number" 
+                step="0.001"
+                value={appConfig.pointRate || 0.01}
+                onChange={(e) => setAppConfig({ ...appConfig, pointRate: parseFloat(e.target.value) })}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Post Boost Price ($)</label>
+              <input 
+                type="number" 
+                step="0.01"
+                value={appConfig.boostPrice || 5.00}
+                onChange={(e) => setAppConfig({ ...appConfig, boostPrice: parseFloat(e.target.value) })}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Verification Fee ($)</label>
+              <input 
+                type="number" 
+                step="0.01"
+                value={appConfig.verificationFee || 10.00}
+                onChange={(e) => setAppConfig({ ...appConfig, verificationFee: parseFloat(e.target.value) })}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+              />
+            </div>
+            <div className="md:col-span-3">
+              <button 
+                type="submit"
+                disabled={isSavingConfig}
+                className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {isSavingConfig ? 'Saving...' : 'Save Configuration'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* User Management */}
       <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">

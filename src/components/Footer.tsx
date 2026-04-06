@@ -61,9 +61,11 @@ export const Footer: React.FC = () => {
           <p className="text-sm font-medium text-neutral-500">
             © 2026 {APP_NAME}. All rights reserved.
           </p>
-          <p className="mt-4 text-sm font-bold text-orange-600 md:mt-0">
-            {FOOTER_TEXT}
-          </p>
+          <div className="mt-4 flex items-center gap-4 text-sm font-bold text-orange-600 md:mt-0">
+            <span>{FOOTER_TEXT}</span>
+            <span className="h-4 w-px bg-neutral-200"></span>
+            <span className="text-neutral-400">Powered by <span className="text-blue-500">Google AI Studio</span></span>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 
@@ -115,6 +115,8 @@ export const Profile: React.FC<ProfileProps> = ({
             <div className="flex items-center gap-4 text-sm font-bold text-neutral-500">
               <span>{user.friends?.length || 0} Friends</span>
               <span>•</span>
+              <span>{user.followers?.length || 0} Followers</span>
+              <span>•</span>
               <span>{userPosts.length} Posts</span>
               <span>•</span>
               <span className="text-orange-600">{user.tier} Tier</span>
@@ -140,13 +142,24 @@ export const Profile: React.FC<ProfileProps> = ({
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
-                >
-                  <Edit3 size={18} />
-                  Edit Profile
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
+                  >
+                    <Edit3 size={18} />
+                    Edit Profile
+                  </button>
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { detail: 'wallet' }))}
+                      className="flex items-center gap-2 rounded-xl bg-orange-50 px-6 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-100 transition-all active:scale-95"
+                    >
+                      <WalletIcon size={18} />
+                      Wallet
+                    </button>
+                  )}
+                </div>
               )
             ) : (
               <button className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95">

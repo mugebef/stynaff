@@ -74,20 +74,27 @@ service cloud.firestore {
     }
     function isValidPost(data) {
       return data.keys().hasAll(['authorId', 'authorName', 'content', 'createdAt', 'likes', 'shares']) &&
-             data.authorId is string && data.authorId == request.auth.uid &&
+             data.authorId is string &&
              data.authorName is string &&
              data.content is string &&
              data.createdAt is timestamp &&
              data.likes is list &&
              data.shares is number;
     }
-    function isValidComment(data) {
-      return data.keys().hasAll(['id', 'postId', 'authorId', 'authorName', 'content', 'createdAt']) &&
-             data.id is string && data.id.size() > 0 &&
-             data.postId is string && data.postId.size() > 0 &&
-             data.authorId is string && data.authorId == request.auth.uid &&
-             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() < 100 &&
-             data.content is string && data.content.size() > 0 && data.content.size() < 1000 &&
+    function isValidPage(data) {
+      return data.keys().hasAll(['name', 'description', 'ownerId', 'isVerified', 'followers', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.ownerId is string &&
+             data.isVerified is bool &&
+             data.followers is list &&
+             data.createdAt is timestamp;
+    }
+    function isValidGroup(data) {
+      return data.keys().hasAll(['name', 'description', 'ownerId', 'members', 'isPrivate', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.ownerId is string &&
+             data.members is list &&
+             data.isPrivate is bool &&
              data.createdAt is timestamp;
     }
 
@@ -98,7 +105,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
-      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin())) || isAdmin();
+      allow update: if (isOwner(userId) && (request.resource.data.role == resource.data.role || isAdmin())) || isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -107,7 +114,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidPost(request.resource.data);
       allow update: if (isAuthenticated() && (
         (request.auth.uid == resource.data.authorId && isValidPost(request.resource.data)) ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) && request.resource.data.likes.size() <= 1000000)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'isBoosted', 'boostBudget']))
       )) || isAdmin();
       allow delete: if (isAuthenticated() && request.auth.uid == resource.data.authorId) || isAdmin();
 
@@ -117,6 +124,45 @@ service cloud.firestore {
         allow update: if (isAuthenticated() && request.auth.uid == resource.data.authorId && isValidComment(request.resource.data)) || isAdmin();
         allow delete: if (isAuthenticated() && request.auth.uid == resource.data.authorId) || isAdmin();
       }
+    }
+
+    match /pages/{pageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPage(request.resource.data);
+      allow update: if (isAuthenticated() && (
+        (request.auth.uid == resource.data.ownerId && isValidPage(request.resource.data)) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers']))
+      )) || isAdmin();
+      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.ownerId) || isAdmin();
+    }
+
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidGroup(request.resource.data);
+      allow update: if (isAuthenticated() && (
+        (request.auth.uid == resource.data.ownerId && isValidGroup(request.resource.data)) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']))
+      )) || isAdmin();
+      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.ownerId) || isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.toId;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.toId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.toId;
+    }
+
+    match /transactions/{txId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /appConfig/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }
