@@ -12,9 +12,12 @@ import { Dating } from './components/Dating';
 import { Blockbuster } from './components/Blockbuster';
 import { Sidebar } from './components/Sidebar';
 import { Profile } from './components/Profile';
+import { AdminDashboard } from './components/AdminDashboard';
+import { Wallet } from './components/Wallet';
+import { Reels } from './components/Reels';
 import { Footer } from './components/Footer';
-import { Post, User as UserType } from './types';
-import { Globe, Loader2 } from 'lucide-react';
+import { Post, User as UserType, Notification } from './types';
+import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -44,7 +47,8 @@ import {
   arrayUnion, 
   arrayRemove, 
   deleteDoc,
-  getDocFromServer
+  getDocFromServer,
+  where
 } from 'firebase/firestore';
 
 enum OperationType {
@@ -102,7 +106,7 @@ export default function App() {
   const [user, setUser] = React.useState<UserType | null>(null);
   const [activeMenu, setActiveMenu] = React.useState('feed');
   const [posts, setPosts] = React.useState<Post[]>([]);
-  const [friendRequests, setFriendRequests] = React.useState<any[]>([]);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
   const [profileUser, setProfileUser] = React.useState<UserType | null>(null);
 
@@ -141,8 +145,15 @@ export default function App() {
               email: firebaseUser.email || '',
               photoURL: firebaseUser.photoURL || undefined,
               role: firebaseUser.email === ADMIN_EMAIL ? 'admin' : 'user',
+              tier: 'General',
+              isVerified: false,
+              verificationRequested: false,
               friends: [],
               friendRequests: [],
+              walletBalance: 0,
+              points: 0,
+              profileViews: 0,
+              createdAt: serverTimestamp(),
             };
             await setDoc(userDocRef, newUser);
             setUser(newUser);
@@ -158,7 +169,7 @@ export default function App() {
     return () => unsubscribe();
   }, [activeMenu, profileUser?.uid]);
 
-  // Posts Listener
+  // Posts Listener (Verified & Liked first)
   React.useEffect(() => {
     if (!isAuthReady || !user) return;
 
@@ -168,13 +179,34 @@ export default function App() {
         id: doc.id,
         ...doc.data()
       })) as Post[];
-      setPosts(postsData);
+      
+      // Algorithm: Verified users first, then most liked
+      const sortedPosts = [...postsData].sort((a, b) => {
+        if (a.authorVerified && !b.authorVerified) return -1;
+        if (!a.authorVerified && b.authorVerified) return 1;
+        return (b.likes?.length || 0) - (a.likes?.length || 0);
+      });
+      
+      setPosts(sortedPosts);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'posts');
     });
 
     return () => unsubscribe();
   }, [isAuthReady, user]);
+
+  // Notifications Listener
+  React.useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, 'notifications'),
+      where('toId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+    return onSnapshot(q, (snap) => {
+      setNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() } as Notification)));
+    });
+  }, [user]);
 
   const handleLogin = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
@@ -189,8 +221,15 @@ export default function App() {
       displayName: name,
       email: email,
       role: email === ADMIN_EMAIL ? 'admin' : 'user',
+      tier: 'General',
+      isVerified: false,
+      verificationRequested: false,
       friends: [],
       friendRequests: [],
+      walletBalance: 0,
+      points: 0,
+      profileViews: 0,
+      createdAt: serverTimestamp(),
     };
     await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
     setUser(newUser);
@@ -229,6 +268,7 @@ export default function App() {
     try {
       let mediaUrl = null;
       let mediaType: 'image' | 'video' | undefined = undefined;
+      let isReel = false;
 
       if (mediaFile) {
         // Simulate upload by using base64 for small files
@@ -238,18 +278,32 @@ export default function App() {
           reader.readAsDataURL(mediaFile);
         });
         mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
+        
+        // Reels logic: video < 15s (simulated check)
+        if (mediaType === 'video') {
+          isReel = true; // In real app, check video duration
+        }
       }
 
       await addDoc(collection(db, 'posts'), {
         authorId: user.uid,
         authorName: user.displayName,
         authorPhoto: user.photoURL || null,
+        authorVerified: user.isVerified || false,
         content,
         mediaUrl,
         mediaType,
+        isReel,
         createdAt: serverTimestamp(),
         likes: [],
-        comments: []
+        comments: [],
+        shares: 0,
+        isSponsored: false
+      });
+
+      // Award points for posting
+      await updateDoc(doc(db, 'users', user.uid), {
+        points: (user.points || 0) + 10
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'posts');
@@ -263,13 +317,58 @@ export default function App() {
     if (!post) return;
 
     const isLiked = post.likes.includes(user.uid);
-    try {
-      await updateDoc(postRef, {
-        likes: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+    await updateDoc(postRef, {
+      likes: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+    });
+
+    if (!isLiked && post.authorId !== user.uid) {
+      await addDoc(collection(db, 'notifications'), {
+        type: 'like',
+        fromId: user.uid,
+        fromName: user.displayName,
+        toId: post.authorId,
+        read: false,
+        createdAt: serverTimestamp()
       });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `posts/${postId}`);
     }
+  };
+
+  const handleAcceptFriend = async (fromId: string, fromName: string) => {
+    if (!user) return;
+    try {
+      // Add to both users' friends lists
+      await updateDoc(doc(db, 'users', user.uid), {
+        friends: arrayUnion(fromId),
+        friendRequests: arrayRemove(fromId)
+      });
+      await updateDoc(doc(db, 'users', fromId), {
+        friends: arrayUnion(user.uid)
+      });
+
+      // Notify
+      await addDoc(collection(db, 'notifications'), {
+        type: 'friend_accepted',
+        fromId: user.uid,
+        fromName: user.displayName,
+        toId: fromId,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeclineFriend = async (fromId: string) => {
+    if (!user) return;
+    await updateDoc(doc(db, 'users', user.uid), {
+      friendRequests: arrayRemove(fromId)
+    });
+  };
+
+  const handleUpdateUserAdmin = async (uid: string, updates: Partial<UserType>) => {
+    if (user?.role !== 'admin') return;
+    await updateDoc(doc(db, 'users', uid), updates);
   };
 
   const handleDelete = async (postId: string) => {
@@ -333,7 +432,8 @@ export default function App() {
           setActiveMenu(menu);
           if (menu === 'profile') setProfileUser(user);
         }} 
-        activeMenu={activeMenu} 
+        activeMenu={activeMenu}
+        notificationCount={notifications.filter(n => !n.read).length}
       />
 
       <main className="mx-auto max-w-7xl px-4 pt-20 pb-12 md:px-6">
@@ -347,14 +447,20 @@ export default function App() {
             onDelete={handleDelete}
             onComment={handleComment}
           />
+        ) : activeMenu === 'admin' && user?.role === 'admin' ? (
+          <AdminDashboard currentUser={user} onUpdateUser={handleUpdateUserAdmin} />
+        ) : activeMenu === 'wallet' ? (
+          <Wallet user={user} onUpdateUser={handleUpdateProfile} />
+        ) : activeMenu === 'reels' ? (
+          <Reels posts={posts} currentUser={user} onLike={handleLike} onComment={handleComment} />
         ) : (
           <div className="flex gap-8">
             {/* Left Sidebar - Profile & Requests */}
             <Sidebar 
               user={user} 
-              friendRequests={friendRequests} 
-              onAcceptFriend={() => {}} 
-              onDeclineFriend={() => {}} 
+              friendRequests={user?.friendRequests || []} 
+              onAcceptFriend={handleAcceptFriend} 
+              onDeclineFriend={handleDeclineFriend} 
               onProfileClick={() => {
                 setActiveMenu('profile');
                 setProfileUser(user);

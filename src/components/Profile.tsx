@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 
@@ -29,6 +29,8 @@ export const Profile: React.FC<ProfileProps> = ({
   const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
 
   const isOwnProfile = user.uid === currentUser.uid;
+  const isAdmin = currentUser.role === 'admin';
+  const canEdit = isOwnProfile || isAdmin;
   const userPosts = posts.filter(p => p.authorId === user.uid);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +64,7 @@ export const Profile: React.FC<ProfileProps> = ({
     <div className="mx-auto max-w-4xl pb-12">
       {/* Cover Photo */}
       <div className="relative h-48 w-full overflow-hidden rounded-b-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 shadow-lg md:h-64">
-        {isOwnProfile && (
+        {canEdit && (
           <button className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg bg-black/50 px-4 py-2 text-sm font-bold text-white backdrop-blur-md hover:bg-black/70 transition-all">
             <Camera size={18} />
             Edit Cover
@@ -87,7 +89,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 <UserIcon size={80} />
               </div>
             )}
-            {isOwnProfile && isEditing && (
+            {canEdit && isEditing && (
               <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100">
                 <Camera size={32} />
                 <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
@@ -97,21 +99,30 @@ export const Profile: React.FC<ProfileProps> = ({
 
           {/* Name & Actions */}
           <div className="mt-4 flex flex-1 flex-col items-center text-center md:mb-4 md:items-start md:text-left">
-            {isEditing ? (
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="mb-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1 text-2xl font-bold text-neutral-900 focus:border-orange-600 focus:outline-none"
-              />
-            ) : (
-              <h1 className="text-3xl font-bold text-neutral-900">{user.displayName}</h1>
-            )}
-            <p className="text-sm font-medium text-neutral-500">{user.friends.length} Friends</p>
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="mb-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1 text-2xl font-bold text-neutral-900 focus:border-orange-600 focus:outline-none"
+                />
+              ) : (
+                <h1 className="text-3xl font-bold text-neutral-900">{user.displayName}</h1>
+              )}
+              {user.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
+            </div>
+            <div className="flex items-center gap-4 text-sm font-bold text-neutral-500">
+              <span>{user.friends?.length || 0} Friends</span>
+              <span>•</span>
+              <span>{userPosts.length} Posts</span>
+              <span>•</span>
+              <span className="text-orange-600">{user.tier} Tier</span>
+            </div>
           </div>
 
           <div className="mt-6 flex gap-2 md:mb-4">
-            {isOwnProfile ? (
+            {canEdit ? (
               isEditing ? (
                 <>
                   <button

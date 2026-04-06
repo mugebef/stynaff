@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X } from 'lucide-react';
+import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X, LayoutDashboard, Video, Wallet as WalletIcon, Bell } from 'lucide-react';
 import { APP_NAME } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -8,18 +8,23 @@ interface NavbarProps {
   onLogout: () => void;
   onMenuClick: (menu: string) => void;
   activeMenu: string;
+  notificationCount: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, activeMenu }) => {
+export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, activeMenu, notificationCount }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const menus = [
     { id: 'feed', label: 'Home', icon: <Globe size={20} /> },
-    { id: 'profile', label: 'Profile', icon: <User size={20} /> },
-    { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
+    { id: 'reels', label: 'Reels', icon: <Video size={20} /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={20} /> },
-    { id: 'blockbuster', label: 'Blockbuster', icon: <Play size={20} /> },
+    { id: 'wallet', label: 'Wallet', icon: <WalletIcon size={20} /> },
+    { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
   ];
+
+  if (user?.role === 'admin') {
+    menus.splice(1, 0, { id: 'admin', label: 'Admin', icon: <LayoutDashboard size={20} /> });
+  }
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur-md">
@@ -56,6 +61,14 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, act
         <div className="flex items-center gap-2 md:gap-4">
           {user ? (
             <>
+              <button className="relative rounded-full p-2 text-neutral-500 hover:bg-neutral-100 transition-all">
+                <Bell size={20} />
+                {notificationCount > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-[10px] font-bold text-white ring-2 ring-white">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
               <div 
                 onClick={() => onMenuClick('profile')}
                 className="flex cursor-pointer items-center gap-2 rounded-full bg-neutral-100 px-3 py-1.5 hover:bg-neutral-200 transition-all"
