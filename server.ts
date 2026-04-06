@@ -28,8 +28,8 @@ async function startServer() {
     });
     app.use(vite.middlewares);
     console.log("Vite development middleware loaded.");
-  // 3. Static Files for Production
-  if (process.env.NODE_ENV === "production") {
+  } else {
+    // 3. Static Files for Production
     const distPath = path.join(process.cwd(), "dist");
     
     // Check if dist exists to prevent crash
