@@ -21,5 +21,18 @@ export default defineConfig(({mode}) => {
       hmr: process.env.DISABLE_HMR !== 'true',
       allowedHosts: ['ray.styni.com', 'www.ray.styni.com', '129.121.73.168'],
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+            'vendor-motion': ['framer-motion'],
+            'vendor-lucide': ['lucide-react'],
+            'vendor-react': ['react', 'react-dom'],
+          },
+        },
+      },
+    },
   };
 });

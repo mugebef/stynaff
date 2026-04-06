@@ -19,11 +19,14 @@ export const Pages: React.FC<PagesProps> = ({ pages, currentUser }) => {
   const handleCreatePage = async () => {
     if (!currentUser || !newName) return;
     try {
+      const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       await addDoc(collection(db, 'pages'), {
         name: newName,
+        slug: slug,
         description: newDesc,
         category: newCategory,
         ownerId: currentUser.uid,
+        ownerName: currentUser.displayName,
         isVerified: false,
         followers: [],
         createdAt: serverTimestamp()
@@ -88,6 +91,9 @@ export const Pages: React.FC<PagesProps> = ({ pages, currentUser }) => {
                     {page.isVerified && <CheckCircle size={18} className="fill-blue-500 text-white" />}
                   </div>
                   <p className="text-xs font-bold text-orange-600 uppercase tracking-widest">{page.category}</p>
+                  {currentUser?.role === 'admin' && (
+                    <p className="mt-1 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Created by: {page.ownerName || 'Unknown'}</p>
+                  )}
                 </div>
                 <button className="rounded-full bg-neutral-100 p-2 text-neutral-500 hover:bg-neutral-200 transition-all">
                   <MoreHorizontal size={20} />

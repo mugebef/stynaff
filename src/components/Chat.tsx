@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare, CheckCircle } from 'lucide-react';
 import { User as UserType, Message as MessageType } from '../types';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc } from 'firebase/firestore';
@@ -110,7 +110,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users }) => {
               }`}
             >
               <div className="relative">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 ring-2 ring-white shadow-sm overflow-hidden">
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-2 ring-white shadow-sm overflow-hidden ${user.photoURL ? 'bg-neutral-100' : (user.gender === 'Female' ? 'bg-pink-50 text-pink-400' : 'bg-blue-50 text-blue-400')}`}>
                   {user.photoURL ? (
                     <img src={user.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -124,6 +124,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users }) => {
                   <h4 className={`text-sm font-bold truncate ${selectedUser?.uid === user.uid ? 'text-orange-600' : 'text-neutral-900'}`}>
                     {user.displayName}
                   </h4>
+                  {user.isVerified && <CheckCircle size={14} className="fill-blue-500 text-white shrink-0" />}
                 </div>
                 <p className="line-clamp-1 text-xs text-neutral-500 font-medium">{user.bio || 'Available'}</p>
               </div>
@@ -142,7 +143,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users }) => {
                 <button onClick={() => setSelectedUser(null)} className="md:hidden text-neutral-500">
                   <ArrowLeft size={24} />
                 </button>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 shadow-sm overflow-hidden">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm overflow-hidden ${selectedUser.photoURL ? 'bg-neutral-100' : (selectedUser.gender === 'Female' ? 'bg-pink-50 text-pink-400' : 'bg-blue-50 text-blue-400')}`}>
                   {selectedUser.photoURL ? (
                     <img src={selectedUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -150,7 +151,10 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users }) => {
                   )}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-neutral-900">{selectedUser.displayName}</h4>
+                  <div className="flex items-center gap-1">
+                    <h4 className="text-sm font-bold text-neutral-900">{selectedUser.displayName}</h4>
+                    {selectedUser.isVerified && <CheckCircle size={14} className="fill-blue-500 text-white" />}
+                  </div>
                   <p className="text-xs font-bold text-green-600 uppercase tracking-widest">Online</p>
                 </div>
               </div>

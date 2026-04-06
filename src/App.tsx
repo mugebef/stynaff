@@ -20,7 +20,7 @@ import { Groups } from './components/Groups';
 import { Status } from './components/Status';
 import { Footer } from './components/Footer';
 import { Post, User as UserType, Notification, Page, Group } from './types';
-import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag } from 'lucide-react';
+import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -116,6 +116,7 @@ export default function App() {
   const [pages, setPages] = React.useState<Page[]>([]);
   const [groups, setGroups] = React.useState<Group[]>([]);
   const [appConfig, setAppConfig] = React.useState<any>(null);
+  const [users, setUsers] = React.useState<UserType[]>([]);
 
   // Listen for menu changes from other components
   React.useEffect(() => {
@@ -240,7 +241,10 @@ export default function App() {
     const unsubGroups = onSnapshot(collection(db, 'groups'), (snap) => {
       setGroups(snap.docs.map(d => ({ id: d.id, ...d.data() } as Group)));
     });
-    return () => { unsubPages(); unsubGroups(); };
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+      setUsers(snap.docs.map(d => ({ ...d.data() } as UserType)));
+    });
+    return () => { unsubPages(); unsubGroups(); unsubUsers(); };
   }, [user]);
 
   // App Config Listener
@@ -255,7 +259,7 @@ export default function App() {
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
-  const handleSignup = async (email: string, pass: string, name: string) => {
+  const handleSignup = async (email: string, pass: string, name: string, gender: string) => {
     const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(firebaseUser, { displayName: name });
     
@@ -266,6 +270,7 @@ export default function App() {
       displayName: name,
       username: username,
       email: email,
+      gender: gender,
       role: email === ADMIN_EMAIL ? 'admin' : 'user',
       tier: 'General',
       isVerified: false,
@@ -295,25 +300,31 @@ export default function App() {
 
   const handleLogout = () => signOut(auth);
 
-  const handleUpdateProfile = async (updates: Partial<UserType>) => {
+  const handleUpdateProfile = async (updates: Partial<UserType>, targetUid?: string) => {
     if (!user) return;
-    const userRef = doc(db, 'users', user.uid);
+    const uid = targetUid || user.uid;
+    const userRef = doc(db, 'users', uid);
     try {
       await updateDoc(userRef, updates);
-      // Update local state
-      setUser(prev => prev ? { ...prev, ...updates } : null);
-      if (profileUser?.uid === user.uid) {
+      
+      // Update local current user state if it's the current user
+      if (uid === user.uid) {
+        setUser(prev => prev ? { ...prev, ...updates } : null);
+        // Update firebase profile if displayName or photoURL changed
+        if (updates.displayName || updates.photoURL) {
+          await updateProfile(auth.currentUser!, {
+            displayName: updates.displayName,
+            photoURL: updates.photoURL
+          });
+        }
+      }
+
+      // Update profileUser if it's the one being viewed
+      if (profileUser?.uid === uid) {
         setProfileUser(prev => prev ? { ...prev, ...updates } : null);
       }
-      // Update firebase profile if displayName or photoURL changed
-      if (updates.displayName || updates.photoURL) {
-        await updateProfile(auth.currentUser!, {
-          displayName: updates.displayName,
-          photoURL: updates.photoURL
-        });
-      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
     }
   };
 
@@ -325,15 +336,18 @@ export default function App() {
       let isReel = false;
 
       if (mediaFile) {
-        if (mediaFile.size > 800000) {
-          throw new Error('File size too large. Please upload a file smaller than 800KB for now.');
+        if (mediaFile.size > 2000000) {
+          throw new Error('File size too large. Please upload a file smaller than 2MB.');
         }
-        // Simulate upload by using base64 for small files
-        const reader = new FileReader();
-        mediaUrl = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(mediaFile);
+        
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
         });
+        const data = await res.json();
+        mediaUrl = data.url;
         mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
         
         // Reels logic: video < 15s (simulated check)
@@ -530,7 +544,7 @@ export default function App() {
             user={profileUser}
             currentUser={user}
             posts={posts}
-            onUpdateProfile={handleUpdateProfile}
+            onUpdateProfile={(updates) => handleUpdateProfile(updates, profileUser.uid)}
             onLike={handleLike}
             onDelete={handleDelete}
             onComment={handleComment}
@@ -582,7 +596,7 @@ export default function App() {
                       onBoost={handleBoost}
                     />
                   )}
-                  {activeMenu === 'chat' && <Chat />}
+                  {activeMenu === 'chat' && <Chat currentUser={user} users={users} />}
                   {activeMenu === 'dating' && <Dating />}
                   {activeMenu === 'blockbuster' && <Blockbuster />}
                 </motion.div>
@@ -594,11 +608,19 @@ export default function App() {
               <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
                 <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-900">Suggested Friends</h4>
                 <div className="space-y-4">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="flex items-center justify-between">
+                  {users.filter(u => u.uid !== user.uid).slice(0, 5).map(u => (
+                    <div key={u.uid} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-neutral-100"></div>
-                        <span className="text-sm font-bold text-neutral-900">User {i}</span>
+                        <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-100">
+                          {u.photoURL ? (
+                            <img src={u.photoURL} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                              <User size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-sm font-bold text-neutral-900">{u.displayName}</span>
                       </div>
                       <button className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-600 hover:bg-orange-100 transition-all">
                         Connect

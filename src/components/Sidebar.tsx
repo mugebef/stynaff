@@ -1,6 +1,16 @@
 import React from 'react';
-import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard } from 'lucide-react';
+import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle } from 'lucide-react';
 import { User as UserType } from '../types';
+
+const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
+  switch (tier) {
+    case 'Bronze': return <Award size={size} className="text-orange-400" />;
+    case 'Silver': return <Medal size={size} className="text-neutral-400" />;
+    case 'Gold': return <Trophy size={size} className="text-yellow-500" />;
+    case 'Platinum': return <Crown size={size} className="text-indigo-400" />;
+    default: return <Shield size={size} className="text-neutral-400" />;
+  }
+};
 
 interface SidebarProps {
   user: UserType | null;
@@ -51,8 +61,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
           <div className="flex-1 overflow-hidden">
-            <h3 className="truncate text-sm font-bold text-neutral-900">{user?.displayName}</h3>
-            <p className="text-xs font-bold text-orange-600 uppercase tracking-widest">{user?.tier} Tier</p>
+            <div className="flex items-center gap-1">
+              <h3 className="truncate text-sm font-bold text-neutral-900">{user?.displayName}</h3>
+              {user?.isVerified && <CheckCircle size={14} className="fill-blue-500 text-white shrink-0" />}
+            </div>
+            <div className="flex items-center gap-1">
+              <TierIcon tier={user?.tier || 'General'} size={12} />
+              <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">{user?.tier}</p>
+              <span className="text-[10px] font-bold text-neutral-400">•</span>
+              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{user?.points || 0} Points</p>
+            </div>
           </div>
         </div>
       </div>

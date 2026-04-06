@@ -165,6 +165,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
               <tr>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Tier</th>
+                <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Wallet</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -191,6 +192,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                       className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-bold text-neutral-700"
                     >
                       {['General', 'Bronze', 'Silver', 'Gold', 'Platinum'].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={user.role}
+                      onChange={(e) => onUpdateUser(user.uid, { role: e.target.value as any })}
+                      className={`rounded-lg border px-2 py-1 text-xs font-bold ${
+                        user.role === 'admin' ? 'border-orange-200 bg-orange-50 text-orange-600' : 'border-neutral-200 bg-white text-neutral-700'
+                      }`}
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
                     </select>
                   </td>
                   <td className="px-6 py-4">
@@ -224,6 +237,57 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                         <Trash2 size={18} />
                       </button>
                     </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Post Management */}
+      <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+        <div className="border-b border-neutral-100 p-6">
+          <h2 className="text-xl font-bold text-neutral-900">Recent Posts Moderation</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-neutral-50 text-xs font-bold uppercase tracking-widest text-neutral-400">
+              <tr>
+                <th className="px-6 py-4">Author</th>
+                <th className="px-6 py-4">Content</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {posts.slice(0, 10).map((post) => (
+                <tr key={post.id} className="hover:bg-neutral-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-bold text-neutral-900">{post.authorName}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="line-clamp-1 text-sm text-neutral-600">{post.content}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    {post.isBoosted && (
+                      <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-600 ring-1 ring-inset ring-orange-600/20">
+                        BOOSTED
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button 
+                      onClick={async () => {
+                        if (confirm('Delete this post?')) {
+                          await deleteDoc(doc(db, 'posts', post.id));
+                          setPosts(posts.filter(p => p.id !== post.id));
+                        }
+                      }}
+                      className="rounded-lg p-2 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </td>
                 </tr>
               ))}

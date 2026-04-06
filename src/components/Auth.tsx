@@ -4,7 +4,7 @@ import { APP_NAME } from '../constants';
 
 interface AuthProps {
   onLogin: (email: string, pass: string) => Promise<void>;
-  onSignup: (email: string, pass: string, name: string) => Promise<void>;
+  onSignup: (email: string, pass: string, name: string, gender: string) => Promise<void>;
   onGoogleLogin: () => Promise<void>;
   onResetPassword: (email: string) => Promise<void>;
 }
@@ -15,6 +15,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin, on
   const [password, setPassword] = React.useState('');
   const [firstName, setFirstName] = React.useState('');
   const [lastName, setLastName] = React.useState('');
+  const [gender, setGender] = React.useState('Male');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [message, setMessage] = React.useState('');
@@ -27,7 +28,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin, on
       if (isLogin) {
         await onLogin(email, password);
       } else {
-        await onSignup(email, password, `${firstName} ${lastName}`);
+        await onSignup(email, password, `${firstName} ${lastName}`, gender);
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');

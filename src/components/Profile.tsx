@@ -1,7 +1,17 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
+
+const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
+  switch (tier) {
+    case 'Bronze': return <Award size={size} className="text-orange-400" />;
+    case 'Silver': return <Medal size={size} className="text-neutral-400" />;
+    case 'Gold': return <Trophy size={size} className="text-yellow-500" />;
+    case 'Platinum': return <Crown size={size} className="text-indigo-400" />;
+    default: return <Shield size={size} className="text-neutral-400" />;
+  }
+};
 
 interface ProfileProps {
   user: UserType;
@@ -25,6 +35,9 @@ export const Profile: React.FC<ProfileProps> = ({
   const [isEditing, setIsEditing] = React.useState(false);
   const [editName, setEditName] = React.useState(user.displayName);
   const [editBio, setEditBio] = React.useState(user.bio || '');
+  const [editAge, setEditAge] = React.useState(user.age || '');
+  const [editCity, setEditCity] = React.useState(user.location?.city || '');
+  const [editCountry, setEditCountry] = React.useState(user.location?.country || '');
   const [loading, setLoading] = React.useState(false);
   const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
 
@@ -50,6 +63,11 @@ export const Profile: React.FC<ProfileProps> = ({
       await onUpdateProfile({
         displayName: editName,
         bio: editBio,
+        age: Number(editAge),
+        location: {
+          city: editCity,
+          country: editCountry
+        },
         photoURL: photoPreview || user.photoURL
       });
       setIsEditing(false);
@@ -85,7 +103,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-neutral-400">
+              <div className={`flex h-full w-full items-center justify-center ${user.gender === 'Female' ? 'bg-pink-50 text-pink-400' : 'bg-blue-50 text-blue-400'}`}>
                 <UserIcon size={80} />
               </div>
             )}
@@ -119,11 +137,14 @@ export const Profile: React.FC<ProfileProps> = ({
               <span>•</span>
               <span>{userPosts.length} Posts</span>
               <span>•</span>
-              <span className="text-orange-600">{user.tier} Tier</span>
+              <div className="flex items-center gap-1 text-orange-600">
+                <TierIcon tier={user.tier} size={14} />
+                <span>{user.tier}</span>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 flex gap-2 md:mb-4">
+          <div className="mt-6 flex flex-wrap justify-center gap-2 md:mb-4 md:justify-start">
             {canEdit ? (
               isEditing ? (
                 <>
@@ -142,7 +163,7 @@ export const Profile: React.FC<ProfileProps> = ({
                   </button>
                 </>
               ) : (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setIsEditing(true)}
                     className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
@@ -158,6 +179,32 @@ export const Profile: React.FC<ProfileProps> = ({
                       <WalletIcon size={18} />
                       Wallet
                     </button>
+                  )}
+                  {isAdmin && !isOwnProfile && (
+                    <>
+                      <button
+                        onClick={() => onUpdateProfile({ isVerified: !user.isVerified })}
+                        className={`flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                          user.isVerified 
+                            ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
+                            : 'bg-neutral-900 text-white hover:bg-black'
+                        }`}
+                      >
+                        <CheckCircle size={18} />
+                        {user.isVerified ? 'Unverify' : 'Verify User'}
+                      </button>
+                      <button
+                        onClick={() => onUpdateProfile({ role: user.role === 'admin' ? 'user' : 'admin' })}
+                        className={`flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                          user.role === 'admin' 
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        }`}
+                      >
+                        {user.role === 'admin' ? <ShieldAlert size={18} /> : <UserPlus size={18} />}
+                        {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                      </button>
+                    </>
                   )}
                 </div>
               )
@@ -195,14 +242,49 @@ export const Profile: React.FC<ProfileProps> = ({
                   <span>Works at <span className="font-bold text-neutral-900">STYN AFRICA</span></span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-neutral-600">
+                  <Calendar size={18} className="text-neutral-400" />
+                  <span>Age: <span className="font-bold text-neutral-900">{user.age || 'Not set'}</span></span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-neutral-600">
                   <MapPin size={18} className="text-neutral-400" />
-                  <span>Lives in <span className="font-bold text-neutral-900">Johannesburg, SA</span></span>
+                  <span>Lives in <span className="font-bold text-neutral-900">{user.location?.city || 'City'}, {user.location?.country || 'Country'}</span></span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-neutral-600">
                   <Calendar size={18} className="text-neutral-400" />
                   <span>Joined <span className="font-bold text-neutral-900">April 2026</span></span>
                 </div>
               </div>
+              {isEditing && (
+                <div className="mt-4 space-y-4 border-t border-neutral-100 pt-4">
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Age</label>
+                    <input 
+                      type="number" 
+                      value={editAge}
+                      onChange={(e) => setEditAge(e.target.value)}
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">City</label>
+                    <input 
+                      type="text" 
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Country</label>
+                    <input 
+                      type="text" 
+                      value={editCountry}
+                      onChange={(e) => setEditCountry(e.target.value)}
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Photos Grid */}

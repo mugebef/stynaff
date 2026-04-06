@@ -15,6 +15,7 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
   const [loading, setLoading] = React.useState(false);
   const [mediaFile, setMediaFile] = React.useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const now = new Date();
@@ -55,7 +56,26 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
   const handleCreateStatus = async () => {
     if (!user || !mediaFile) return;
     setLoading(true);
+    setError(null);
     try {
+      if (mediaFile.size > 2000000) {
+        throw new Error('File size too large. Please upload a file smaller than 2MB.');
+      }
+
+      const formData = new FormData();
+      formData.append('file', mediaFile);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!res.ok) {
+        throw new Error('Upload failed. Please try again.');
+      }
+
+      const data = await res.json();
+      const mediaUrl = data.url;
+
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
 
@@ -63,7 +83,7 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
         userId: user.uid,
         userName: user.displayName,
         userPhoto: user.photoURL || null,
-        mediaUrl: mediaPreview, // Simulated upload
+        mediaUrl: mediaUrl,
         mediaType: mediaFile.type.startsWith('image') ? 'image' : 'video',
         createdAt: serverTimestamp(),
         expiresAt: expiresAt
@@ -71,8 +91,9 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
       setIsModalOpen(false);
       setMediaFile(null);
       setMediaPreview(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || 'Something went wrong during upload.');
     } finally {
       setLoading(false);
     }
@@ -84,14 +105,14 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => { setIsModalOpen(true); setError(null); }}
         className="relative h-48 w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg ring-1 ring-neutral-200"
       >
         <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-50">
           {user?.photoURL ? (
             <img src={user.photoURL} alt="" className="h-full w-full object-cover brightness-75" />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-200 text-neutral-400">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white ${user?.gender === 'Female' ? 'bg-pink-400' : 'bg-blue-400'}`}>
               <User size={24} />
             </div>
           )}
@@ -151,17 +172,22 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-8 shadow-2xl"
+              className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
             >
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-neutral-900">Create Story</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-neutral-900">Create Story</h2>
                 <button onClick={() => setIsModalOpen(false)} className="text-neutral-400 hover:text-neutral-600">
-                  <X size={24} />
+                  <X size={20} />
                 </button>
               </div>
 
-              <div className="space-y-6">
-                <div className="relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200">
+              <div className="space-y-4">
+                {error && (
+                  <div className="rounded-xl bg-red-50 p-3 text-xs font-bold text-red-600">
+                    {error}
+                  </div>
+                )}
+                <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200">
                   {mediaPreview ? (
                     mediaFile?.type.startsWith('image') ? (
                       <img src={mediaPreview} alt="Preview" className="h-full w-full object-cover" />
@@ -170,17 +196,17 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
                     )
                   ) : (
                     <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 text-neutral-400 hover:bg-neutral-200 transition-all">
-                      <Camera size={48} />
-                      <span className="text-sm font-bold">Select Photo or Video</span>
+                      <Camera size={40} />
+                      <span className="text-xs font-bold">Select Photo or Video</span>
                       <input type="file" className="hidden" accept="image/*,video/*" onChange={handleMediaChange} />
                     </label>
                   )}
                   {mediaPreview && (
                     <button 
                       onClick={() => { setMediaFile(null); setMediaPreview(null); }}
-                      className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                      className="absolute right-3 top-3 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70"
                     >
-                      <X size={20} />
+                      <X size={16} />
                     </button>
                   )}
                 </div>
@@ -188,9 +214,9 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
                 <button 
                   onClick={handleCreateStatus}
                   disabled={loading || !mediaFile}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {loading ? <Loader2 className="animate-spin" size={20} /> : 'Share to Story'}
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : 'Share Story'}
                 </button>
               </div>
             </motion.div>
