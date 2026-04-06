@@ -15,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, act
 
   const menus = [
     { id: 'feed', label: 'Home', icon: <Globe size={20} /> },
+    { id: 'profile', label: 'Profile', icon: <User size={20} /> },
     { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={20} /> },
     { id: 'blockbuster', label: 'Blockbuster', icon: <Play size={20} /> },
@@ -39,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, act
             <button
               key={menu.id}
               onClick={() => onMenuClick(menu.id)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
                 activeMenu === menu.id
                   ? 'bg-orange-50 text-orange-600'
                   : 'text-neutral-600 hover:bg-neutral-100 hover:text-orange-600'
@@ -55,19 +56,22 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onMenuClick, act
         <div className="flex items-center gap-2 md:gap-4">
           {user ? (
             <>
-              <div className="flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1.5">
+              <div 
+                onClick={() => onMenuClick('profile')}
+                className="flex cursor-pointer items-center gap-2 rounded-full bg-neutral-100 px-3 py-1.5 hover:bg-neutral-200 transition-all"
+              >
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName} className="h-6 w-6 rounded-full" />
+                  <img src={user.photoURL} alt={user.displayName} className="h-6 w-6 rounded-full object-cover" />
                 ) : (
                   <User size={16} className="text-neutral-500" />
                 )}
-                <span className="text-sm font-semibold text-neutral-700 hidden sm:block">
-                  {user.displayName}
+                <span className="text-sm font-bold text-neutral-700 hidden sm:block">
+                  {user.displayName.split(' ')[0]}
                 </span>
               </div>
               <button
                 onClick={onLogout}
-                className="rounded-full p-2 text-neutral-500 hover:bg-neutral-100 hover:text-orange-600 transition-all"
+                className="rounded-full bg-red-50 p-2 text-red-500 hover:bg-red-100 transition-all"
                 title="Logout"
               >
                 <LogOut size={20} />

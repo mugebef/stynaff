@@ -7,23 +7,33 @@ interface SidebarProps {
   friendRequests: any[];
   onAcceptFriend: (uid: string) => void;
   onDeclineFriend: (uid: string) => void;
+  onProfileClick: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ user, friendRequests, onAcceptFriend, onDeclineFriend }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  user, 
+  friendRequests, 
+  onAcceptFriend, 
+  onDeclineFriend,
+  onProfileClick
+}) => {
   return (
     <div className="hidden w-80 flex-col gap-6 lg:flex">
       {/* Profile Card */}
-      <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200 transition-all hover:shadow-2xl">
-        <div className="h-24 w-full bg-gradient-to-r from-orange-600 to-orange-400"></div>
+      <div 
+        onClick={onProfileClick}
+        className="group cursor-pointer overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200 transition-all hover:shadow-2xl hover:ring-orange-600/20"
+      >
+        <div className="h-24 w-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all group-hover:scale-105"></div>
         <div className="relative -mt-12 flex flex-col items-center px-6 pb-6">
-          <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-neutral-100 text-neutral-500 shadow-lg">
+          <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-neutral-100 text-neutral-500 shadow-lg transition-transform group-hover:scale-105">
             {user.photoURL ? (
               <img src={user.photoURL} alt={user.displayName} className="h-full w-full rounded-full object-cover" />
             ) : (
               <User size={48} />
             )}
           </div>
-          <h3 className="text-xl font-bold text-neutral-900">{user.displayName}</h3>
+          <h3 className="text-xl font-bold text-neutral-900 group-hover:text-orange-600 transition-colors">{user.displayName}</h3>
           <p className="mt-1 text-sm text-neutral-500">{user.email}</p>
           
           {user.role === 'admin' && (
