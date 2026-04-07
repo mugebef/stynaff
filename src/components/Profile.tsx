@@ -25,6 +25,10 @@ interface ProfileProps {
   onComment: (postId: string, content: string) => void;
   onBoost?: (postId: string, price: number, duration: number) => void;
   onSendFriendRequest: (targetUid: string) => void;
+  onAcceptFriend: (uid: string) => void;
+  onDeclineFriend: (uid: string) => void;
+  onCancelFriendRequest: (uid: string) => void;
+  onUnfriend: (uid: string) => void;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ 
@@ -37,7 +41,11 @@ export const Profile: React.FC<ProfileProps> = ({
   onDelete,
   onComment,
   onBoost,
-  onSendFriendRequest
+  onSendFriendRequest,
+  onAcceptFriend,
+  onDeclineFriend,
+  onCancelFriendRequest,
+  onUnfriend
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'Account' | 'Profile' | 'Privacy' | 'Security' | 'Membership' | 'Extra'>('Account');
@@ -214,15 +222,37 @@ export const Profile: React.FC<ProfileProps> = ({
             {!isOwnProfile && !isEditing && (
               <div className="flex flex-wrap gap-2">
                 {currentUser.friends?.includes(user.uid) ? (
-                  <button className="flex items-center gap-2 rounded-xl bg-green-50 px-6 py-2.5 text-sm font-bold text-green-600 ring-1 ring-inset ring-green-600/20">
+                  <button 
+                    onClick={() => onUnfriend(user.uid)}
+                    className="flex items-center gap-2 rounded-xl bg-green-50 px-6 py-2.5 text-sm font-bold text-green-600 ring-1 ring-inset ring-green-600/20 hover:bg-red-50 hover:text-red-600 hover:ring-red-600/20 transition-all"
+                  >
                     <CheckCircle size={18} />
                     Friends
                   </button>
-                ) : user.friendRequests?.includes(currentUser.uid) ? (
-                  <button className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-500">
+                ) : currentUser.sentRequests?.includes(user.uid) ? (
+                  <button 
+                    onClick={() => onCancelFriendRequest(user.uid)}
+                    className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-all"
+                  >
                     <Loader2 className="animate-spin" size={18} />
-                    Request Sent
+                    Cancel Request
                   </button>
+                ) : currentUser.friendRequests?.includes(user.uid) ? (
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => onAcceptFriend(user.uid)}
+                      className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                    >
+                      <UserPlus size={18} />
+                      Accept
+                    </button>
+                    <button 
+                      onClick={() => onDeclineFriend(user.uid)}
+                      className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
+                    >
+                      Decline
+                    </button>
+                  </div>
                 ) : (
                   <button 
                     onClick={() => onSendFriendRequest(user.uid)}

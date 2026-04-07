@@ -21,6 +21,7 @@ import { Status } from './components/Status';
 import { Footer } from './components/Footer';
 import { Upgrade } from './components/Upgrade';
 import { Marketplace, Jobs, Events } from './components/Marketplace';
+import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification, Page, Group } from './types';
 import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
@@ -193,6 +194,7 @@ export default function App() {
               verificationRequested: false,
               friends: [],
               friendRequests: [],
+              sentRequests: [],
               followers: [],
               following: [],
               swipedLeft: [],
@@ -317,10 +319,24 @@ export default function App() {
         ...doc.data()
       })) as Post[];
       
-      // Algorithm: Verified users first, then most liked
-      const sortedPosts = [...postsData].sort((a, b) => {
+      // Algorithm: Filter to self/friends/sponsored, then sort
+      const filteredPosts = postsData.filter(p => 
+        p.authorId === user.uid || 
+        user.friends?.includes(p.authorId) || 
+        p.isSponsored || 
+        p.isBoosted
+      );
+
+      const sortedPosts = [...filteredPosts].sort((a, b) => {
+        // Boosted/Sponsored always at top
+        const isABoosted = a.isBoosted || a.isSponsored;
+        const isBBoosted = b.isBoosted || b.isSponsored;
+        if (isABoosted && !isBBoosted) return -1;
+        if (!isABoosted && isBBoosted) return 1;
+
         if (a.authorVerified && !b.authorVerified) return -1;
         if (!a.authorVerified && b.authorVerified) return 1;
+        
         return (b.likes?.length || 0) - (a.likes?.length || 0);
       });
       
@@ -390,6 +406,7 @@ export default function App() {
       verificationRequested: false,
       friends: [],
       friendRequests: [],
+      sentRequests: [],
       followers: [],
       following: [],
       joinedGroups: [],
@@ -568,9 +585,15 @@ export default function App() {
   const handleSendFriendRequest = async (targetUid: string) => {
     if (!user) return;
     try {
+      // Update receiver's incoming requests
       await updateDoc(doc(db, 'users', targetUid), {
         friendRequests: arrayUnion(user.uid)
       });
+      // Update sender's outgoing requests
+      await updateDoc(doc(db, 'users', user.uid), {
+        sentRequests: arrayUnion(targetUid)
+      });
+      // Notify
       await addDoc(collection(db, 'notifications'), {
         type: 'friend_request',
         fromId: user.uid,
@@ -580,6 +603,37 @@ export default function App() {
         createdAt: serverTimestamp()
       });
       alert('Friend request sent!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancelFriendRequest = async (targetUid: string) => {
+    if (!user) return;
+    try {
+      // Remove from receiver's incoming requests
+      await updateDoc(doc(db, 'users', targetUid), {
+        friendRequests: arrayRemove(user.uid)
+      });
+      // Remove from sender's outgoing requests
+      await updateDoc(doc(db, 'users', user.uid), {
+        sentRequests: arrayRemove(targetUid)
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnfriend = async (friendId: string) => {
+    if (!user) return;
+    try {
+      // Remove from both users' friends lists
+      await updateDoc(doc(db, 'users', user.uid), {
+        friends: arrayRemove(friendId)
+      });
+      await updateDoc(doc(db, 'users', friendId), {
+        friends: arrayRemove(user.uid)
+      });
     } catch (err) {
       console.error(err);
     }
@@ -604,7 +658,8 @@ export default function App() {
         friendRequests: arrayRemove(fromId)
       });
       await updateDoc(doc(db, 'users', fromId), {
-        friends: arrayUnion(user.uid)
+        friends: arrayUnion(user.uid),
+        sentRequests: arrayRemove(user.uid)
       });
 
       // Notify
@@ -623,9 +678,16 @@ export default function App() {
 
   const handleDeclineFriend = async (fromId: string) => {
     if (!user) return;
-    await updateDoc(doc(db, 'users', user.uid), {
-      friendRequests: arrayRemove(fromId)
-    });
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        friendRequests: arrayRemove(fromId)
+      });
+      await updateDoc(doc(db, 'users', fromId), {
+        sentRequests: arrayRemove(user.uid)
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleUpdateUserAdmin = async (uid: string, updates: Partial<UserType>) => {
@@ -713,6 +775,27 @@ export default function App() {
             onComment={handleComment}
             onBoost={handleBoost}
             onSendFriendRequest={handleSendFriendRequest}
+            onAcceptFriend={handleAcceptFriend}
+            onDeclineFriend={handleDeclineFriend}
+            onCancelFriendRequest={handleCancelFriendRequest}
+            onUnfriend={handleUnfriend}
+          />
+        ) : activeMenu === 'friends' ? (
+          <FriendsPage 
+            currentUser={user}
+            users={users}
+            onAcceptFriend={handleAcceptFriend}
+            onDeclineFriend={handleDeclineFriend}
+            onCancelFriendRequest={handleCancelFriendRequest}
+            onSendFriendRequest={handleSendFriendRequest}
+            onUnfriend={handleUnfriend}
+            onViewProfile={(uid) => {
+              const target = users.find(u => u.uid === uid);
+              if (target) {
+                setProfileUser(target);
+                setActiveMenu('profile');
+              }
+            }}
           />
         ) : activeMenu === 'admin' && user?.role === 'admin' ? (
           <AdminDashboard currentUser={user} onUpdateUser={handleUpdateUserAdmin} />

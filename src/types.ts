@@ -22,7 +22,8 @@ export interface User {
   interests?: string[];
   mood?: string;
   friends: string[]; // Array of UIDs
-  friendRequests: string[]; // Array of UIDs
+  friendRequests: string[]; // Array of UIDs (Incoming)
+  sentRequests: string[]; // Array of UIDs (Outgoing)
   followers: string[]; // Array of UIDs
   following: string[]; // Array of UIDs
   swipedLeft: string[]; // Array of UIDs
