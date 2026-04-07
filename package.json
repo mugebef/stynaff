@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "PORT=3001 tsx server.ts",
+    "dev": "tsx server.ts",
     "build": "vite build",
-    "deploy": "npm run build && pm2 restart stynaff",
-    "start": "NODE_ENV=production PORT=3001 tsx server.ts",
+    "deploy": "npm run build && pm2 restart ecosystem.config.js --env production",
+    "start": "NODE_ENV=production tsx server.ts",
+    "update": "git pull && npm install && npm run deploy",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"

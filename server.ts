@@ -32,7 +32,7 @@ const upload = multer({
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3001;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
   app.use("/uploads", express.static(uploadsDir));
@@ -84,8 +84,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "127.0.0.1", () => {
-    console.log(`>>> Styn Africa Server running at http://127.0.0.1:${PORT}`);
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
     console.log(`>>> Domain: ray.styni.com`);
   });
 }
