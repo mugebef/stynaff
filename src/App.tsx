@@ -502,11 +502,10 @@ export default function App() {
     }
   };
 
-  const handleBoost = async (postId: string) => {
+  const handleBoost = async (postId: string, price: number, duration: number) => {
     if (!user) return;
-    const boostPrice = appConfig?.boostPricePerDay || 5.00;
-    if ((user.walletBalance || 0) < boostPrice) {
-      alert(`Insufficient funds. Boosting costs $${boostPrice.toFixed(2)}.`);
+    if ((user.walletBalance || 0) < price) {
+      alert(`Insufficient funds. Boosting costs $${price.toFixed(2)}.`);
       setActiveMenu('wallet');
       return;
     }
@@ -514,14 +513,16 @@ export default function App() {
     try {
       await updateDoc(doc(db, 'posts', postId), {
         isBoosted: true,
-        boostBudget: boostPrice
+        boostBudget: price,
+        boostDuration: duration,
+        boostedAt: serverTimestamp()
       });
       await updateDoc(doc(db, 'users', user.uid), {
-        walletBalance: (user.walletBalance || 0) - boostPrice
+        walletBalance: (user.walletBalance || 0) - price
       });
       await addDoc(collection(db, 'transactions'), {
         userId: user.uid,
-        amount: boostPrice,
+        amount: price,
         type: 'boost_post',
         status: 'completed',
         method: 'wallet',
@@ -704,11 +705,13 @@ export default function App() {
           <Profile 
             user={profileUser}
             currentUser={user}
+            users={users}
             posts={posts}
             onUpdateProfile={(updates) => handleUpdateProfile(updates, profileUser.uid)}
             onLike={handleLike}
             onDelete={handleDelete}
             onComment={handleComment}
+            onBoost={handleBoost}
             onSendFriendRequest={handleSendFriendRequest}
           />
         ) : activeMenu === 'admin' && user?.role === 'admin' ? (
@@ -734,9 +737,11 @@ export default function App() {
             {/* Left Sidebar - Profile & Requests */}
             <Sidebar 
               user={user} 
+              users={users}
               friendRequests={user?.friendRequests || []} 
               onAcceptFriend={handleAcceptFriend} 
               onDeclineFriend={handleDeclineFriend} 
+              onSendFriendRequest={handleSendFriendRequest}
               onProfileClick={() => {
                 setActiveMenu('profile');
                 setProfileUser(user);
@@ -759,6 +764,7 @@ export default function App() {
                     <Feed 
                       posts={posts} 
                       currentUser={user} 
+                      users={users}
                       onPost={handlePost} 
                       onLike={handleLike} 
                       onDelete={handleDelete} 

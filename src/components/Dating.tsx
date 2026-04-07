@@ -46,6 +46,16 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
           .filter(u => {
             const ageMatch = !currentUser.age || !u.age || Math.abs(u.age - currentUser.age) <= 15;
             return ageMatch;
+          })
+          .filter(u => {
+            // Match by city and country if set
+            if (currentUser.location?.country && u.location?.country) {
+              if (currentUser.location.country !== u.location.country) return false;
+            }
+            if (currentUser.location?.city && u.location?.city) {
+              if (currentUser.location.city !== u.location.city) return false;
+            }
+            return true;
           });
         setMatches(potentialMatches);
       } catch (err) {

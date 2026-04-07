@@ -18,6 +18,7 @@ export interface User {
   age?: number;
   gender?: 'Male' | 'Female' | 'Other';
   interestedIn?: 'Male' | 'Female' | 'Everyone';
+  relationshipStatus?: 'Single' | 'In a relationship' | 'Married' | 'Engaged' | 'It\'s complicated' | 'Separated' | 'Divorced' | 'Widowed';
   interests?: string[];
   mood?: string;
   friends: string[]; // Array of UIDs
@@ -37,6 +38,12 @@ export interface User {
   lastSeen?: any;
   typingTo?: string | null;
   anonymousMode?: boolean;
+  banned?: boolean;
+  banMessage?: string;
+  isActivated?: boolean;
+  gettingStarted?: boolean;
+  isDemo?: boolean;
+  emailVerified?: boolean;
 }
 
 export interface Post {

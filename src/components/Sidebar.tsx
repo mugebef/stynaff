@@ -15,21 +15,28 @@ const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
 
 interface SidebarProps {
   user: UserType | null;
+  users: UserType[];
   friendRequests: any[];
   onAcceptFriend: (uid: string) => void;
   onDeclineFriend: (uid: string) => void;
+  onSendFriendRequest: (uid: string) => void;
   onProfileClick: () => void;
   onMenuClick: (menu: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   user, 
+  users,
   friendRequests, 
   onAcceptFriend, 
   onDeclineFriend, 
+  onSendFriendRequest,
   onProfileClick,
   onMenuClick
 }) => {
+  const suggestedFriends = users
+    .filter(u => u.uid !== user?.uid && !user?.friends?.includes(u.uid) && !user?.friendRequests?.includes(u.uid))
+    .slice(0, 3);
   const menuItems = [
     { id: 'feed', label: 'News Feed', icon: <Globe size={20} className="text-blue-500" /> },
     { id: 'reels', label: 'Reels', icon: <Video size={20} className="text-pink-500" /> },
@@ -112,6 +119,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
         <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-indigo-400/20 blur-3xl"></div>
+      </div>
+
+      {/* Suggested Friends */}
+      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-sm font-bold uppercase tracking-widest text-neutral-900">Suggested Friends</h4>
+        </div>
+        <div className="space-y-4">
+          {suggestedFriends.map((sUser) => (
+            <div key={sUser.uid} className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-100 ring-2 ring-orange-100">
+                  {sUser.photoURL ? (
+                    <img src={sUser.photoURL} alt={sUser.displayName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                      <User size={20} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="truncate text-xs font-bold text-neutral-900">{sUser.displayName}</span>
+                  <span className="text-[10px] text-neutral-500">{sUser.location?.city || 'Africa'}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => onSendFriendRequest(sUser.uid)}
+                className="rounded-full bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-600 hover:bg-orange-100 transition-all active:scale-95"
+              >
+                Connect
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Friend Requests */}

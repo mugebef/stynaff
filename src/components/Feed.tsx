@@ -7,15 +7,16 @@ import { motion } from 'framer-motion';
 interface FeedProps {
   posts: Post[];
   currentUser: any;
+  users: any[];
   onPost: (content: string, mediaFile?: File) => Promise<void>;
   onLike: (postId: string) => void;
   onDelete: (postId: string) => void;
   onComment: (postId: string, content: string) => void;
-  onBoost?: (postId: string) => void;
+  onBoost?: (postId: string, price: number, duration: number) => void;
   ads?: any[];
 }
 
-export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, onDelete, onComment, onBoost, ads = [] }) => {
+export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, onLike, onDelete, onComment, onBoost, ads = [] }) => {
   const [content, setContent] = React.useState('');
   const [mediaFile, setMediaFile] = React.useState<File | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -113,22 +114,53 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
       )}
 
       {/* Create Post */}
-      <div className="mb-8 rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
-        <div className="flex gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 shadow-inner">
+      <div className="mb-8 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm ring-1 ring-neutral-200">
+        <div className="flex gap-3">
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-100 shadow-inner">
             {currentUser?.photoURL ? (
-              <img src={currentUser.photoURL} alt={currentUser.displayName} className="h-full w-full rounded-full object-cover" referrerPolicy="no-referrer" />
+              <img src={currentUser.photoURL} alt={currentUser.displayName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             ) : (
-              <User size={24} />
+              <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                <User size={20} />
+              </div>
             )}
           </div>
-          <form onSubmit={handleSubmit} className="flex-1 space-y-4">
+          <div className="flex-1">
+            <div 
+              onClick={() => {}} // Could open a full modal if needed
+              className="flex h-10 w-full cursor-pointer items-center rounded-full bg-neutral-100 px-4 text-sm text-neutral-500 hover:bg-neutral-200 transition-all"
+            >
+              What's on your mind, {currentUser?.displayName?.split(' ')[0]}?
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-3 flex items-center justify-around border-t border-neutral-100 pt-3">
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-all">
+            <Image size={20} className="text-green-500" />
+            <span>Photo/video</span>
+            <input type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaChange} />
+          </label>
+          <button className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-all">
+            <Video size={20} className="text-pink-500" />
+            <span>Reel</span>
+          </button>
+          <button className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-all">
+            <Video size={20} className="text-red-500" />
+            <span>Live video</span>
+          </button>
+        </div>
+
+        {/* Hidden Form for actual submission if media is selected or user starts typing */}
+        {(content || mediaFile) && (
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4 border-t border-neutral-100 pt-4">
             <textarea
+              autoFocus
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={`What's on your mind, ${currentUser?.displayName?.split(' ')[0]}?`}
-              className="w-full resize-none border-none bg-transparent text-lg placeholder-neutral-400 focus:outline-none focus:ring-0"
-              rows={2}
+              placeholder="Tell us more..."
+              className="w-full resize-none border-none bg-transparent text-sm placeholder-neutral-400 focus:outline-none focus:ring-0"
+              rows={3}
             />
             
             {mediaPreview && (
@@ -139,6 +171,7 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
                   <video src={mediaPreview} className="h-full w-full object-cover" />
                 )}
                 <button
+                  type="button"
                   onClick={() => { setMediaFile(null); setMediaPreview(null); }}
                   className="absolute right-3 top-3 rounded-full bg-black/50 p-2 text-white backdrop-blur-md hover:bg-black/70 transition-all"
                 >
@@ -147,29 +180,17 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
               </div>
             )}
 
-            <div className="flex items-center justify-between border-t border-neutral-100 pt-4">
-              <div className="flex gap-1">
-                <label className="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition-all">
-                  <Image size={20} className="text-green-500" />
-                  <span className="hidden sm:inline">Photo</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleMediaChange} />
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition-all">
-                  <Video size={20} className="text-blue-500" />
-                  <span className="hidden sm:inline">Video</span>
-                  <input type="file" accept="video/*" className="hidden" onChange={handleMediaChange} />
-                </label>
-              </div>
+            <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={loading || (!content.trim() && !mediaFile)}
-                className="flex items-center gap-2 rounded-full bg-orange-600 px-8 py-2.5 text-sm font-bold text-white shadow-xl shadow-orange-600/20 hover:bg-orange-700 disabled:opacity-50 active:scale-95 transition-all"
+                className="flex items-center gap-2 rounded-full bg-orange-600 px-8 py-2 text-sm font-bold text-white shadow-lg shadow-orange-600/20 hover:bg-orange-700 disabled:opacity-50 active:scale-95 transition-all"
               >
-                {loading ? <Loader2 className="animate-spin" size={18} /> : 'Post Now'}
+                {loading ? <Loader2 className="animate-spin" size={18} /> : 'Post'}
               </button>
             </div>
           </form>
-        </div>
+        )}
       </div>
 
       {/* Trending Section (Optional UI element) */}
@@ -194,6 +215,7 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
               key={post.id}
               post={post}
               currentUser={currentUser}
+              users={users}
               onLike={onLike}
               onDelete={onDelete}
               onComment={onComment}
