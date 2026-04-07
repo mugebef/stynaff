@@ -12,9 +12,10 @@ interface FeedProps {
   onDelete: (postId: string) => void;
   onComment: (postId: string, content: string) => void;
   onBoost?: (postId: string) => void;
+  ads?: any[];
 }
 
-export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, onDelete, onComment, onBoost }) => {
+export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, onDelete, onComment, onBoost, ads = [] }) => {
   const [content, setContent] = React.useState('');
   const [mediaFile, setMediaFile] = React.useState<File | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -51,32 +52,65 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       {/* Sponsored Section */}
-      <div className="mb-8 rounded-[2rem] border border-neutral-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-xl ring-1 ring-neutral-200">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg shadow-orange-100">
-              <Sparkles size={16} />
+      {ads.length > 0 ? (
+        ads.map((ad) => (
+          <div key={ad.id} className="mb-8 rounded-[2rem] border border-neutral-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-xl ring-1 ring-neutral-200">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg shadow-orange-100">
+                  <Sparkles size={16} />
+                </div>
+                <span className="text-sm font-black uppercase tracking-widest text-neutral-900">Sponsored Content</span>
+              </div>
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Ad</span>
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-neutral-900">Sponsored Content</span>
+            <div className="flex gap-4">
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-neutral-100 shadow-inner">
+                <img src={ad.imageUrl} alt={ad.title} className="h-full w-full object-cover" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h4 className="text-sm font-bold text-neutral-900">{ad.title}</h4>
+                <p className="text-xs leading-relaxed text-neutral-500">{ad.description}</p>
+                <a 
+                  href={ad.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-full bg-orange-600 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95"
+                >
+                  Learn More
+                </a>
+              </div>
+            </div>
           </div>
-          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Ad</span>
+        ))
+      ) : (
+        <div className="mb-8 rounded-[2rem] border border-neutral-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-xl ring-1 ring-neutral-200">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg shadow-orange-100">
+                <Sparkles size={16} />
+              </div>
+              <span className="text-sm font-black uppercase tracking-widest text-neutral-900">Sponsored Content</span>
+            </div>
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Ad</span>
+          </div>
+          <div className="flex gap-4">
+            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-neutral-100 shadow-inner">
+              <img src="https://picsum.photos/seed/ad/200/200" alt="Ad" className="h-full w-full object-cover" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h4 className="text-sm font-bold text-neutral-900">Upgrade to STYN Platinum Today!</h4>
+              <p className="text-xs leading-relaxed text-neutral-500">Get verified, boost your posts, and reach millions across Africa. Limited time offer: 50% off your first month.</p>
+              <button 
+                onClick={() => onBoost?.('upgrade')}
+                className="rounded-full bg-orange-600 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95"
+              >
+                Learn More
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-neutral-100 shadow-inner">
-            <img src="https://picsum.photos/seed/ad/200/200" alt="Ad" className="h-full w-full object-cover" />
-          </div>
-          <div className="flex-1 space-y-2">
-            <h4 className="text-sm font-bold text-neutral-900">Upgrade to STYN Platinum Today!</h4>
-            <p className="text-xs leading-relaxed text-neutral-500">Get verified, boost your posts, and reach millions across Africa. Limited time offer: 50% off your first month.</p>
-            <button 
-              onClick={() => onBoost?.('upgrade')}
-              className="rounded-full bg-orange-600 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95"
-            >
-              Learn More
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Create Post */}
       <div className="mb-8 rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">

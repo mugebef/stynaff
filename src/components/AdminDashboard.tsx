@@ -1,8 +1,18 @@
 import React from 'react';
-import { Users, FileText, CheckCircle, TrendingUp, DollarSign, Award, Edit, Trash2, Search, Settings, Zap } from 'lucide-react';
+import { Users, FileText, CheckCircle, TrendingUp, DollarSign, Award, Edit, Trash2, Search, Settings, Zap, Megaphone, Plus, X } from 'lucide-react';
 import { User, Post, Transaction } from '../types';
 import { db } from '../firebase';
-import { collection, query, getDocs, updateDoc, doc, deleteDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, query, getDocs, updateDoc, doc, deleteDoc, onSnapshot, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+
+interface SponsoredAd {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  link: string;
+  active: boolean;
+  createdAt: any;
+}
 
 interface AdminDashboardProps {
   currentUser: User;
@@ -12,10 +22,14 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onUpdateUser }) => {
   const [users, setUsers] = React.useState<User[]>([]);
   const [posts, setPosts] = React.useState<Post[]>([]);
+  const [ads, setAds] = React.useState<SponsoredAd[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [appConfig, setAppConfig] = React.useState<any>(null);
   const [isSavingConfig, setIsSavingConfig] = React.useState(false);
+  
+  const [isAdModalOpen, setIsAdModalOpen] = React.useState(false);
+  const [newAd, setNewAd] = React.useState({ title: '', description: '', imageUrl: '', link: '' });
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -36,8 +50,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
     const unsubConfig = onSnapshot(doc(db, 'appConfig', 'main'), (snap) => {
       if (snap.exists()) setAppConfig(snap.data());
     });
-    return () => unsubConfig();
+
+    const unsubAds = onSnapshot(collection(db, 'sponsoredContent'), (snap) => {
+      setAds(snap.docs.map(d => ({ id: d.id, ...d.data() } as SponsoredAd)));
+    });
+
+    return () => {
+      unsubConfig();
+      unsubAds();
+    };
   }, []);
+
+  const handleCreateAd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'sponsoredContent'), {
+        ...newAd,
+        active: true,
+        createdAt: serverTimestamp()
+      });
+      setIsAdModalOpen(false);
+      setNewAd({ title: '', description: '', imageUrl: '', link: '' });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleAdStatus = async (adId: string, currentStatus: boolean) => {
+    await updateDoc(doc(db, 'sponsoredContent', adId), { active: !currentStatus });
+  };
+
+  const deleteAd = async (adId: string) => {
+    if (confirm('Delete this ad?')) {
+      await deleteDoc(doc(db, 'sponsoredContent', adId));
+    }
+  };
 
   const handleUpdateConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +176,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
               />
             </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Points per Post</label>
+              <input 
+                type="number" 
+                value={appConfig.pointsPerPost || 10}
+                onChange={(e) => setAppConfig({ ...appConfig, pointsPerPost: parseInt(e.target.value) })}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Points per Like</label>
+              <input 
+                type="number" 
+                value={appConfig.pointsPerLike || 1}
+                onChange={(e) => setAppConfig({ ...appConfig, pointsPerLike: parseInt(e.target.value) })}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Premium Monthly Price ($)</label>
+              <input 
+                type="number" 
+                step="0.01"
+                value={appConfig.premiumMonthlyPrice || 9.99}
+                onChange={(e) => setAppConfig({ ...appConfig, premiumMonthlyPrice: parseFloat(e.target.value) })}
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+              />
+            </div>
             <div className="md:col-span-3">
               <button 
                 type="submit"
@@ -208,19 +283,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {user.isVerified ? (
-                        <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 ring-1 ring-inset ring-blue-600/20">
-                          <CheckCircle size={10} /> VERIFIED
+                      <button 
+                        onClick={() => onUpdateUser(user.uid, { isVerified: !user.isVerified, verificationRequested: false })}
+                        className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ring-1 ring-inset transition-all ${
+                          user.isVerified 
+                            ? 'bg-blue-50 text-blue-600 ring-blue-600/20' 
+                            : 'bg-neutral-50 text-neutral-400 ring-neutral-200 hover:bg-blue-50 hover:text-blue-600 hover:ring-blue-600/20'
+                        }`}
+                      >
+                        <CheckCircle size={10} /> {user.isVerified ? 'VERIFIED' : 'UNVERIFIED'}
+                      </button>
+                      {user.verificationRequested && !user.isVerified && (
+                        <span className="animate-pulse rounded-full bg-orange-600 px-2 py-1 text-[10px] font-bold text-white">
+                          PENDING
                         </span>
-                      ) : user.verificationRequested ? (
-                        <button 
-                          onClick={() => onUpdateUser(user.uid, { isVerified: true, verificationRequested: false })}
-                          className="rounded-full bg-orange-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-orange-700"
-                        >
-                          APPROVE
-                        </button>
-                      ) : (
-                        <span className="text-[10px] font-bold text-neutral-400">UNVERIFIED</span>
                       )}
                     </div>
                   </td>
@@ -268,6 +344,123 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
           </table>
         </div>
       </div>
+
+      {/* Ads & Sponsored Content Management */}
+      <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+        <div className="border-b border-neutral-100 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                <Megaphone size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-neutral-900">Ads & Sponsored Content</h2>
+            </div>
+            <button 
+              onClick={() => setIsAdModalOpen(true)}
+              className="flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+            >
+              <Plus size={18} />
+              Create New Ad
+            </button>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {ads.map((ad) => (
+              <div key={ad.id} className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-4 transition-all hover:shadow-md">
+                <div className="mb-4 aspect-video w-full overflow-hidden rounded-xl bg-neutral-200">
+                  <img src={ad.imageUrl} alt={ad.title} className="h-full w-full object-cover" />
+                </div>
+                <h3 className="mb-1 text-sm font-bold text-neutral-900">{ad.title}</h3>
+                <p className="mb-4 line-clamp-2 text-xs text-neutral-500">{ad.description}</p>
+                <div className="flex items-center justify-between">
+                  <button 
+                    onClick={() => toggleAdStatus(ad.id, ad.active)}
+                    className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      ad.active ? 'bg-green-100 text-green-600' : 'bg-neutral-200 text-neutral-500'
+                    }`}
+                  >
+                    {ad.active ? 'Active' : 'Inactive'}
+                  </button>
+                  <button 
+                    onClick={() => deleteAd(ad.id)}
+                    className="rounded-full bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Ad Creation Modal */}
+      {isAdModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm" onClick={() => setIsAdModalOpen(false)} />
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-neutral-900">Create Sponsored Ad</h2>
+              <button onClick={() => setIsAdModalOpen(false)} className="text-neutral-400 hover:text-neutral-600">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateAd} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Ad Title</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newAd.title}
+                  onChange={(e) => setNewAd({ ...newAd, title: e.target.value })}
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  placeholder="e.g. Upgrade to Platinum"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Description</label>
+                <textarea 
+                  required
+                  value={newAd.description}
+                  onChange={(e) => setNewAd({ ...newAd, description: e.target.value })}
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  rows={3}
+                  placeholder="Describe your ad..."
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Image URL</label>
+                <input 
+                  type="url" 
+                  required
+                  value={newAd.imageUrl}
+                  onChange={(e) => setNewAd({ ...newAd, imageUrl: e.target.value })}
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Destination Link</label>
+                <input 
+                  type="url" 
+                  required
+                  value={newAd.link}
+                  onChange={(e) => setNewAd({ ...newAd, link: e.target.value })}
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  placeholder="https://example.com"
+                />
+              </div>
+              <button 
+                type="submit"
+                className="w-full rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+              >
+                Create Ad
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Post Management */}
       <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">

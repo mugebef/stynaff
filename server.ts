@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import fs from "fs";
+import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,19 +16,11 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Configure multer for local storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + "-" + file.originalname);
-  },
-});
+const storage = multer.memoryStorage(); // Use memory storage for sharp processing
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for raw upload
 });
 
 async function startServer() {
@@ -47,12 +40,33 @@ async function startServer() {
     });
   });
 
-  app.post("/api/upload", upload.single("file"), (req, res) => {
+  app.post("/api/upload", upload.single("file"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
-    const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const filename = uniqueSuffix + "-" + req.file.originalname.replace(/\s+/g, '-');
+    const outputPath = path.join(uploadsDir, filename);
+
+    try {
+      if (req.file.mimetype.startsWith("image/")) {
+        // Compress image using sharp
+        await sharp(req.file.buffer)
+          .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 80 })
+          .toFile(outputPath);
+      } else {
+        // For videos or other files, just save as is
+        fs.writeFileSync(outputPath, req.file.buffer);
+      }
+
+      const fileUrl = `/uploads/${filename}`;
+      res.json({ url: fileUrl });
+    } catch (err) {
+      console.error("Upload error:", err);
+      res.status(500).json({ error: "Failed to process upload" });
+    }
   });
 
   // 2. Vite Integration for Development

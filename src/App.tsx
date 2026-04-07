@@ -119,6 +119,7 @@ export default function App() {
   const [groups, setGroups] = React.useState<Group[]>([]);
   const [appConfig, setAppConfig] = React.useState<any>(null);
   const [users, setUsers] = React.useState<UserType[]>([]);
+  const [ads, setAds] = React.useState<any[]>([]);
 
   const [selectedChatUser, setSelectedChatUser] = React.useState<UserType | null>(null);
 
@@ -131,9 +132,22 @@ export default function App() {
         setSelectedChatUser(e.detail.targetUser);
       }
     };
+    const handleViewProfile = (e: any) => {
+      const targetUid = e.detail;
+      const targetUser = users.find(u => u.uid === targetUid);
+      if (targetUser) {
+        setProfileUser(targetUser);
+        setActiveMenu('profile');
+      }
+    };
+
     window.addEventListener('changeMenu', handleMenuChange);
-    return () => window.removeEventListener('changeMenu', handleMenuChange);
-  }, [user]);
+    window.addEventListener('viewProfile', handleViewProfile);
+    return () => {
+      window.removeEventListener('changeMenu', handleMenuChange);
+      window.removeEventListener('viewProfile', handleViewProfile);
+    };
+  }, [user, users]);
 
   // Test connection to Firestore
   React.useEffect(() => {
@@ -234,6 +248,16 @@ export default function App() {
     const q = query(collection(db, 'users'));
     const unsubscribe = onSnapshot(q, (snap) => {
       setUsers(snap.docs.map(d => d.data() as UserType));
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  // Ads Listener
+  React.useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'sponsoredContent'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setAds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return () => unsubscribe();
   }, [user]);
@@ -465,8 +489,9 @@ export default function App() {
       });
 
       // Award points for posting
+      const pointsAward = appConfig?.pointsPerPost || 10;
       await updateDoc(doc(db, 'users', user.uid), {
-        points: (user.points || 0) + 10
+        points: (user.points || 0) + pointsAward
       });
       
       console.log('Post created successfully');
@@ -519,15 +544,53 @@ export default function App() {
       likes: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
     });
 
-    if (!isLiked && post.authorId !== user.uid) {
+    if (!isLiked) {
+      // Award points for liking
+      const pointsAward = appConfig?.pointsPerLike || 1;
+      await updateDoc(doc(db, 'users', user.uid), {
+        points: (user.points || 0) + pointsAward
+      });
+
+      if (post.authorId !== user.uid) {
+        await addDoc(collection(db, 'notifications'), {
+          type: 'like',
+          fromId: user.uid,
+          fromName: user.displayName,
+          toId: post.authorId,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
+    }
+  };
+
+  const handleSendFriendRequest = async (targetUid: string) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'users', targetUid), {
+        friendRequests: arrayUnion(user.uid)
+      });
       await addDoc(collection(db, 'notifications'), {
-        type: 'like',
+        type: 'friend_request',
         fromId: user.uid,
         fromName: user.displayName,
-        toId: post.authorId,
+        toId: targetUid,
         read: false,
         createdAt: serverTimestamp()
       });
+      alert('Friend request sent!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMarkNotificationRead = async (notificationId: string) => {
+    try {
+      await updateDoc(doc(db, 'notifications', notificationId), {
+        read: true
+      });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -632,6 +695,8 @@ export default function App() {
         }} 
         activeMenu={activeMenu}
         notificationCount={notifications.filter(n => !n.read).length}
+        notifications={notifications}
+        onMarkRead={handleMarkNotificationRead}
       />
 
       <main className="mx-auto max-w-7xl px-4 pt-20 pb-12 md:px-6">
@@ -644,6 +709,7 @@ export default function App() {
             onLike={handleLike}
             onDelete={handleDelete}
             onComment={handleComment}
+            onSendFriendRequest={handleSendFriendRequest}
           />
         ) : activeMenu === 'admin' && user?.role === 'admin' ? (
           <AdminDashboard currentUser={user} onUpdateUser={handleUpdateUserAdmin} />
@@ -698,6 +764,7 @@ export default function App() {
                       onDelete={handleDelete} 
                       onComment={handleComment} 
                       onBoost={handleBoost}
+                      ads={ads.filter(a => a.active)}
                     />
                   )}
                   {activeMenu === 'chat' && <Chat currentUser={user} users={users} initialSelectedUser={selectedChatUser} />}
@@ -710,21 +777,44 @@ export default function App() {
             {/* Right Sidebar - Suggestions & Ads */}
             <div className="hidden w-80 flex-col gap-6 xl:flex">
               {/* Sponsored Card */}
-              <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
-                <div className="relative aspect-video">
-                  <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
-                  <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                    Sponsored
+              {ads.filter(a => a.active).length > 0 ? (
+                <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+                  <div className="relative aspect-video">
+                    <img src={ads.filter(a => a.active)[0].imageUrl} alt="Ad" className="h-full w-full object-cover" />
+                    <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                      Sponsored
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h4 className="mb-2 text-sm font-black text-neutral-900">{ads.filter(a => a.active)[0].title}</h4>
+                    <p className="mb-4 text-xs leading-relaxed text-neutral-500">{ads.filter(a => a.active)[0].description}</p>
+                    <a 
+                      href={ads.filter(a => a.active)[0].link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95"
+                    >
+                      Learn More
+                    </a>
                   </div>
                 </div>
-                <div className="p-6">
-                  <h4 className="mb-2 text-sm font-black text-neutral-900">Explore the Serengeti</h4>
-                  <p className="mb-4 text-xs leading-relaxed text-neutral-500">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
-                  <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95">
-                    Book Now
-                  </button>
+              ) : (
+                <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+                  <div className="relative aspect-video">
+                    <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
+                    <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                      Sponsored
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h4 className="mb-2 text-sm font-black text-neutral-900">Explore the Serengeti</h4>
+                    <p className="mb-4 text-xs leading-relaxed text-neutral-500">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
+                    <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95">
+                      Book Now
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
                 <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-900">Suggested Friends</h4>

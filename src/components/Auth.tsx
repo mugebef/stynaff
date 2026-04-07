@@ -130,6 +130,28 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin, on
             />
           </div>
 
+          {!isLogin && (
+            <div className="relative">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Gender</label>
+              <div className="flex gap-4">
+                {['Male', 'Female'].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGender(g)}
+                    className={`flex-1 rounded-xl py-3 text-sm font-bold transition-all ${
+                      gender === g 
+                        ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' 
+                        : 'bg-neutral-50 text-neutral-500 border border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {isLogin && (
             <div className="flex justify-end">
               <button

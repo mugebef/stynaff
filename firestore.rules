@@ -79,7 +79,23 @@ service cloud.firestore {
              data.content is string &&
              data.createdAt is timestamp &&
              data.likes is list &&
-             data.shares is number;
+             data.shares is number &&
+             (!('authorPhoto' in data) || data.authorPhoto == null || data.authorPhoto is string) &&
+             (!('authorVerified' in data) || data.authorVerified is bool) &&
+             (!('mediaUrl' in data) || data.mediaUrl == null || data.mediaUrl is string) &&
+             (!('mediaType' in data) || data.mediaType == null || data.mediaType is string) &&
+             (!('isReel' in data) || data.isReel is bool) &&
+             (!('comments' in data) || data.comments is list) &&
+             (!('isSponsored' in data) || data.isSponsored is bool);
+    }
+    function isValidAd(data) {
+      return data.keys().hasAll(['title', 'description', 'imageUrl', 'link', 'active', 'createdAt']) &&
+             data.title is string &&
+             data.description is string &&
+             data.imageUrl is string &&
+             data.link is string &&
+             data.active is bool &&
+             data.createdAt is timestamp;
     }
     function isValidPage(data) {
       return data.keys().hasAll(['name', 'description', 'ownerId', 'isVerified', 'followers', 'createdAt']) &&
@@ -200,6 +216,11 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId && isValidStatus(request.resource.data);
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+
+    match /sponsoredContent/{adId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }

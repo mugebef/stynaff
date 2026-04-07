@@ -15,6 +15,7 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
   const [loading, setLoading] = React.useState(false);
   const [mediaFile, setMediaFile] = React.useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = React.useState<string | null>(null);
+  const [content, setContent] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -54,27 +55,33 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
   };
 
   const handleCreateStatus = async () => {
-    if (!user || !mediaFile) return;
+    if (!user || (!mediaFile && !content.trim())) return;
     setLoading(true);
     setError(null);
     try {
-      if (mediaFile.size > 2000000) {
-        throw new Error('File size too large. Please upload a file smaller than 2MB.');
-      }
+      let mediaUrl = null;
+      let mediaType: 'image' | 'video' | undefined = undefined;
 
-      const formData = new FormData();
-      formData.append('file', mediaFile);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!res.ok) {
-        throw new Error('Upload failed. Please try again.');
-      }
+      if (mediaFile) {
+        if (mediaFile.size > 10000000) { // 10MB limit
+          throw new Error('File size too large. Please upload a file smaller than 10MB.');
+        }
 
-      const data = await res.json();
-      const mediaUrl = data.url;
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!res.ok) {
+          throw new Error('Upload failed. Please try again.');
+        }
+
+        const data = await res.json();
+        mediaUrl = data.url;
+        mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
+      }
 
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
@@ -84,13 +91,15 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
         userName: user.displayName,
         userPhoto: user.photoURL || null,
         mediaUrl: mediaUrl,
-        mediaType: mediaFile.type.startsWith('image') ? 'image' : 'video',
+        mediaType: mediaType || 'image',
+        content: content.trim() || null,
         createdAt: serverTimestamp(),
         expiresAt: expiresAt
       });
       setIsModalOpen(false);
       setMediaFile(null);
       setMediaPreview(null);
+      setContent('');
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Something went wrong during upload.');
@@ -133,12 +142,18 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
           whileTap={{ scale: 0.95 }}
           className="relative h-48 w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg ring-1 ring-neutral-200"
         >
-          <img 
-            src={status.mediaUrl} 
-            alt={status.userName} 
-            className="h-full w-full object-cover brightness-75 transition-all hover:brightness-100"
-            referrerPolicy="no-referrer"
-          />
+          {status.mediaUrl ? (
+            <img 
+              src={status.mediaUrl} 
+              alt={status.userName} 
+              className="h-full w-full object-cover brightness-75 transition-all hover:brightness-100"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-500 to-orange-600 p-4 text-center">
+              <p className="text-[10px] font-bold text-white line-clamp-6">{status.content}</p>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
           
           <div className="absolute left-3 top-3 h-8 w-8 overflow-hidden rounded-full border-2 border-orange-600 bg-white ring-2 ring-white">
@@ -154,6 +169,11 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
           <span className="absolute bottom-3 left-3 right-3 text-[10px] font-bold text-white truncate">
             {status.userName}
           </span>
+          {status.mediaUrl && status.content && (
+            <div className="absolute bottom-8 left-3 right-3">
+              <p className="text-[8px] font-medium text-white/90 line-clamp-2">{status.content}</p>
+            </div>
+          )}
         </motion.div>
       ))}
 
@@ -211,9 +231,17 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
                   )}
                 </div>
 
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="What's on your mind?"
+                  className="w-full resize-none rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm focus:border-orange-600 focus:outline-none"
+                  rows={3}
+                />
+
                 <button 
                   onClick={handleCreateStatus}
-                  disabled={loading || !mediaFile}
+                  disabled={loading || (!mediaFile && !content.trim())}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" size={18} /> : 'Share Story'}

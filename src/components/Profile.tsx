@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 
@@ -21,6 +21,7 @@ interface ProfileProps {
   onLike: (postId: string) => void;
   onDelete: (postId: string) => void;
   onComment: (postId: string, content: string) => void;
+  onSendFriendRequest: (targetUid: string) => void;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ 
@@ -30,7 +31,8 @@ export const Profile: React.FC<ProfileProps> = ({
   onUpdateProfile,
   onLike,
   onDelete,
-  onComment
+  onComment,
+  onSendFriendRequest
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editName, setEditName] = React.useState(user.displayName);
@@ -38,7 +40,9 @@ export const Profile: React.FC<ProfileProps> = ({
   const [editAge, setEditAge] = React.useState(user.age || '');
   const [editCity, setEditCity] = React.useState(user.location?.city || '');
   const [editCountry, setEditCountry] = React.useState(user.location?.country || '');
+  const [editGender, setEditGender] = React.useState(user.gender || 'Male');
   const [loading, setLoading] = React.useState(false);
+  const [photoFile, setPhotoFile] = React.useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
 
   const isOwnProfile = user.uid === currentUser.uid;
@@ -49,6 +53,7 @@ export const Profile: React.FC<ProfileProps> = ({
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -60,15 +65,29 @@ export const Profile: React.FC<ProfileProps> = ({
   const handleSave = async () => {
     setLoading(true);
     try {
+      let finalPhotoURL = user.photoURL;
+
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append('file', photoFile);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        finalPhotoURL = data.url;
+      }
+
       await onUpdateProfile({
         displayName: editName,
         bio: editBio,
         age: Number(editAge),
+        gender: editGender as any,
         location: {
           city: editCity,
           country: editCountry
         },
-        photoURL: photoPreview || user.photoURL
+        photoURL: finalPhotoURL
       });
       setIsEditing(false);
     } catch (err) {
@@ -209,9 +228,37 @@ export const Profile: React.FC<ProfileProps> = ({
                 </div>
               )
             ) : (
-              <button className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95">
-                Add Friend
-              </button>
+              <div className="flex flex-wrap gap-2">
+                {currentUser.friends?.includes(user.uid) ? (
+                  <button className="flex items-center gap-2 rounded-xl bg-green-50 px-6 py-2.5 text-sm font-bold text-green-600 ring-1 ring-inset ring-green-600/20">
+                    <CheckCircle size={18} />
+                    Friends
+                  </button>
+                ) : user.friendRequests?.includes(currentUser.uid) ? (
+                  <button className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-500">
+                    <Loader2 className="animate-spin" size={18} />
+                    Request Sent
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => onSendFriendRequest(user.uid)}
+                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                  >
+                    <UserPlus size={18} />
+                    Add Friend
+                  </button>
+                )}
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { 
+                    detail: 'chat',
+                    targetUser: user 
+                  } as any))}
+                  className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
+                >
+                  <MessageSquare size={18} />
+                  Message
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -244,6 +291,22 @@ export const Profile: React.FC<ProfileProps> = ({
                 <div className="flex items-center gap-3 text-sm text-neutral-600">
                   <Calendar size={18} className="text-neutral-400" />
                   <span>Age: <span className="font-bold text-neutral-900">{user.age || 'Not set'}</span></span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-neutral-600">
+                  <UserIcon size={18} className="text-neutral-400" />
+                  <span>Gender: {isEditing ? (
+                    <select
+                      value={editGender}
+                      onChange={(e) => setEditGender(e.target.value as any)}
+                      className="ml-1 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-xs font-bold text-neutral-900 focus:border-orange-600 focus:outline-none"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  ) : (
+                    <span className="font-bold text-neutral-900">{user.gender || 'Not set'}</span>
+                  )}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-neutral-600">
                   <MapPin size={18} className="text-neutral-400" />

@@ -30,7 +30,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, onLike, o
   };
 
   const handleProfileClick = () => {
-    window.dispatchEvent(new CustomEvent('changeMenu', { detail: 'profile' }));
+    window.dispatchEvent(new CustomEvent('viewProfile', { detail: post.authorId }));
   };
 
   return (

@@ -33,10 +33,19 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
           .map(d => d.data() as User)
           .filter(u => !swiped.includes(u.uid))
           .filter(u => {
-            // Basic filtering
+            // Strict gender matching: Male <-> Female
+            if (currentUser.gender === 'Male') {
+              return u.gender === 'Female';
+            } else if (currentUser.gender === 'Female') {
+              return u.gender === 'Male';
+            }
+            // If user gender is not set or 'Other', show based on interestedIn or everyone
             const genderMatch = !currentUser.interestedIn || currentUser.interestedIn === 'Everyone' || u.gender === currentUser.interestedIn;
+            return genderMatch;
+          })
+          .filter(u => {
             const ageMatch = !currentUser.age || !u.age || Math.abs(u.age - currentUser.age) <= 15;
-            return genderMatch && ageMatch;
+            return ageMatch;
           });
         setMatches(potentialMatches);
       } catch (err) {
@@ -105,7 +114,10 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
       </div>
 
       {/* Tinder Card */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[2.5rem] bg-neutral-100 shadow-2xl ring-1 ring-neutral-200">
+      <div 
+        onClick={() => window.dispatchEvent(new CustomEvent('viewProfile', { detail: currentMatch.uid }))}
+        className="relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[2.5rem] bg-neutral-100 shadow-2xl ring-1 ring-neutral-200"
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentMatch.uid}
