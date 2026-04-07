@@ -225,12 +225,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm font-bold text-neutral-900">${user.walletBalance?.toFixed(2) || '0.00'}</p>
-                    <p className="text-[10px] font-bold text-neutral-400">{user.points || 0} Points</p>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-neutral-400">$</span>
+                        <input 
+                          type="number"
+                          value={user.walletBalance || 0}
+                          onChange={(e) => onUpdateUser(user.uid, { walletBalance: parseFloat(e.target.value) })}
+                          className="w-16 rounded border border-neutral-200 bg-transparent px-1 py-0.5 text-xs font-bold text-neutral-900 focus:border-orange-600 focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Award size={10} className="text-neutral-400" />
+                        <input 
+                          type="number"
+                          value={user.points || 0}
+                          onChange={(e) => onUpdateUser(user.uid, { points: parseInt(e.target.value) })}
+                          className="w-16 rounded border border-neutral-200 bg-transparent px-1 py-0.5 text-[10px] font-bold text-neutral-500 focus:border-orange-600 focus:outline-none"
+                        />
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-orange-600 transition-all">
+                      <button 
+                        onClick={() => {
+                          const newName = prompt('Enter new display name:', user.displayName);
+                          if (newName) onUpdateUser(user.uid, { displayName: newName });
+                        }}
+                        className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-orange-600 transition-all"
+                      >
                         <Edit size={18} />
                       </button>
                       <button className="rounded-lg p-2 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-all">

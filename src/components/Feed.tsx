@@ -48,41 +48,34 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, onPost, onLike, 
     }
   };
 
-  // Mock stories for UI demonstration
-  const stories = [
-    { id: '1', name: 'Your Story', image: currentUser?.photoURL, isUser: true },
-    { id: '2', name: 'Sarah', image: 'https://picsum.photos/seed/sarah/200/300' },
-    { id: '3', name: 'John', image: 'https://picsum.photos/seed/john/200/300' },
-    { id: '4', name: 'Emma', image: 'https://picsum.photos/seed/emma/200/300' },
-    { id: '5', name: 'Mike', image: 'https://picsum.photos/seed/mike/200/300' },
-    { id: '6', name: 'Anna', image: 'https://picsum.photos/seed/anna/200/300' },
-  ];
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      {/* Stories Bar */}
-      <div className="mb-8 flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-        {stories.map((story) => (
-          <div key={story.id} className="flex flex-col items-center gap-2 shrink-0">
-            <div className={`relative h-16 w-16 rounded-full p-0.5 ${story.isUser ? 'bg-neutral-200' : 'bg-gradient-to-tr from-orange-500 to-pink-500'}`}>
-              <div className="h-full w-full overflow-hidden rounded-full border-2 border-white bg-neutral-100">
-                {story.image ? (
-                  <img src={story.image} alt={story.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-neutral-400">
-                    <User size={24} />
-                  </div>
-                )}
-              </div>
-              {story.isUser && (
-                <div className="absolute bottom-0 right-0 rounded-full bg-orange-600 p-1 text-white ring-2 ring-white">
-                  <Plus size={12} />
-                </div>
-              )}
+      {/* Sponsored Section */}
+      <div className="mb-8 rounded-[2rem] border border-neutral-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-xl ring-1 ring-neutral-200">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg shadow-orange-100">
+              <Sparkles size={16} />
             </div>
-            <span className="text-[10px] font-bold text-neutral-600">{story.name}</span>
+            <span className="text-sm font-black uppercase tracking-widest text-neutral-900">Sponsored Content</span>
           </div>
-        ))}
+          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Ad</span>
+        </div>
+        <div className="flex gap-4">
+          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-neutral-100 shadow-inner">
+            <img src="https://picsum.photos/seed/ad/200/200" alt="Ad" className="h-full w-full object-cover" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <h4 className="text-sm font-bold text-neutral-900">Upgrade to STYN Platinum Today!</h4>
+            <p className="text-xs leading-relaxed text-neutral-500">Get verified, boost your posts, and reach millions across Africa. Limited time offer: 50% off your first month.</p>
+            <button 
+              onClick={() => onBoost?.('upgrade')}
+              className="rounded-full bg-orange-600 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95"
+            >
+              Learn More
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Create Post */}

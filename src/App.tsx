@@ -19,6 +19,8 @@ import { Pages } from './components/Pages';
 import { Groups } from './components/Groups';
 import { Status } from './components/Status';
 import { Footer } from './components/Footer';
+import { Upgrade } from './components/Upgrade';
+import { Marketplace, Jobs, Events } from './components/Marketplace';
 import { Post, User as UserType, Notification, Page, Group } from './types';
 import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
@@ -466,7 +468,11 @@ export default function App() {
       await updateDoc(doc(db, 'users', user.uid), {
         points: (user.points || 0) + 10
       });
+      
+      console.log('Post created successfully');
     } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
       handleFirestoreError(error, OperationType.CREATE, 'posts');
     }
   };
@@ -649,6 +655,14 @@ export default function App() {
           <Pages pages={pages} currentUser={user} />
         ) : activeMenu === 'groups' ? (
           <Groups groups={groups} currentUser={user} />
+        ) : activeMenu === 'upgrade' ? (
+          <Upgrade user={user} onUpgrade={(tier) => handleUpdateProfile({ tier: tier as any })} />
+        ) : activeMenu === 'marketplace' ? (
+          <Marketplace />
+        ) : activeMenu === 'jobs' ? (
+          <Jobs />
+        ) : activeMenu === 'events' ? (
+          <Events />
         ) : (
           <div className="flex gap-8">
             {/* Left Sidebar - Profile & Requests */}
@@ -693,8 +707,25 @@ export default function App() {
               </AnimatePresence>
             </div>
 
-            {/* Right Sidebar - Suggestions (Placeholder) */}
+            {/* Right Sidebar - Suggestions & Ads */}
             <div className="hidden w-80 flex-col gap-6 xl:flex">
+              {/* Sponsored Card */}
+              <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+                <div className="relative aspect-video">
+                  <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
+                  <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                    Sponsored
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h4 className="mb-2 text-sm font-black text-neutral-900">Explore the Serengeti</h4>
+                  <p className="mb-4 text-xs leading-relaxed text-neutral-500">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
+                  <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95">
+                    Book Now
+                  </button>
+                </div>
+              </div>
+
               <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
                 <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-900">Suggested Friends</h4>
                 <div className="space-y-4">

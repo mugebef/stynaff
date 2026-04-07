@@ -103,7 +103,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <h4 className="mb-1 text-lg font-bold">STYN Premium</h4>
           <p className="mb-4 text-xs font-medium text-indigo-100">Unlock exclusive features, boost your profile, and more!</p>
-          <button className="w-full rounded-xl bg-white py-2.5 text-xs font-bold text-indigo-600 shadow-lg transition-all hover:bg-indigo-50 active:scale-95">
+          <button 
+            onClick={() => onMenuClick('upgrade')}
+            className="w-full rounded-xl bg-white py-2.5 text-xs font-bold text-indigo-600 shadow-lg transition-all hover:bg-indigo-50 active:scale-95"
+          >
             Upgrade Now
           </button>
         </div>
