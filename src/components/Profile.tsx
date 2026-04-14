@@ -623,7 +623,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 <div className="space-y-3 border-t border-neutral-100 pt-4">
                   <div className="flex items-center gap-3 text-sm text-neutral-600">
                     <Briefcase size={18} className="text-neutral-400" />
-                    <span>Works at <span className="font-bold text-neutral-900">STYN AFRICA</span></span>
+                    <span>Works at <span className="font-bold text-neutral-900">STYN</span></span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-neutral-600">
                     <Calendar size={18} className="text-neutral-400" />

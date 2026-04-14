@@ -20,7 +20,7 @@ const storage = multer.memoryStorage(); // Use memory storage for sharp processi
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for raw upload
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit for video uploads
 });
 
 async function startServer() {
@@ -34,8 +34,9 @@ async function startServer() {
   app.get("/api/health", (req, res) => {
     res.json({ 
       status: "online", 
-      server: "Styn Africa VPS",
+      server: "STYN VPS",
       storage: "NVMe",
+      features: ["Reels", "Chat", "Dating", "Blockbuster"],
       nodeVersion: process.version 
     });
   });

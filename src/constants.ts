@@ -1,6 +1,6 @@
-export const APP_NAME = 'STYN AFRICA';
+export const APP_NAME = 'STYN';
 export const ADMIN_EMAIL = 'datingwithbounce@gmail.com';
-export const FOOTER_TEXT = '© 2026 STYN AFRICA. All rights reserved.';
+export const FOOTER_TEXT = '© 2026 STYN. All rights reserved.';
 
 export const COUNTRIES_AND_CITIES: { [country: string]: string[] } = {
   'South Africa': ['Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Port Elizabeth', 'Bloemfontein'],

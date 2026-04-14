@@ -558,6 +558,41 @@ export default function App() {
     }
   };
 
+  const handleReelUpload = async (file: File, caption: string) => {
+    if (!user) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+      const data = await response.json();
+
+      await addDoc(collection(db, 'posts'), {
+        content: caption,
+        mediaUrl: data.url,
+        mediaType: 'video',
+        isReel: true,
+        authorId: user.uid,
+        authorName: user.name,
+        authorPhoto: user.profilePic || '',
+        authorVerified: user.isVerified || false,
+        likes: [],
+        comments: [],
+        shares: 0,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error uploading reel:', error);
+      throw error;
+    }
+  };
+
   const handleLike = async (postId: string) => {
     if (!user) return;
     const postRef = doc(db, 'posts', postId);
@@ -740,7 +775,6 @@ export default function App() {
             <Globe size={48} className="animate-pulse" />
             <div className="absolute -inset-2 animate-ping rounded-3xl border-2 border-orange-600/20"></div>
           </div>
-          <h1 className="mb-2 text-2xl font-bold tracking-tight text-neutral-900">STYN AFRICA</h1>
           <div className="flex items-center justify-center gap-2">
             <Loader2 className="animate-spin text-orange-600" size={18} />
             <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">Connecting...</p>
@@ -809,7 +843,7 @@ export default function App() {
         ) : activeMenu === 'wallet' ? (
           <Wallet user={user} onUpdateUser={handleUpdateProfile} />
         ) : activeMenu === 'reels' ? (
-          <Reels posts={posts} currentUser={user} onLike={handleLike} onComment={handleComment} />
+          <Reels posts={posts} currentUser={user} onLike={handleLike} onComment={handleComment} onUpload={handleReelUpload} />
         ) : activeMenu === 'live' ? (
           <Live />
         ) : activeMenu === 'pages' ? (
