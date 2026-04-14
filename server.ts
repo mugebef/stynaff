@@ -56,8 +56,11 @@ async function startServer() {
 
   app.post("/api/upload", upload.single("file"), async (req, res) => {
     if (!req.file) {
+      console.error(">>> Upload Error: No file received in request");
       return res.status(400).json({ error: "No file uploaded" });
     }
+
+    console.log(`>>> Uploading: ${req.file.originalname} (${req.file.mimetype}, ${req.file.size} bytes)`);
 
     const isVideo = req.file.mimetype.startsWith("video/");
     const targetDir = isVideo ? videoUploadDir : imageUploadDir;

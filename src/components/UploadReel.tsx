@@ -14,6 +14,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
   const [caption, setCaption] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [status, setStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +34,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
     try {
       await onUpload(file, caption);
       setStatus('success');
+      setErrorMessage(null);
       setTimeout(() => {
         onClose();
         setFile(null);
@@ -40,8 +42,9 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
         setCaption('');
         setStatus('idle');
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       setStatus('error');
+      setErrorMessage(error.message || 'Failed to upload reel.');
     } finally {
       setLoading(false);
     }
@@ -145,9 +148,14 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                   )}
 
                   {status === 'error' && (
-                    <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-600">
-                      <AlertCircle size={18} />
-                      Failed to upload reel.
+                    <div className="flex flex-col gap-1 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-600">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle size={18} />
+                        Upload Failed
+                      </div>
+                      {errorMessage && (
+                        <p className="text-[10px] font-normal opacity-80">{errorMessage}</p>
+                      )}
                     </div>
                   )}
 
