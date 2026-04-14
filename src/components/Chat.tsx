@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare, CheckCircle, Image as ImageIcon, Mic, Paperclip, Smile, Reply, Trash2, Heart } from 'lucide-react';
+import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare, CheckCircle, Image as ImageIcon, Mic, Paperclip, Smile, Reply, Trash2, Heart, Users, Shield } from 'lucide-react';
 import { User as UserType, Message as MessageType } from '../types';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc, limit } from 'firebase/firestore';
@@ -143,59 +143,72 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-140px)] max-w-6xl overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-2xl ring-1 ring-neutral-200">
+    <div className="mx-auto flex h-[calc(100vh-140px)] max-w-6xl overflow-hidden rounded-3xl border border-neutral-200 bg-[#f0f2f5] shadow-2xl ring-1 ring-neutral-200">
       {/* Sidebar */}
-      <div className={`w-full flex-col border-r border-neutral-200 md:flex md:w-80 lg:w-96 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
-        <div className="bg-neutral-50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-neutral-900">Messenger</h2>
-            <button className="rounded-full bg-orange-100 p-2 text-orange-600 hover:bg-orange-200 transition-all">
-              <MessageSquare size={20} />
-            </button>
+      <div className={`w-full flex-col border-r border-neutral-200 bg-white md:flex md:w-80 lg:w-96 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
+        <div className="bg-[#f0f2f5] p-4 flex items-center justify-between">
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-200">
+            {currentUser.photoURL ? (
+              <img src={currentUser.photoURL} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                <User size={20} />
+              </div>
+            )}
           </div>
+          <div className="flex gap-4 text-neutral-500">
+            <button className="hover:text-neutral-700"><Users size={20} /></button>
+            <button className="hover:text-neutral-700"><MessageSquare size={20} /></button>
+            <button className="hover:text-neutral-700"><MoreVertical size={20} /></button>
+          </div>
+        </div>
+
+        <div className="p-3">
           <div className="relative">
-            <Search className="absolute left-4 top-3.5 text-neutral-400" size={18} />
+            <Search className="absolute left-4 top-2.5 text-neutral-400" size={16} />
             <input
               type="text"
-              placeholder="Search conversations..."
+              placeholder="Search or start new chat"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-2xl border border-neutral-200 bg-white py-3 pl-12 pr-4 text-sm font-bold text-neutral-900 focus:border-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-600/10"
+              className="w-full rounded-xl border-none bg-[#f0f2f5] py-2 pl-12 pr-4 text-sm focus:outline-none"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div className="flex-1 overflow-y-auto">
           {chatUsers.map((user) => (
             <div
               key={user.uid}
               onClick={() => setSelectedUser(user)}
-              className={`flex cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all ${
-                selectedUser?.uid === user.uid ? 'bg-orange-50' : 'hover:bg-neutral-50'
+              className={`flex cursor-pointer items-center gap-3 border-b border-neutral-50 px-4 py-3 transition-all ${
+                selectedUser?.uid === user.uid ? 'bg-[#f0f2f5]' : 'hover:bg-neutral-50'
               }`}
             >
-              <div className="relative">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-2 ring-white shadow-sm overflow-hidden ${user.photoURL ? 'bg-neutral-100' : (user.gender === 'Female' ? 'bg-pink-50 text-pink-400' : 'bg-blue-50 text-blue-400')}`}>
+              <div className="relative shrink-0">
+                <div className="h-12 w-12 overflow-hidden rounded-full bg-neutral-200">
                   {user.photoURL ? (
                     <img src={user.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <User size={28} />
+                    <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                      <User size={24} />
+                    </div>
                   )}
                 </div>
                 {user.isOnline && (
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-500"></div>
+                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-[#25d366]"></div>
                 )}
               </div>
               <div className="flex-1 overflow-hidden">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className={`text-sm font-bold truncate ${selectedUser?.uid === user.uid ? 'text-orange-600' : 'text-neutral-900'}`}>
+                <div className="flex items-center justify-between">
+                  <h4 className="truncate text-sm font-bold text-neutral-900">
                     {user.displayName}
                   </h4>
-                  {user.isVerified && <CheckCircle size={14} className="fill-blue-500 text-white shrink-0" />}
+                  <span className="text-[10px] text-neutral-400">12:45 PM</span>
                 </div>
-                <p className="line-clamp-1 text-xs text-neutral-500 font-medium">
+                <p className="truncate text-xs text-neutral-500">
                   {user.typingTo === currentUser.uid ? (
-                    <span className="text-orange-600 font-bold animate-pulse italic">Typing...</span>
+                    <span className="text-[#25d366] font-bold">typing...</span>
                   ) : (
                     user.bio || 'Available'
                   )}
@@ -207,166 +220,110 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       </div>
 
       {/* Main Chat Area */}
-      <div className={`flex flex-1 flex-col bg-[#f0f2f5] ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex flex-1 flex-col bg-[#efeae2] relative ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
+        {/* Background Pattern Overlay */}
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')]"></div>
+
         {selectedUser ? (
           <>
             {/* Chat Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-4">
+            <div className="relative z-10 flex items-center justify-between bg-[#f0f2f5] p-3 shadow-sm">
+              <div className="flex items-center gap-3">
                 <button onClick={() => setSelectedUser(null)} className="md:hidden text-neutral-500">
-                  <ArrowLeft size={24} />
+                  <ArrowLeft size={20} />
                 </button>
-                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm overflow-hidden ${selectedUser.photoURL ? 'bg-neutral-100' : (selectedUser.gender === 'Female' ? 'bg-pink-50 text-pink-400' : 'bg-blue-50 text-blue-400')}`}>
+                <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-200">
                   {selectedUser.photoURL ? (
                     <img src={selectedUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <User size={24} />
+                    <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                      <User size={20} />
+                    </div>
                   )}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1">
-                    <h4 className="text-sm font-bold text-neutral-900">{selectedUser.displayName}</h4>
-                    {selectedUser.isVerified && <CheckCircle size={14} className="fill-blue-500 text-white" />}
-                  </div>
-                  <p className={`text-[10px] font-bold uppercase tracking-widest ${selectedUser.isOnline ? 'text-green-600' : 'text-neutral-400'}`}>
-                    {selectedUser.isOnline ? 'Online' : 'Offline'}
+                  <h4 className="text-sm font-bold text-neutral-900">{selectedUser.displayName}</h4>
+                  <p className="text-[10px] text-neutral-500">
+                    {selectedUser.isOnline ? 'online' : 'last seen recently'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="rounded-full p-2.5 text-neutral-500 hover:bg-neutral-100 transition-all">
-                  <Phone size={20} />
-                </button>
-                <button className="rounded-full p-2.5 text-neutral-500 hover:bg-neutral-100 transition-all">
-                  <Video size={20} />
-                </button>
-                <button className="rounded-full p-2.5 text-neutral-500 hover:bg-neutral-100 transition-all">
-                  <MoreVertical size={20} />
-                </button>
+              <div className="flex items-center gap-5 text-neutral-500">
+                <button className="hover:text-neutral-700"><Video size={20} /></button>
+                <button className="hover:text-neutral-700"><Phone size={20} /></button>
+                <button className="hover:text-neutral-700"><Search size={20} /></button>
+                <button className="hover:text-neutral-700"><MoreVertical size={20} /></button>
               </div>
             </div>
             
             {/* Messages Area */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto p-4 md:p-8 space-y-2">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className="group relative max-w-[75%]">
-                    <div
-                      className={`rounded-2xl p-4 shadow-sm ${
-                        msg.senderId === currentUser.uid
-                          ? 'bg-orange-600 text-white rounded-tr-none shadow-xl shadow-orange-200'
-                          : 'bg-white text-neutral-800 rounded-tl-none ring-1 ring-neutral-200'
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
-                      <div className={`mt-1 flex items-center justify-end gap-1 text-[10px] font-bold uppercase ${
-                        msg.senderId === currentUser.uid ? 'text-orange-100' : 'text-neutral-400'
-                      }`}>
-                        <span>
-                          {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
-                        </span>
-                        {msg.senderId === currentUser.uid && (
-                          msg.status === 'seen' ? <CheckCheck size={12} className="text-blue-300" /> : <Check size={12} />
-                        )}
-                      </div>
-                      
-                      {/* Reactions Display */}
-                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                        <div className="absolute -bottom-2 right-2 flex gap-1 rounded-full bg-white px-1.5 py-0.5 shadow-sm ring-1 ring-neutral-200">
-                          {Object.values(msg.reactions).map((r, i) => (
-                            <span key={i} className="text-xs">{r}</span>
-                          ))}
-                        </div>
+                  <div className={`relative max-w-[85%] md:max-w-[65%] rounded-lg px-3 py-1.5 shadow-sm ${
+                    msg.senderId === currentUser.uid
+                      ? 'bg-[#dcf8c6] text-neutral-900 rounded-tr-none'
+                      : 'bg-white text-neutral-900 rounded-tl-none'
+                  }`}>
+                    {/* Message Tail */}
+                    <div className={`absolute top-0 h-3 w-3 ${
+                      msg.senderId === currentUser.uid 
+                        ? 'right-[-8px] border-l-[10px] border-l-[#dcf8c6] border-b-[10px] border-b-transparent' 
+                        : 'left-[-8px] border-r-[10px] border-r-white border-b-[10px] border-b-transparent'
+                    }`}></div>
+
+                    <p className="text-sm leading-relaxed pr-12">{msg.content}</p>
+                    <div className="absolute bottom-1 right-2 flex items-center gap-1">
+                      <span className="text-[9px] text-neutral-400">
+                        {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                      </span>
+                      {msg.senderId === currentUser.uid && (
+                        msg.status === 'seen' ? <CheckCheck size={14} className="text-blue-400" /> : <Check size={14} className="text-neutral-400" />
                       )}
-                    </div>
-                    
-                    {/* Hover Actions */}
-                    <div className={`absolute top-0 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 ${msg.senderId === currentUser.uid ? 'right-full mr-2' : 'left-full ml-2'}`}>
-                      <button onClick={() => handleReaction(msg.id, '❤️')} className="rounded-full bg-white p-1.5 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50">
-                        <Heart size={14} className="text-red-500" />
-                      </button>
-                      <button className="rounded-full bg-white p-1.5 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50">
-                        <Reply size={14} className="text-neutral-500" />
-                      </button>
                     </div>
                   </div>
                 </div>
               ))}
               {otherUserTyping && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl bg-white p-4 text-neutral-400 ring-1 ring-neutral-200 shadow-sm">
-                    <div className="flex gap-1">
-                      <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
-                      <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
-                      <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
-                    </div>
+                  <div className="rounded-lg bg-white px-3 py-2 text-xs text-neutral-500 shadow-sm italic">
+                    typing...
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Smart Replies */}
-            <AnimatePresence>
-              {smartReplies.length > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="flex gap-2 p-4 bg-transparent overflow-x-auto no-scrollbar"
-                >
-                  {smartReplies.map((reply, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSendMessage(undefined, reply)}
-                      className="whitespace-nowrap rounded-full bg-white px-4 py-2 text-xs font-bold text-orange-600 shadow-sm ring-1 ring-neutral-200 hover:bg-orange-50 transition-all"
-                    >
-                      {reply}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Input Area */}
-            <div className="bg-white p-4 border-t border-neutral-200">
-              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  <button type="button" className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100">
-                    <Paperclip size={20} />
-                  </button>
-                  <button type="button" className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100">
-                    <ImageIcon size={20} />
-                  </button>
+            <div className="relative z-10 bg-[#f0f2f5] p-3">
+              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2">
+                <div className="flex gap-2 text-neutral-500">
+                  <button type="button" className="hover:text-neutral-700"><Smile size={24} /></button>
+                  <button type="button" className="hover:text-neutral-700"><Paperclip size={24} /></button>
                 </div>
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onFocus={() => setIsTyping(true)}
-                    onBlur={() => setIsTyping(false)}
-                    onChange={(e) => {
-                      setNewMessage(e.target.value);
-                      setIsTyping(true);
-                    }}
-                    placeholder="Type a message..."
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-3 text-sm font-bold text-neutral-900 focus:border-orange-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-orange-600/10"
-                  />
-                  <button type="button" className="absolute right-4 top-3 text-neutral-400 hover:text-orange-600">
-                    <Smile size={20} />
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onFocus={() => setIsTyping(true)}
+                  onBlur={() => setIsTyping(false)}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    setIsTyping(true);
+                  }}
+                  placeholder="Type a message"
+                  className="flex-1 rounded-xl border-none bg-white px-4 py-2.5 text-sm focus:outline-none"
+                />
                 {newMessage.trim() ? (
                   <button 
                     type="submit"
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00a884] text-white shadow-md transition-all active:scale-95"
                   >
                     <Send size={20} />
                   </button>
                 ) : (
-                  <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-all">
+                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00a884] text-white shadow-md transition-all">
                     <Mic size={20} />
                   </button>
                 )}
@@ -374,17 +331,20 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             </div>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center p-8">
-            <div className="text-center">
-              <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-2xl ring-1 ring-neutral-200"
-              >
-                <MessageSquare size={48} className="text-orange-600" />
-              </motion.div>
-              <h3 className="text-2xl font-bold text-neutral-900">Select a conversation</h3>
-              <p className="mt-3 text-sm font-bold text-neutral-500 uppercase tracking-widest">Connect with your friends instantly</p>
+          <div className="relative z-10 flex flex-1 items-center justify-center p-8 bg-[#f8f9fa] border-b-4 border-[#25d366]">
+            <div className="text-center max-w-md">
+              <div className="mx-auto mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-neutral-100">
+                <MessageSquare size={64} className="text-neutral-300" />
+              </div>
+              <h3 className="text-3xl font-light text-neutral-600 mb-4">WhatsApp Web</h3>
+              <p className="text-sm text-neutral-500 leading-relaxed">
+                Send and receive messages without keeping your phone online.<br/>
+                Use WhatsApp on up to 4 linked devices and 1 phone at the same time.
+              </p>
+              <div className="mt-12 flex items-center justify-center gap-2 text-neutral-400">
+                <Shield size={14} />
+                <span className="text-xs">End-to-end encrypted</span>
+              </div>
             </div>
           </div>
         )}

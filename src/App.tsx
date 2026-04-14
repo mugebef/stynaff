@@ -15,6 +15,7 @@ import { Profile } from './components/Profile';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Wallet } from './components/Wallet';
 import { Reels } from './components/Reels';
+import { Live } from './components/Live';
 import { Pages } from './components/Pages';
 import { Groups } from './components/Groups';
 import { Status } from './components/Status';
@@ -111,7 +112,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 
 export default function App() {
   const [user, setUser] = React.useState<UserType | null>(null);
-  const [activeMenu, setActiveMenu] = React.useState('feed');
+  const [activeMenu, setActiveMenu] = React.useState('reels');
   const [posts, setPosts] = React.useState<Post[]>([]);
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
@@ -127,10 +128,16 @@ export default function App() {
   // Listen for menu changes from other components
   React.useEffect(() => {
     const handleMenuChange = (e: any) => {
-      setActiveMenu(e.detail);
-      if (e.detail === 'profile') setProfileUser(user);
-      if (e.detail === 'chat' && e.detail.targetUser) {
-        setSelectedChatUser(e.detail.targetUser);
+      const detail = e.detail;
+      if (typeof detail === 'string') {
+        setActiveMenu(detail);
+        if (detail === 'profile') setProfileUser(user);
+      } else if (detail && detail.menu) {
+        setActiveMenu(detail.menu);
+        if (detail.menu === 'profile') setProfileUser(user);
+        if (detail.menu === 'chat' && detail.targetUser) {
+          setSelectedChatUser(detail.targetUser);
+        }
       }
     };
     const handleViewProfile = (e: any) => {
@@ -803,6 +810,8 @@ export default function App() {
           <Wallet user={user} onUpdateUser={handleUpdateProfile} />
         ) : activeMenu === 'reels' ? (
           <Reels posts={posts} currentUser={user} onLike={handleLike} onComment={handleComment} />
+        ) : activeMenu === 'live' ? (
+          <Live />
         ) : activeMenu === 'pages' ? (
           <Pages pages={pages} currentUser={user} />
         ) : activeMenu === 'groups' ? (
@@ -843,22 +852,15 @@ export default function App() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {activeMenu === 'feed' && (
-                    <Feed 
-                      posts={posts} 
-                      currentUser={user} 
-                      users={users}
-                      onPost={handlePost} 
-                      onLike={handleLike} 
-                      onDelete={handleDelete} 
-                      onComment={handleComment} 
-                      onBoost={handleBoost}
-                      ads={ads.filter(a => a.active)}
-                    />
+                  {activeMenu === 'chat' && user && (
+                    <Chat currentUser={user} users={users} initialSelectedUser={selectedChatUser} />
                   )}
-                  {activeMenu === 'chat' && <Chat currentUser={user} users={users} initialSelectedUser={selectedChatUser} />}
-                  {activeMenu === 'dating' && <Dating currentUser={user} onSwipe={handleSwipe} />}
-                  {activeMenu === 'blockbuster' && <Blockbuster />}
+                  {activeMenu === 'dating' && user && (
+                    <Dating currentUser={user} onSwipe={handleSwipe} />
+                  )}
+                  {activeMenu === 'blockbuster' && (
+                    <Blockbuster />
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>

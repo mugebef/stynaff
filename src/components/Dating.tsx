@@ -189,8 +189,13 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
         >
           <X size={32} />
         </button>
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-blue-400 shadow-xl ring-1 ring-neutral-200 hover:bg-blue-50 transition-all active:scale-90">
-          <Info size={24} />
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { 
+            detail: { menu: 'chat', targetUser: currentMatch }
+          }))}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#00a884] shadow-xl ring-1 ring-neutral-200 hover:bg-green-50 transition-all active:scale-90"
+        >
+          <MessageSquare size={28} />
         </button>
         <button 
           onClick={() => handleSwipeAction('right')}
@@ -240,9 +245,8 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
                     setShowMatchModal(null);
                     // Trigger menu change to chat with target user
                     window.dispatchEvent(new CustomEvent('changeMenu', { 
-                      detail: 'chat',
-                      targetUser: showMatchModal 
-                    } as any));
+                      detail: { menu: 'chat', targetUser: showMatchModal }
+                    }));
                   }}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-xl shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-95"
                 >

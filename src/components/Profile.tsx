@@ -264,13 +264,12 @@ export const Profile: React.FC<ProfileProps> = ({
                 )}
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { 
-                    detail: 'chat',
-                    targetUser: user 
-                  } as any))}
+                    detail: { menu: 'chat', targetUser: user }
+                  }))}
                   className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
                 >
                   <MessageSquare size={18} />
-                  Message
+                  Chat
                 </button>
               </div>
             )}

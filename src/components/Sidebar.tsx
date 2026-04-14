@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle, ShoppingBag, Calendar, Briefcase, Sparkles } from 'lucide-react';
+import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle, ShoppingBag, Calendar, Briefcase, Sparkles, Radio, Play } from 'lucide-react';
 import { User as UserType } from '../types';
 import { motion } from 'framer-motion';
 
@@ -38,11 +38,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .filter(u => u.uid !== user?.uid && !user?.friends?.includes(u.uid) && !user?.friendRequests?.includes(u.uid))
     .slice(0, 3);
   const menuItems = [
-    { id: 'feed', label: 'News Feed', icon: <Globe size={20} className="text-blue-500" /> },
-    { id: 'friends', label: 'Friends', icon: <UserPlus size={20} className="text-green-600" /> },
     { id: 'reels', label: 'Reels', icon: <Video size={20} className="text-pink-500" /> },
+    { id: 'blockbuster', label: 'Blockbuster', icon: <Play size={20} className="text-red-600" /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={20} className="text-red-500" /> },
     { id: 'chat', label: 'Messenger', icon: <MessageSquare size={20} className="text-indigo-500" /> },
+    { id: 'live', label: 'Live', icon: <Radio size={20} className="text-red-500" /> },
+    { id: 'friends', label: 'Friends', icon: <UserPlus size={20} className="text-green-600" /> },
     { id: 'marketplace', label: 'Marketplace', icon: <ShoppingBag size={20} className="text-orange-500" /> },
     { id: 'events', label: 'Events', icon: <Calendar size={20} className="text-red-400" /> },
     { id: 'jobs', label: 'Jobs', icon: <Briefcase size={20} className="text-blue-600" /> },

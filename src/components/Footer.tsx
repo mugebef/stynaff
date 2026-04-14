@@ -16,10 +16,6 @@ export const Footer: React.FC = () => {
                 {APP_NAME}
               </span>
             </div>
-            <p className="text-sm leading-relaxed text-neutral-500">
-              Empowering Africa's digital future through connection, entertainment, and innovation.
-            </p>
-            <p className="text-sm font-black italic text-orange-600">"Our Motto Is Unique Experience"</p>
           </div>
           
           <div>

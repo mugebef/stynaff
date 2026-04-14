@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X, LayoutDashboard, Video, Wallet as WalletIcon, Bell } from 'lucide-react';
+import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X, LayoutDashboard, Video, Wallet as WalletIcon, Bell, Radio } from 'lucide-react';
 import { APP_NAME } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,10 +27,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
 
   const menus = [
-    { id: 'feed', label: 'Home', icon: <Globe size={20} /> },
     { id: 'reels', label: 'Reels', icon: <Video size={20} /> },
+    { id: 'blockbuster', label: 'Blockbuster', icon: <Play size={20} /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={20} /> },
     { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
+    { id: 'live', label: 'Live', icon: <Radio size={20} /> },
   ];
 
   if (user?.role === 'admin') {
