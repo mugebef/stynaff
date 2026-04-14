@@ -10,10 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(process.cwd(), "uploads");
+const uploadsDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+console.log(`>>> Uploads directory: ${uploadsDir}`);
 
 // Configure multer for local storage
 const storage = multer.memoryStorage(); // Use memory storage for sharp processing

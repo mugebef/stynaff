@@ -593,6 +593,49 @@ export default function App() {
     }
   };
 
+  const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File }) => {
+    if (!user) return;
+    try {
+      // Upload thumbnail
+      const thumbFormData = new FormData();
+      thumbFormData.append('file', movieData.thumbnailFile);
+      const thumbRes = await fetch('/api/upload', { method: 'POST', body: thumbFormData });
+      const thumbData = await thumbRes.json();
+
+      // Upload movie
+      const movieFormData = new FormData();
+      movieFormData.append('file', movieData.movieFile);
+      const movieRes = await fetch('/api/upload', { method: 'POST', body: movieFormData });
+      const movieDataRes = await movieRes.json();
+
+      // Upload trailer if exists
+      let trailerUrl = null;
+      if (movieData.trailerFile) {
+        const trailerFormData = new FormData();
+        trailerFormData.append('file', movieData.trailerFile);
+        const trailerRes = await fetch('/api/upload', { method: 'POST', body: trailerFormData });
+        const trailerData = await trailerRes.json();
+        trailerUrl = trailerData.url;
+      }
+
+      // Save to Firestore
+      await addDoc(collection(db, 'movies'), {
+        title: movieData.title,
+        description: movieData.description,
+        thumbnailUrl: thumbData.url,
+        videoUrl: movieDataRes.url,
+        trailerUrl: trailerUrl,
+        authorId: user.uid,
+        createdAt: serverTimestamp(),
+        rating: 0,
+        views: 0
+      });
+    } catch (error) {
+      console.error('Error uploading movie:', error);
+      throw error;
+    }
+  };
+
   const handleLike = async (postId: string) => {
     if (!user) return;
     const postRef = doc(db, 'posts', postId);
@@ -893,7 +936,7 @@ export default function App() {
                     <Dating currentUser={user} onSwipe={handleSwipe} />
                   )}
                   {activeMenu === 'blockbuster' && (
-                    <Blockbuster />
+                    <Blockbuster onUpload={handleMovieUpload} />
                   )}
                 </motion.div>
               </AnimatePresence>

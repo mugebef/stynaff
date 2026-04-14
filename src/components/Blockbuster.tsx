@@ -1,9 +1,16 @@
 import React from 'react';
-import { Play, Search, Filter, Star, Clock, User, ArrowRight } from 'lucide-react';
+import { Play, Search, Filter, Star, Clock, User, Plus, Film } from 'lucide-react';
+import { UploadMovie } from './UploadMovie';
 
-export const Blockbuster: React.FC = () => {
+interface BlockbusterProps {
+  onUpload?: (data: any) => Promise<void>;
+}
+
+export const Blockbuster: React.FC<BlockbusterProps> = ({ onUpload }) => {
+  const [isUploadOpen, setIsUploadOpen] = React.useState(false);
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 relative">
       <div className="mb-12 flex items-center justify-between">
         <div>
           <h2 className="text-4xl font-bold tracking-tight text-neutral-900">Blockbuster</h2>
@@ -92,6 +99,24 @@ export const Blockbuster: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Upload Button - Fixed + Button Lower Right */}
+      <div className="fixed bottom-10 right-10 z-50">
+        <button
+          onClick={() => setIsUploadOpen(true)}
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] hover:scale-110 transition-all active:scale-95 ring-4 ring-white"
+        >
+          <Plus size={32} strokeWidth={3} />
+        </button>
+      </div>
+
+      {onUpload && (
+        <UploadMovie 
+          isOpen={isUploadOpen} 
+          onClose={() => setIsUploadOpen(false)} 
+          onUpload={onUpload} 
+        />
+      )}
     </div>
   );
 };
