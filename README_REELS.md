@@ -31,7 +31,7 @@ server {
     # Increase client body size for video uploads
     client_max_body_size 100M;
 
-    root /home/styni.com/public_html;
+    root /home/styni.com/stynaff/dist;
     index index.html index.htm;
 
     # Serve uploaded videos directly via Nginx for performance

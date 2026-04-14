@@ -126,7 +126,7 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
-    console.log(`>>> Domain: styni.com`);
+    console.log(`>>> Domain: https://styni.com/`);
   });
 }
 
