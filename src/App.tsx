@@ -21,7 +21,7 @@ import { Footer } from './components/Footer';
 import { Upgrade } from './components/Upgrade';
 import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification } from './types';
-import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User } from 'lucide-react';
+import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -850,19 +850,63 @@ export default function App() {
 
   if (!isAuthReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0c]">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-orange-600 text-white shadow-2xl shadow-orange-200">
-            <Globe size={48} className="animate-pulse" />
-            <div className="absolute -inset-2 animate-ping rounded-3xl border-2 border-orange-600/20"></div>
+          <div className="relative mx-auto mb-12 flex h-32 w-32 items-center justify-center">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+              className="absolute inset-0 rounded-[2.5rem] border-2 border-dashed border-orange-600/30"
+            />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-orange-600 text-white shadow-2xl shadow-orange-900/40">
+              <Globe size={48} className="animate-pulse" />
+            </div>
+            
+            {/* Floating Icons */}
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 2, delay: 0 }}
+              className="absolute -top-4 -right-4 rounded-full bg-neutral-900 p-3 text-pink-500 shadow-xl border border-white/5"
+            >
+              <Heart size={20} fill="currentColor" />
+            </motion.div>
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
+              className="absolute -bottom-4 -left-4 rounded-full bg-neutral-900 p-3 text-red-600 shadow-xl border border-white/5"
+            >
+              <Play size={20} fill="currentColor" />
+            </motion.div>
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 2, delay: 1 }}
+              className="absolute top-1/2 -left-8 -translate-y-1/2 rounded-full bg-neutral-900 p-3 text-indigo-500 shadow-xl border border-white/5"
+            >
+              <MessageSquare size={20} fill="currentColor" />
+            </motion.div>
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <Loader2 className="animate-spin text-orange-600" size={18} />
-            <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">Connecting...</p>
+          
+          <h1 className="mb-2 text-4xl font-black italic tracking-tighter text-white">
+            STYN
+          </h1>
+          <p className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-orange-500">
+            Unique Experience
+          </p>
+          
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-1 w-48 overflow-hidden rounded-full bg-neutral-900">
+              <motion.div 
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                className="h-full w-full bg-gradient-to-r from-transparent via-orange-600 to-transparent"
+              />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Initializing Secure Connection</p>
           </div>
         </motion.div>
       </div>
@@ -874,7 +918,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 font-sans text-white">
+    <div className="min-h-screen bg-[#0c0c0c] font-sans text-white">
       <Navbar 
         user={user} 
         onLogout={handleLogout} 

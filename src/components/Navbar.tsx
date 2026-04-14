@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }
 
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-neutral-950/80 backdrop-blur-md">
+    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#0c0c0c]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
         {/* Logo */}
         <div className="flex flex-col items-start cursor-pointer" onClick={() => onMenuClick('feed')}>

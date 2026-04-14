@@ -56,7 +56,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin, on
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#0c0c0c] px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 rounded-3xl bg-neutral-900 p-8 shadow-xl ring-1 ring-white/5 border border-white/5">
         {/* Header */}
         <div className="text-center">

@@ -120,7 +120,15 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
 
       {/* Content */}
       <div className="px-4 pb-4 md:px-6 md:pb-6">
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">{post.content}</p>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+          {post.content.split(/(#\w+)/g).map((part, i) => (
+            part.startsWith('#') ? (
+              <span key={i} className="font-bold text-orange-500 hover:underline cursor-pointer transition-all">
+                {part}
+              </span>
+            ) : part
+          ))}
+        </p>
       </div>
 
       {/* Media */}

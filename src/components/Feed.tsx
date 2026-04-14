@@ -195,10 +195,23 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
         )}
       </div>
 
-      {/* Trending Section (Optional UI element) */}
-      <div className="mb-8 flex items-center gap-4 rounded-2xl bg-orange-600/10 p-4 text-orange-500 border border-orange-600/20">
-        <TrendingUp size={20} />
-        <span className="text-sm font-bold">Trending in Africa: #STYN #SocialSuperApp #TechInnovation</span>
+      {/* Trending Section */}
+      <div className="mb-8 overflow-hidden rounded-[2rem] border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+        <div className="flex items-center gap-3 border-b border-white/5 bg-neutral-950/50 px-6 py-4">
+          <TrendingUp size={20} className="text-orange-500" />
+          <h3 className="text-sm font-black uppercase tracking-widest text-white">Viral Hashtags</h3>
+        </div>
+        <div className="flex flex-wrap gap-2 p-6">
+          {['#STYN', '#SocialSuperApp', '#Viral', '#TrendingNow', '#TechInnovation', '#AfricaRising', '#UniqueExperience'].map((tag) => (
+            <button 
+              key={tag}
+              onClick={() => setContent(prev => prev + (prev.endsWith(' ') || prev === '' ? '' : ' ') + tag)}
+              className="rounded-full bg-neutral-800 px-4 py-2 text-xs font-bold text-neutral-400 transition-all hover:bg-orange-600 hover:text-white active:scale-95"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Post List */}

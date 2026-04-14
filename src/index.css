@@ -20,7 +20,7 @@
 
 @layer base {
   body {
-    @apply bg-neutral-950 text-neutral-100 selection:bg-orange-500/30;
+    @apply bg-[#0c0c0c] text-neutral-100 selection:bg-orange-500/30;
   }
 
   /* Custom Scrollbar for the dark theme */
@@ -28,7 +28,7 @@
     width: 6px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-neutral-950;
+    @apply bg-[#0c0c0c];
   }
   ::-webkit-scrollbar-thumb {
     @apply bg-neutral-800 rounded-full hover:bg-orange-600/50 transition-colors;
