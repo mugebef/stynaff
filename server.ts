@@ -2,9 +2,12 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import multer from "multer";
+import { createRequire } from "module";
 import fs from "fs";
 import sharp from "sharp";
+
+const require = createRequire(import.meta.url);
+const multer = require("multer");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -114,7 +117,7 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
-    console.log(`>>> Domain: ray.styni.com`);
+    console.log(`>>> Domain: styni.com`);
   });
 }
 

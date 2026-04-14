@@ -19,7 +19,7 @@ export default defineConfig(({mode}) => {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
-      allowedHosts: ['ray.styni.com', 'www.ray.styni.com', '129.121.73.168'],
+      allowedHosts: ['styni.com', 'www.styni.com', '129.121.73.168'],
     },
     build: {
       chunkSizeWarningLimit: 1000,
