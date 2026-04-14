@@ -29,6 +29,7 @@ interface ProfileProps {
   onDeclineFriend: (uid: string) => void;
   onCancelFriendRequest: (uid: string) => void;
   onUnfriend: (uid: string) => void;
+  onFollow: (uid: string) => void;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ 
@@ -45,7 +46,8 @@ export const Profile: React.FC<ProfileProps> = ({
   onAcceptFriend,
   onDeclineFriend,
   onCancelFriendRequest,
-  onUnfriend
+  onUnfriend,
+  onFollow
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'Account' | 'Profile' | 'Privacy' | 'Security' | 'Membership' | 'Extra'>('Account');
@@ -76,6 +78,7 @@ export const Profile: React.FC<ProfileProps> = ({
 
   const isOwnProfile = user.uid === currentUser.uid;
   const isAdmin = currentUser.role === 'admin';
+  const isFollowing = currentUser.following?.includes(user.uid);
   const canEdit = isOwnProfile || isAdmin;
   const userPosts = posts.filter(p => p.authorId === user.uid);
 
@@ -166,7 +169,7 @@ export const Profile: React.FC<ProfileProps> = ({
       <div className="relative px-4 md:px-8">
         <div className="flex flex-col items-center md:flex-row md:items-end md:gap-6">
           {/* Profile Photo */}
-          <div className="relative -mt-20 h-40 w-40 overflow-hidden rounded-full border-4 border-white bg-neutral-100 shadow-2xl md:-mt-24 md:h-48 md:w-48">
+          <div className="relative -mt-20 h-40 w-40 overflow-hidden rounded-full border-4 border-neutral-950 bg-neutral-900 shadow-2xl md:-mt-24 md:h-48 md:w-48">
             {photoPreview || user.photoURL ? (
               <img 
                 src={photoPreview || user.photoURL} 
@@ -175,7 +178,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className={`flex h-full w-full items-center justify-center ${user.gender === 'Female' ? 'bg-pink-50 text-pink-400' : 'bg-blue-50 text-blue-400'}`}>
+              <div className={`flex h-full w-full items-center justify-center ${user.gender === 'Female' ? 'bg-pink-500/10 text-pink-500' : 'bg-blue-500/10 text-blue-500'}`}>
                 <UserIcon size={80} />
               </div>
             )}
@@ -190,21 +193,21 @@ export const Profile: React.FC<ProfileProps> = ({
           {/* Name & Actions */}
           <div className="mt-4 flex flex-1 flex-col items-center text-center md:mb-4 md:items-start md:text-left">
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold text-neutral-900">{user.displayName}</h1>
+              <h1 className="text-3xl font-bold text-white">{user.displayName}</h1>
               {user.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
             </div>
-            <div className="flex items-center gap-4 text-sm font-bold text-neutral-500">
+            <div className="flex items-center gap-4 text-sm font-bold text-neutral-400">
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-xs text-neutral-400 uppercase tracking-widest">User ID</span>
-                <span className="text-lg text-neutral-900">{user.uid.slice(0, 8)}</span>
+                <span className="text-xs text-neutral-500 uppercase tracking-widest">User ID</span>
+                <span className="text-lg text-white">{user.uid.slice(0, 8)}</span>
               </div>
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-xs text-neutral-400 uppercase tracking-widest">Friends</span>
-                <span className="text-lg text-neutral-900">{user.friends?.length || 0}</span>
+                <span className="text-xs text-neutral-500 uppercase tracking-widest">Friends</span>
+                <span className="text-lg text-white">{user.friends?.length || 0}</span>
               </div>
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-xs text-neutral-400 uppercase tracking-widest">Followers</span>
-                <span className="text-lg text-neutral-900">{user.followers?.length || 0}</span>
+                <span className="text-xs text-neutral-500 uppercase tracking-widest">Followers</span>
+                <span className="text-lg text-white">{user.followers?.length || 0}</span>
               </div>
             </div>
           </div>
@@ -213,7 +216,7 @@ export const Profile: React.FC<ProfileProps> = ({
             {canEdit && !isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
               >
                 <Edit3 size={18} />
                 Edit Profile
@@ -221,10 +224,21 @@ export const Profile: React.FC<ProfileProps> = ({
             )}
             {!isOwnProfile && !isEditing && (
               <div className="flex flex-wrap gap-2">
+                <button 
+                  onClick={() => onFollow(user.uid)}
+                  className={`flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                    isFollowing 
+                      ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' 
+                      : 'bg-orange-600 text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700'
+                  }`}
+                >
+                  <UserPlus size={18} />
+                  {isFollowing ? 'Following' : 'Follow'}
+                </button>
                 {currentUser.friends?.includes(user.uid) ? (
                   <button 
                     onClick={() => onUnfriend(user.uid)}
-                    className="flex items-center gap-2 rounded-xl bg-green-50 px-6 py-2.5 text-sm font-bold text-green-600 ring-1 ring-inset ring-green-600/20 hover:bg-red-50 hover:text-red-600 hover:ring-red-600/20 transition-all"
+                    className="flex items-center gap-2 rounded-xl bg-green-500/10 px-6 py-2.5 text-sm font-bold text-green-500 ring-1 ring-inset ring-green-600/20 hover:bg-red-500/10 hover:text-red-500 hover:ring-red-600/20 transition-all"
                   >
                     <CheckCircle size={18} />
                     Friends
@@ -232,7 +246,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 ) : currentUser.sentRequests?.includes(user.uid) ? (
                   <button 
                     onClick={() => onCancelFriendRequest(user.uid)}
-                    className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-all"
+                    className="flex items-center gap-2 rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-400 hover:bg-red-500/10 hover:text-red-500 transition-all"
                   >
                     <Loader2 className="animate-spin" size={18} />
                     Cancel Request
@@ -241,14 +255,14 @@ export const Profile: React.FC<ProfileProps> = ({
                   <div className="flex gap-2">
                     <button 
                       onClick={() => onAcceptFriend(user.uid)}
-                      className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                      className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                     >
                       <UserPlus size={18} />
                       Accept
                     </button>
                     <button 
                       onClick={() => onDeclineFriend(user.uid)}
-                      className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
+                      className="flex items-center gap-2 rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-200 hover:bg-neutral-700 transition-all active:scale-95"
                     >
                       Decline
                     </button>
@@ -256,7 +270,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 ) : (
                   <button 
                     onClick={() => onSendFriendRequest(user.uid)}
-                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                   >
                     <UserPlus size={18} />
                     Add Friend
@@ -266,7 +280,7 @@ export const Profile: React.FC<ProfileProps> = ({
                   onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { 
                     detail: { menu: 'chat', targetUser: user }
                   }))}
-                  className="flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-2.5 text-sm font-bold text-neutral-900 hover:bg-neutral-200 transition-all active:scale-95"
+                  className="flex items-center gap-2 rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-200 hover:bg-neutral-700 transition-all active:scale-95"
                 >
                   <MessageSquare size={18} />
                   Chat
@@ -280,51 +294,51 @@ export const Profile: React.FC<ProfileProps> = ({
           <div className="mt-8 space-y-6">
             {/* Stats Boxes */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm ring-1 ring-neutral-200">
+              <div className="rounded-2xl border border-white/5 bg-neutral-900 p-4 shadow-sm ring-1 ring-white/5">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-neutral-50 pb-2">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-neutral-500">User ID</span>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600">{user.uid.slice(0, 8)}</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">{user.uid.slice(0, 8)}</span>
                   </div>
-                  <div className="flex items-center justify-between border-b border-neutral-50 pb-2">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-neutral-500">Joined</span>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600">8 July 2025</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">8 July 2025</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-500">Last Login</span>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600">9 March 2026</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">9 March 2026</span>
                   </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm ring-1 ring-neutral-200">
+              <div className="rounded-2xl border border-white/5 bg-neutral-900 p-4 shadow-sm ring-1 ring-white/5">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-neutral-50 pb-2">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-neutral-500">Friends</span>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600">{user.friends?.length || 0}</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">{user.friends?.length || 0}</span>
                   </div>
-                  <div className="flex items-center justify-between border-b border-neutral-50 pb-2">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-neutral-500">Followings</span>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600">{user.following?.length || 0}</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">{user.following?.length || 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-500">Followers</span>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600">{user.followers?.length || 0}</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">{user.followers?.length || 0}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200 overflow-hidden">
+            <div className="rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5 overflow-hidden">
               {/* Tabs */}
-              <div className="flex border-b border-neutral-100 bg-neutral-50/50 overflow-x-auto scrollbar-hide">
+              <div className="flex border-b border-white/5 bg-neutral-950/50 overflow-x-auto scrollbar-hide">
                 {tabs.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all whitespace-nowrap ${
                       activeTab === tab.id 
-                        ? 'border-b-2 border-orange-600 bg-white text-orange-600' 
-                        : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900'
+                        ? 'border-b-2 border-orange-600 bg-neutral-900 text-orange-500' 
+                        : 'text-neutral-500 hover:bg-neutral-800 hover:text-white'
                     }`}
                   >
                     {tab.icon}
@@ -340,65 +354,65 @@ export const Profile: React.FC<ProfileProps> = ({
                     {isAdmin && (
                       <>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-neutral-700">Verified User</span>
+                          <span className="text-sm font-bold text-neutral-300">Verified User</span>
                           <button 
                             onClick={() => setEditVerified(!editVerified)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${editVerified ? 'bg-orange-600' : 'bg-neutral-200'}`}
+                            className={`relative h-6 w-11 rounded-full transition-colors ${editVerified ? 'bg-orange-600' : 'bg-neutral-800'}`}
                           >
                             <div className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${editVerified ? 'translate-x-5' : ''}`} />
                           </button>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-neutral-700">Banned</span>
+                          <span className="text-sm font-bold text-neutral-300">Banned</span>
                           <button 
                             onClick={() => setEditBanned(!editBanned)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${editBanned ? 'bg-red-600' : 'bg-neutral-200'}`}
+                            className={`relative h-6 w-11 rounded-full transition-colors ${editBanned ? 'bg-red-600' : 'bg-neutral-800'}`}
                           >
                             <div className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${editBanned ? 'translate-x-5' : ''}`} />
                           </button>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Ban Message</label>
+                          <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Ban Message</label>
                           <textarea 
                             value={editBanMessage}
                             onChange={(e) => setEditBanMessage(e.target.value)}
-                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm focus:border-orange-600 focus:outline-none"
+                            className="w-full rounded-xl border border-white/5 bg-neutral-950 p-3 text-sm text-white focus:border-orange-600 focus:outline-none"
                             rows={2}
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-neutral-700">Account Activated</span>
+                          <span className="text-sm font-bold text-neutral-300">Account Activated</span>
                           <button 
                             onClick={() => setEditActivated(!editActivated)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${editActivated ? 'bg-orange-600' : 'bg-neutral-200'}`}
+                            className={`relative h-6 w-11 rounded-full transition-colors ${editActivated ? 'bg-orange-600' : 'bg-neutral-800'}`}
                           >
                             <div className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${editActivated ? 'translate-x-5' : ''}`} />
                           </button>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-neutral-700">Getting Started</span>
+                          <span className="text-sm font-bold text-neutral-300">Getting Started</span>
                           <button 
                             onClick={() => setEditGettingStarted(!editGettingStarted)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${editGettingStarted ? 'bg-orange-600' : 'bg-neutral-200'}`}
+                            className={`relative h-6 w-11 rounded-full transition-colors ${editGettingStarted ? 'bg-orange-600' : 'bg-neutral-800'}`}
                           >
                             <div className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${editGettingStarted ? 'translate-x-5' : ''}`} />
                           </button>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-neutral-700">Demo Account</span>
+                          <span className="text-sm font-bold text-neutral-300">Demo Account</span>
                           <button 
                             onClick={() => setEditDemo(!editDemo)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${editDemo ? 'bg-orange-600' : 'bg-neutral-200'}`}
+                            className={`relative h-6 w-11 rounded-full transition-colors ${editDemo ? 'bg-orange-600' : 'bg-neutral-800'}`}
                           >
                             <div className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${editDemo ? 'translate-x-5' : ''}`} />
                           </button>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">User Group</label>
+                          <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">User Group</label>
                           <select 
                             value={editRole}
                             onChange={(e) => setEditRole(e.target.value as any)}
-                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                            className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                           >
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
@@ -407,21 +421,21 @@ export const Profile: React.FC<ProfileProps> = ({
                       </>
                     )}
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Username</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Username</label>
                       <input 
                         type="text" 
                         value={editUsername}
                         onChange={(e) => setEditUsername(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                        className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Email Address</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Email Address</label>
                       <input 
                         type="email" 
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                        className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -430,39 +444,39 @@ export const Profile: React.FC<ProfileProps> = ({
                 {activeTab === 'Profile' && (
                   <div className="space-y-6">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Display Name</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Display Name</label>
                       <input 
                         type="text" 
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                        className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Bio</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Bio</label>
                       <textarea 
                         value={editBio}
                         onChange={(e) => setEditBio(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm focus:border-orange-600 focus:outline-none"
+                        className="w-full rounded-xl border border-white/5 bg-neutral-950 p-3 text-sm text-white focus:border-orange-600 focus:outline-none"
                         rows={3}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Age</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Age</label>
                         <input 
                           type="number" 
                           value={editAge}
                           onChange={(e) => setEditAge(e.target.value)}
-                          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                          className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Gender</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Gender</label>
                         <select 
                           value={editGender}
                           onChange={(e) => setEditGender(e.target.value as any)}
-                          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                          className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                         >
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
@@ -471,11 +485,11 @@ export const Profile: React.FC<ProfileProps> = ({
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Relationship Status</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Relationship Status</label>
                       <select 
                         value={editRelationship}
                         onChange={(e) => setEditRelationship(e.target.value as any)}
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                        className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                       >
                         {RELATIONSHIP_STATUSES.map(status => (
                           <option key={status} value={status}>{status}</option>
@@ -484,14 +498,14 @@ export const Profile: React.FC<ProfileProps> = ({
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Country</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Country</label>
                         <select 
                           value={editCountry}
                           onChange={(e) => {
                             setEditCountry(e.target.value);
                             setEditCity(COUNTRIES_AND_CITIES[e.target.value]?.[0] || '');
                           }}
-                          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                          className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                         >
                           <option value="">Select Country</option>
                           {Object.keys(COUNTRIES_AND_CITIES).map(country => (
@@ -500,11 +514,11 @@ export const Profile: React.FC<ProfileProps> = ({
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">City</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">City</label>
                         <select 
                           value={editCity}
                           onChange={(e) => setEditCity(e.target.value)}
-                          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                          className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                           disabled={!editCountry}
                         >
                           <option value="">Select City</option>
@@ -521,10 +535,10 @@ export const Profile: React.FC<ProfileProps> = ({
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-sm font-bold text-neutral-900">Anonymous Mode</h4>
+                        <h4 className="text-sm font-bold text-white">Anonymous Mode</h4>
                         <p className="text-xs text-neutral-500">Browse profiles without letting them know.</p>
                       </div>
-                      <button className="relative h-6 w-11 rounded-full bg-neutral-200">
+                      <button className="relative h-6 w-11 rounded-full bg-neutral-800">
                         <div className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white" />
                       </button>
                     </div>
@@ -534,11 +548,11 @@ export const Profile: React.FC<ProfileProps> = ({
                 {activeTab === 'Security' && (
                   <div className="space-y-6">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">New Password</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">New Password</label>
                       <input 
                         type="password" 
                         placeholder="Leave blank to keep current"
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                        className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -546,14 +560,14 @@ export const Profile: React.FC<ProfileProps> = ({
 
                 {activeTab === 'Membership' && (
                   <div className="space-y-6">
-                    <div className="rounded-2xl bg-orange-50 p-6">
+                    <div className="rounded-2xl bg-orange-600/10 p-6 border border-orange-600/20">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg shadow-orange-900/20">
                           <TierIcon tier={user.tier} size={24} />
                         </div>
                         <div>
-                          <h4 className="text-lg font-bold text-neutral-900">Current Tier: {user.tier}</h4>
-                          <p className="text-sm text-neutral-600">You have {user.points} points in your wallet.</p>
+                          <h4 className="text-lg font-bold text-white">Current Tier: {user.tier}</h4>
+                          <p className="text-sm text-neutral-400">You have {user.points} points in your wallet.</p>
                         </div>
                       </div>
                     </div>
@@ -563,14 +577,14 @@ export const Profile: React.FC<ProfileProps> = ({
                 {activeTab === 'Extra' && (
                   <div className="space-y-6">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Interests</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Interests</label>
                       <div className="flex flex-wrap gap-2">
                         {user.interests?.map(interest => (
-                          <span key={interest} className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">
+                          <span key={interest} className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-bold text-neutral-400">
                             {interest}
                           </span>
                         ))}
-                        <button className="rounded-full border border-dashed border-neutral-300 px-3 py-1 text-xs font-bold text-neutral-400 hover:border-orange-600 hover:text-orange-600">
+                        <button className="rounded-full border border-dashed border-white/10 px-3 py-1 text-xs font-bold text-neutral-500 hover:border-orange-600 hover:text-orange-600">
                           + Add Interest
                         </button>
                       </div>
@@ -580,9 +594,9 @@ export const Profile: React.FC<ProfileProps> = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50/50 p-6">
+              <div className="flex items-center justify-between border-t border-white/5 bg-neutral-950/50 p-6">
                 <div className="flex gap-2">
-                  <button className="flex items-center gap-2 rounded-xl bg-red-50 px-6 py-2.5 text-sm font-bold text-red-600 hover:bg-red-100 transition-all">
+                  <button className="flex items-center gap-2 rounded-xl bg-red-500/10 px-6 py-2.5 text-sm font-bold text-red-500 hover:bg-red-500/20 transition-all">
                     <Trash2 size={18} />
                     Delete Posts
                   </button>
@@ -595,14 +609,14 @@ export const Profile: React.FC<ProfileProps> = ({
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-50 transition-all"
+                    className="rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-300 border border-white/5 hover:bg-neutral-700 transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="animate-spin" size={18} /> : 'Save Changes'}
                   </button>
@@ -614,49 +628,49 @@ export const Profile: React.FC<ProfileProps> = ({
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Intro Sidebar */}
             <div className="space-y-6">
-              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-                <h3 className="mb-4 text-lg font-bold text-neutral-900">Intro</h3>
-                <p className="mb-4 text-sm text-neutral-700">
+              <div className="rounded-2xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
+                <h3 className="mb-4 text-lg font-bold text-white">Intro</h3>
+                <p className="mb-4 text-sm text-neutral-400">
                   {user.bio || "No bio yet. Add one to tell people about yourself!"}
                 </p>
                 
-                <div className="space-y-3 border-t border-neutral-100 pt-4">
-                  <div className="flex items-center gap-3 text-sm text-neutral-600">
-                    <Briefcase size={18} className="text-neutral-400" />
-                    <span>Works at <span className="font-bold text-neutral-900">STYN</span></span>
+                <div className="space-y-3 border-t border-white/5 pt-4">
+                  <div className="flex items-center gap-3 text-sm text-neutral-400">
+                    <Briefcase size={18} className="text-neutral-500" />
+                    <span>Works at <span className="font-bold text-white">STYN</span></span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-600">
-                    <Calendar size={18} className="text-neutral-400" />
-                    <span>Age: <span className="font-bold text-neutral-900">{user.age || 'Not set'}</span></span>
+                  <div className="flex items-center gap-3 text-sm text-neutral-400">
+                    <Calendar size={18} className="text-neutral-500" />
+                    <span>Age: <span className="font-bold text-white">{user.age || 'Not set'}</span></span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-600">
-                    <UserIcon size={18} className="text-neutral-400" />
-                    <span>Gender: <span className="font-bold text-neutral-900">{user.gender || 'Not set'}</span></span>
+                  <div className="flex items-center gap-3 text-sm text-neutral-400">
+                    <UserIcon size={18} className="text-neutral-500" />
+                    <span>Gender: <span className="font-bold text-white">{user.gender || 'Not set'}</span></span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-600">
-                    <Heart size={18} className="text-neutral-400" />
-                    <span>Status: <span className="font-bold text-neutral-900">{user.relationshipStatus || 'Not set'}</span></span>
+                  <div className="flex items-center gap-3 text-sm text-neutral-400">
+                    <Heart size={18} className="text-neutral-500" />
+                    <span>Status: <span className="font-bold text-white">{user.relationshipStatus || 'Not set'}</span></span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-600">
-                    <MapPin size={18} className="text-neutral-400" />
-                    <span>Lives in <span className="font-bold text-neutral-900">{user.location?.city || 'City'}, {user.location?.country || 'Country'}</span></span>
+                  <div className="flex items-center gap-3 text-sm text-neutral-400">
+                    <MapPin size={18} className="text-neutral-500" />
+                    <span>Lives in <span className="font-bold text-white">{user.location?.city || 'City'}, {user.location?.country || 'Country'}</span></span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-600">
-                    <Calendar size={18} className="text-neutral-400" />
-                    <span>Joined <span className="font-bold text-neutral-900">April 2026</span></span>
+                  <div className="flex items-center gap-3 text-sm text-neutral-400">
+                    <Calendar size={18} className="text-neutral-500" />
+                    <span>Joined <span className="font-bold text-white">April 2026</span></span>
                   </div>
                 </div>
               </div>
 
               {/* Photos Grid */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm ring-1 ring-neutral-200">
+              <div className="rounded-2xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-neutral-900">Photos</h3>
-                  <button className="text-sm font-bold text-orange-600 hover:underline">See all</button>
+                  <h3 className="text-lg font-bold text-white">Photos</h3>
+                  <button className="text-sm font-bold text-orange-500 hover:underline">See all</button>
                 </div>
                 <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl">
                   {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="aspect-square bg-neutral-100 transition-all hover:opacity-80">
+                    <div key={i} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
                       <img 
                         src={`https://picsum.photos/seed/${user.uid + i}/200`} 
                         alt="Gallery" 
@@ -673,7 +687,7 @@ export const Profile: React.FC<ProfileProps> = ({
             <div className="lg:col-span-2">
               <div className="space-y-6">
                 {userPosts.length === 0 ? (
-                  <div className="rounded-2xl border border-neutral-200 bg-white p-12 text-center shadow-sm">
+                  <div className="rounded-2xl border border-white/5 bg-neutral-900 p-12 text-center shadow-sm">
                     <p className="text-neutral-500">No posts on this timeline yet.</p>
                   </div>
                 ) : (

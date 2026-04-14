@@ -93,16 +93,16 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
 
   if (currentIndex >= matches.length) {
     return (
-      <div className="flex h-[80vh] items-center justify-center rounded-3xl bg-white p-12 text-center shadow-xl ring-1 ring-neutral-200">
+      <div className="flex h-[80vh] items-center justify-center rounded-3xl bg-neutral-900 p-12 text-center shadow-xl ring-1 ring-white/5 border border-white/5">
         <div className="max-w-sm">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-orange-600/10 text-orange-500">
             <Heart size={48} className="animate-pulse" />
           </div>
-          <h2 className="mb-2 text-2xl font-bold text-neutral-900">No more matches!</h2>
+          <h2 className="mb-2 text-2xl font-bold text-white">No more matches!</h2>
           <p className="text-neutral-500">Check back later or expand your search criteria to find more people nearby.</p>
           <button 
             onClick={() => setCurrentIndex(0)}
-            className="mt-8 rounded-xl bg-orange-600 px-8 py-3 text-sm font-bold text-white shadow-lg hover:bg-orange-700 transition-all active:scale-95"
+            className="mt-8 rounded-xl bg-orange-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
           >
             Refresh Matches
           </button>
@@ -116,8 +116,8 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
   return (
     <div className="mx-auto max-w-md space-y-8 pb-12">
       <div className="flex items-center justify-between px-4">
-        <h1 className="text-3xl font-bold text-neutral-900">Dating</h1>
-        <div className="flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-bold text-orange-600">
+        <h1 className="text-3xl font-bold text-white">Dating</h1>
+        <div className="flex items-center gap-2 rounded-full bg-orange-600/10 px-4 py-2 text-sm font-bold text-orange-500 border border-orange-600/20">
           <Sparkles size={18} />
           AI Compatibility
         </div>
@@ -126,7 +126,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
       {/* Tinder Card */}
       <div 
         onClick={() => window.dispatchEvent(new CustomEvent('viewProfile', { detail: currentMatch.uid }))}
-        className="relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[2.5rem] bg-neutral-100 shadow-2xl ring-1 ring-neutral-200"
+        className="relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[2.5rem] bg-neutral-900 shadow-2xl ring-1 ring-white/5 border border-white/5"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -145,21 +145,21 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
             {currentMatch.photoURL ? (
               <img src={currentMatch.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-neutral-200 text-neutral-400">
+              <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-neutral-700">
                 <UserIcon size={120} />
               </div>
             )}
 
             {/* Info Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-neutral-950"></div>
             
             <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
               <div className="flex items-center gap-2">
                 <h2 className="text-3xl font-bold">{currentMatch.displayName}, {currentMatch.age || '??'}</h2>
-                {currentMatch.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
+                {currentMatch.isVerified && <CheckCircle size={24} className="fill-orange-500 text-white" />}
                 {currentMatch.tier === 'Platinum' && <ShieldCheck size={24} className="text-orange-400" />}
               </div>
-              <div className="mt-2 flex items-center gap-2 text-sm font-medium text-white/80">
+              <div className="mt-2 flex items-center gap-2 text-sm font-medium text-neutral-400">
                 <MapPin size={16} />
                 <span>{currentMatch.location?.city || 'Nearby'}, {currentMatch.location?.country || 'SA'}</span>
               </div>
@@ -168,14 +168,14 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
               {currentMatch.interests && currentMatch.interests.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {currentMatch.interests.slice(0, 3).map((interest, i) => (
-                    <span key={i} className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase backdrop-blur-md">
+                    <span key={i} className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase backdrop-blur-md border border-white/5">
                       {interest}
                     </span>
                   ))}
                 </div>
               )}
               
-              <p className="mt-4 text-sm line-clamp-2 text-white/90">{currentMatch.bio || "No bio provided."}</p>
+              <p className="mt-4 text-sm line-clamp-2 text-neutral-300">{currentMatch.bio || "No bio provided."}</p>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -185,7 +185,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
       <div className="flex items-center justify-center gap-6">
         <button 
           onClick={() => handleSwipeAction('left')}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-red-500 shadow-xl ring-1 ring-neutral-200 hover:bg-red-50 transition-all active:scale-90"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-900 text-red-500 shadow-xl ring-1 ring-white/5 hover:bg-red-500/10 transition-all active:scale-90 border border-white/5"
         >
           <X size={32} />
         </button>
@@ -193,13 +193,13 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
           onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { 
             detail: { menu: 'chat', targetUser: currentMatch }
           }))}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#00a884] shadow-xl ring-1 ring-neutral-200 hover:bg-green-50 transition-all active:scale-90"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-900 text-orange-500 shadow-xl ring-1 ring-white/5 hover:bg-orange-600/10 transition-all active:scale-90 border border-white/5"
         >
           <MessageSquare size={28} />
         </button>
         <button 
           onClick={() => handleSwipeAction('right')}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-green-500 shadow-xl ring-1 ring-neutral-200 hover:bg-green-50 transition-all active:scale-90"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-900 text-green-500 shadow-xl ring-1 ring-white/5 hover:bg-green-500/10 transition-all active:scale-90 border border-white/5"
         >
           <Heart size={32} className="fill-current" />
         </button>

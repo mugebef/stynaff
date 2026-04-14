@@ -115,21 +115,21 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => { setIsModalOpen(true); setError(null); }}
-        className="relative h-48 w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg ring-1 ring-neutral-200"
+        className="relative h-48 w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-neutral-900 shadow-lg ring-1 ring-white/5"
       >
-        <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-50">
+        <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-800">
           {user?.photoURL ? (
-            <img src={user.photoURL} alt="" className="h-full w-full object-cover brightness-75" />
+            <img src={user.photoURL} alt="" className="h-full w-full object-cover brightness-50" />
           ) : (
-            <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white ${user?.gender === 'Female' ? 'bg-pink-400' : 'bg-blue-400'}`}>
+            <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white ${user?.gender === 'Female' ? 'bg-pink-500' : 'bg-blue-500'}`}>
               <User size={24} />
             </div>
           )}
-          <div className="absolute bottom-0 left-0 right-0 bg-white p-2 text-center">
-            <div className="mx-auto -mt-6 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-white ring-4 ring-white">
+          <div className="absolute bottom-0 left-0 right-0 bg-neutral-900 p-2 text-center border-t border-white/5">
+            <div className="mx-auto -mt-6 mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-white ring-4 ring-neutral-900">
               <Plus size={16} />
             </div>
-            <span className="text-[10px] font-bold text-neutral-900">Create Story</span>
+            <span className="text-[10px] font-bold text-white">Create Story</span>
           </div>
         </div>
       </motion.div>
@@ -140,7 +140,7 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
           key={status.id}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="relative h-48 w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg ring-1 ring-neutral-200"
+          className="relative h-48 w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-neutral-900 shadow-lg ring-1 ring-white/5"
         >
           {status.mediaUrl ? (
             <img 
@@ -150,17 +150,17 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-500 to-orange-600 p-4 text-center">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-600 to-orange-800 p-4 text-center">
               <p className="text-[10px] font-bold text-white line-clamp-6">{status.content}</p>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
           
-          <div className="absolute left-3 top-3 h-8 w-8 overflow-hidden rounded-full border-2 border-orange-600 bg-white ring-2 ring-white">
+          <div className="absolute left-3 top-3 h-8 w-8 overflow-hidden rounded-full border-2 border-orange-600 bg-neutral-900 ring-2 ring-neutral-900">
             {status.userPhoto ? (
               <img src={status.userPhoto} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-neutral-100 text-neutral-400">
+              <div className="flex h-full w-full items-center justify-center bg-neutral-800 text-neutral-500">
                 <User size={14} />
               </div>
             )}
@@ -186,28 +186,28 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
+              className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-neutral-900 p-6 shadow-2xl border border-white/5"
             >
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-neutral-900">Create Story</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-neutral-400 hover:text-neutral-600">
+                <h2 className="text-xl font-bold text-white">Create Story</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-neutral-500 hover:text-white transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
               <div className="space-y-4">
                 {error && (
-                  <div className="rounded-xl bg-red-50 p-3 text-xs font-bold text-red-600">
+                  <div className="rounded-xl bg-red-500/10 p-3 text-xs font-bold text-red-500 border border-red-500/20">
                     {error}
                   </div>
                 )}
-                <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200">
+                <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-800 ring-1 ring-white/5">
                   {mediaPreview ? (
                     mediaFile?.type.startsWith('image') ? (
                       <img src={mediaPreview} alt="Preview" className="h-full w-full object-cover" />
@@ -215,7 +215,7 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
                       <video src={mediaPreview} className="h-full w-full object-cover" />
                     )
                   ) : (
-                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 text-neutral-400 hover:bg-neutral-200 transition-all">
+                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 text-neutral-500 hover:bg-neutral-700 transition-all">
                       <Camera size={40} />
                       <span className="text-xs font-bold">Select Photo or Video</span>
                       <input type="file" className="hidden" accept="image/*,video/*" onChange={handleMediaChange} />
@@ -235,14 +235,14 @@ export const Status: React.FC<StatusProps> = ({ user }) => {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="What's on your mind?"
-                  className="w-full resize-none rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm focus:border-orange-600 focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-white/5 bg-neutral-800 p-3 text-sm text-white focus:border-orange-600 focus:outline-none placeholder-neutral-600"
                   rows={3}
                 />
 
                 <button 
                   onClick={handleCreateStatus}
                   disabled={loading || (!mediaFile && !content.trim())}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" size={18} /> : 'Share Story'}
                 </button>

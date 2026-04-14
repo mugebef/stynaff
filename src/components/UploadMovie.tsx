@@ -61,17 +61,17 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-2xl overflow-hidden rounded-[40px] bg-white shadow-2xl my-8"
+            className="relative w-full max-w-2xl overflow-hidden rounded-[40px] bg-neutral-900 shadow-2xl my-8 border border-white/5"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-100 p-8">
+            <div className="flex items-center justify-between border-b border-white/5 p-8">
               <div>
-                <h3 className="text-2xl font-black tracking-tight text-neutral-900">Upload to Blockbuster</h3>
-                <p className="text-sm text-neutral-500">Share your cinematic masterpiece with Africa.</p>
+                <h3 className="text-2xl font-black tracking-tight text-white">Upload to Blockbuster</h3>
+                <p className="text-sm text-neutral-400">Share your cinematic masterpiece with Africa.</p>
               </div>
               <button 
                 onClick={onClose}
-                className="rounded-full p-3 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-all"
+                className="rounded-full p-3 text-neutral-500 hover:bg-neutral-800 hover:text-white transition-all"
               >
                 <X size={28} />
               </button>
@@ -83,18 +83,18 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                 <div className="space-y-6">
                   {/* Thumbnail Upload */}
                   <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Movie Poster (Thumbnail)</label>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Poster (Thumbnail)</label>
                     <div 
                       onClick={() => document.getElementById('thumb-input')?.click()}
                       className={`relative aspect-[2/3] cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed transition-all ${
-                        thumbnailFile ? 'border-orange-600' : 'border-neutral-200 hover:border-orange-400 bg-neutral-50'
+                        thumbnailFile ? 'border-orange-600' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
                       }`}
                     >
                       {thumbnailFile ? (
                         <img src={URL.createObjectURL(thumbnailFile)} className="h-full w-full object-cover" alt="Preview" />
                       ) : (
                         <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-                          <Film size={32} className="text-neutral-300" />
+                          <Film size={32} className="text-neutral-700" />
                           <p className="text-xs font-bold text-neutral-500">Click to upload poster</p>
                         </div>
                       )}
@@ -104,16 +104,16 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
 
                   {/* Trailer Upload */}
                   <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Trailer (Optional)</label>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Trailer (Optional)</label>
                     <div 
                       onClick={() => document.getElementById('trailer-input')?.click()}
                       className={`relative rounded-2xl border-2 border-dashed p-4 transition-all ${
-                        trailerFile ? 'border-orange-600 bg-orange-50' : 'border-neutral-200 hover:border-orange-400 bg-neutral-50'
+                        trailerFile ? 'border-orange-600 bg-orange-600/10' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <PlayCircle size={24} className={trailerFile ? 'text-orange-600' : 'text-neutral-300'} />
-                        <span className="text-xs font-bold text-neutral-600">
+                        <PlayCircle size={24} className={trailerFile ? 'text-orange-500' : 'text-neutral-700'} />
+                        <span className="text-xs font-bold text-neutral-400">
                           {trailerFile ? trailerFile.name : 'Upload Trailer Video'}
                         </span>
                       </div>
@@ -125,38 +125,38 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                 {/* Right Column: Details */}
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Movie Title</label>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Title</label>
                     <input
                       type="text"
                       required
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Enter movie title"
-                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4 text-sm font-bold focus:border-orange-600 focus:bg-white focus:outline-none transition-all"
+                      className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Description</label>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Description</label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="What is this movie about?"
-                      className="h-32 w-full resize-none rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-sm font-medium focus:border-orange-600 focus:bg-white focus:outline-none transition-all"
+                      className="h-32 w-full resize-none rounded-2xl border border-white/5 bg-neutral-950 p-5 text-sm font-medium text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Full Movie File</label>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Full Movie File</label>
                     <div 
                       onClick={() => document.getElementById('movie-input')?.click()}
                       className={`relative rounded-2xl border-2 border-dashed p-6 transition-all ${
-                        movieFile ? 'border-orange-600 bg-orange-50' : 'border-neutral-200 hover:border-orange-400 bg-neutral-50'
+                        movieFile ? 'border-orange-600 bg-orange-600/10' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
                       }`}
                     >
                       <div className="flex flex-col items-center gap-2 text-center">
-                        <Upload size={24} className={movieFile ? 'text-orange-600' : 'text-neutral-300'} />
-                        <span className="text-xs font-bold text-neutral-600">
+                        <Upload size={24} className={movieFile ? 'text-orange-500' : 'text-neutral-700'} />
+                        <span className="text-xs font-bold text-neutral-400">
                           {movieFile ? movieFile.name : 'Select Full Movie Video'}
                         </span>
                       </div>
@@ -165,14 +165,14 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                   </div>
 
                   {status === 'success' && (
-                    <div className="flex items-center gap-2 rounded-2xl bg-green-50 p-4 text-sm font-bold text-green-600">
+                    <div className="flex items-center gap-2 rounded-2xl bg-orange-600/10 p-4 text-sm font-bold text-orange-500">
                       <CheckCircle2 size={20} />
                       Movie uploaded successfully!
                     </div>
                   )}
 
                   {status === 'error' && (
-                    <div className="flex items-center gap-2 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-600">
+                    <div className="flex items-center gap-2 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500">
                       <AlertCircle size={20} />
                       Failed to upload movie.
                     </div>
@@ -181,7 +181,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                   <button
                     type="submit"
                     disabled={!movieFile || !thumbnailFile || !title || loading || status === 'success'}
-                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 py-5 text-lg font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 py-5 text-lg font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="animate-spin" size={24} />

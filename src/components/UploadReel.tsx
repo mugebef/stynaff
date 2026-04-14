@@ -66,14 +66,14 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl"
+            className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-neutral-900 shadow-2xl border border-white/5"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-100 p-6">
-              <h3 className="text-xl font-bold text-neutral-900">Upload Reel</h3>
+            <div className="flex items-center justify-between border-b border-white/5 p-6">
+              <h3 className="text-xl font-bold text-white">Upload Reel</h3>
               <button 
                 onClick={onClose}
-                className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-all"
+                className="rounded-full p-2 text-neutral-500 hover:bg-neutral-800 hover:text-white transition-all"
               >
                 <X size={24} />
               </button>
@@ -85,7 +85,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                 <div 
                   onClick={() => fileInputRef.current?.click()}
                   className={`relative aspect-[9/16] cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all ${
-                    preview ? 'border-orange-600' : 'border-neutral-200 hover:border-orange-400 bg-neutral-50'
+                    preview ? 'border-orange-600' : 'border-neutral-800 hover:border-orange-500 bg-neutral-950'
                   }`}
                 >
                   {preview ? (
@@ -98,11 +98,11 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                     />
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                      <div className="rounded-full bg-orange-100 p-4 text-orange-600">
+                      <div className="rounded-full bg-orange-600/10 p-4 text-orange-500">
                         <Upload size={32} />
                       </div>
                       <div>
-                        <p className="font-bold text-neutral-900">Select Video</p>
+                        <p className="font-bold text-white">Select Video</p>
                         <p className="text-xs text-neutral-500">MP4, WebM or Ogg (Max 50MB)</p>
                       </div>
                     </div>
@@ -126,29 +126,29 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
                       placeholder="Write a catchy caption..."
-                      className="h-32 w-full resize-none rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm focus:border-orange-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
+                      className="h-32 w-full resize-none rounded-2xl border border-white/5 bg-neutral-950 p-4 text-sm text-white placeholder-neutral-600 focus:border-orange-600 focus:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
                     />
                   </div>
 
-                  <div className="rounded-2xl bg-orange-50 p-4">
+                  <div className="rounded-2xl bg-orange-600/10 p-4 border border-orange-600/20">
                     <div className="flex gap-3">
-                      <Video className="shrink-0 text-orange-600" size={20} />
+                      <Video className="shrink-0 text-orange-500" size={20} />
                       <div>
-                        <p className="text-xs font-bold text-orange-900">Reel Tips</p>
-                        <p className="text-[10px] text-orange-700/80">Vertical videos (9:16) perform best. Keep it under 60 seconds for maximum engagement.</p>
+                        <p className="text-xs font-bold text-orange-400">Reel Tips</p>
+                        <p className="text-[10px] text-orange-200/60">Vertical videos (9:16) perform best. Keep it under 60 seconds for maximum engagement.</p>
                       </div>
                     </div>
                   </div>
 
                   {status === 'success' && (
-                    <div className="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-sm font-bold text-green-600">
+                    <div className="flex items-center gap-2 rounded-xl bg-green-500/10 p-3 text-sm font-bold text-green-500 border border-green-500/20">
                       <CheckCircle2 size={18} />
                       Reel uploaded successfully!
                     </div>
                   )}
 
                   {status === 'error' && (
-                    <div className="flex flex-col gap-1 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-600">
+                    <div className="flex flex-col gap-1 rounded-xl bg-red-500/10 p-3 text-sm font-bold text-red-500 border border-red-500/20">
                       <div className="flex items-center gap-2">
                         <AlertCircle size={18} />
                         Upload Failed
@@ -162,7 +162,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                   <button
                     type="submit"
                     disabled={!file || loading || status === 'success'}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="animate-spin" size={20} />

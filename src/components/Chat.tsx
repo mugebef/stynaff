@@ -143,35 +143,35 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-140px)] max-w-6xl overflow-hidden rounded-3xl border border-neutral-200 bg-[#f0f2f5] shadow-2xl ring-1 ring-neutral-200">
+    <div className="mx-auto flex h-[calc(100vh-140px)] max-w-6xl overflow-hidden rounded-3xl border border-white/5 bg-neutral-950 shadow-2xl ring-1 ring-white/5">
       {/* Sidebar */}
-      <div className={`w-full flex-col border-r border-neutral-200 bg-white md:flex md:w-80 lg:w-96 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
-        <div className="bg-[#f0f2f5] p-4 flex items-center justify-between">
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-200">
+      <div className={`w-full flex-col border-r border-white/5 bg-neutral-900 md:flex md:w-80 lg:w-96 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
+        <div className="bg-neutral-950 p-4 flex items-center justify-between border-b border-white/5">
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
             {currentUser.photoURL ? (
               <img src={currentUser.photoURL} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-neutral-400">
+              <div className="flex h-full w-full items-center justify-center text-neutral-500">
                 <User size={20} />
               </div>
             )}
           </div>
-          <div className="flex gap-4 text-neutral-500">
-            <button className="hover:text-neutral-700"><Users size={20} /></button>
-            <button className="hover:text-neutral-700"><MessageSquare size={20} /></button>
-            <button className="hover:text-neutral-700"><MoreVertical size={20} /></button>
+          <div className="flex gap-4 text-neutral-400">
+            <button className="hover:text-orange-500 transition-colors"><Users size={20} /></button>
+            <button className="hover:text-orange-500 transition-colors"><MessageSquare size={20} /></button>
+            <button className="hover:text-orange-500 transition-colors"><MoreVertical size={20} /></button>
           </div>
         </div>
 
         <div className="p-3">
           <div className="relative">
-            <Search className="absolute left-4 top-2.5 text-neutral-400" size={16} />
+            <Search className="absolute left-4 top-2.5 text-neutral-500" size={16} />
             <input
               type="text"
               placeholder="Search or start new chat"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border-none bg-[#f0f2f5] py-2 pl-12 pr-4 text-sm focus:outline-none"
+              className="w-full rounded-xl border border-white/5 bg-neutral-950 py-2 pl-12 pr-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
             />
           </div>
         </div>
@@ -181,34 +181,34 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             <div
               key={user.uid}
               onClick={() => setSelectedUser(user)}
-              className={`flex cursor-pointer items-center gap-3 border-b border-neutral-50 px-4 py-3 transition-all ${
-                selectedUser?.uid === user.uid ? 'bg-[#f0f2f5]' : 'hover:bg-neutral-50'
+              className={`flex cursor-pointer items-center gap-3 border-b border-white/5 px-4 py-3 transition-all ${
+                selectedUser?.uid === user.uid ? 'bg-neutral-800' : 'hover:bg-neutral-800/50'
               }`}
             >
               <div className="relative shrink-0">
-                <div className="h-12 w-12 overflow-hidden rounded-full bg-neutral-200">
+                <div className="h-12 w-12 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
                   {user.photoURL ? (
                     <img src={user.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                    <div className="flex h-full w-full items-center justify-center text-neutral-500">
                       <User size={24} />
                     </div>
                   )}
                 </div>
                 {user.isOnline && (
-                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-[#25d366]"></div>
+                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-neutral-900 bg-orange-500"></div>
                 )}
               </div>
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-center justify-between">
-                  <h4 className="truncate text-sm font-bold text-neutral-900">
+                  <h4 className="truncate text-sm font-bold text-white">
                     {user.displayName}
                   </h4>
-                  <span className="text-[10px] text-neutral-400">12:45 PM</span>
+                  <span className="text-[10px] text-neutral-500">12:45 PM</span>
                 </div>
-                <p className="truncate text-xs text-neutral-500">
+                <p className="truncate text-xs text-neutral-400">
                   {user.typingTo === currentUser.uid ? (
-                    <span className="text-[#25d366] font-bold">typing...</span>
+                    <span className="text-orange-500 font-bold">typing...</span>
                   ) : (
                     user.bio || 'Available'
                   )}
@@ -220,68 +220,61 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       </div>
 
       {/* Main Chat Area */}
-      <div className={`flex flex-1 flex-col bg-[#efeae2] relative ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex flex-1 flex-col bg-neutral-950 relative ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
         {/* Background Pattern Overlay */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')]"></div>
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')]"></div>
 
         {selectedUser ? (
           <>
             {/* Chat Header */}
-            <div className="relative z-10 flex items-center justify-between bg-[#f0f2f5] p-3 shadow-sm">
+            <div className="relative z-10 flex items-center justify-between bg-neutral-900 p-3 shadow-sm border-b border-white/5">
               <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedUser(null)} className="md:hidden text-neutral-500">
+                <button onClick={() => setSelectedUser(null)} className="md:hidden text-neutral-400">
                   <ArrowLeft size={20} />
                 </button>
-                <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-200">
+                <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
                   {selectedUser.photoURL ? (
                     <img src={selectedUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                    <div className="flex h-full w-full items-center justify-center text-neutral-500">
                       <User size={20} />
                     </div>
                   )}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-neutral-900">{selectedUser.displayName}</h4>
+                  <h4 className="text-sm font-bold text-white">{selectedUser.displayName}</h4>
                   <p className="text-[10px] text-neutral-500">
                     {selectedUser.isOnline ? 'online' : 'last seen recently'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-5 text-neutral-500">
-                <button className="hover:text-neutral-700"><Video size={20} /></button>
-                <button className="hover:text-neutral-700"><Phone size={20} /></button>
-                <button className="hover:text-neutral-700"><Search size={20} /></button>
-                <button className="hover:text-neutral-700"><MoreVertical size={20} /></button>
+              <div className="flex items-center gap-5 text-neutral-400">
+                <button className="hover:text-orange-500 transition-colors"><Video size={20} /></button>
+                <button className="hover:text-orange-500 transition-colors"><Phone size={20} /></button>
+                <button className="hover:text-orange-500 transition-colors"><Search size={20} /></button>
+                <button className="hover:text-orange-500 transition-colors"><MoreVertical size={20} /></button>
               </div>
             </div>
             
             {/* Messages Area */}
-            <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto p-4 md:p-8 space-y-2">
+            <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`relative max-w-[85%] md:max-w-[65%] rounded-lg px-3 py-1.5 shadow-sm ${
+                  <div className={`relative max-w-[85%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${
                     msg.senderId === currentUser.uid
-                      ? 'bg-[#dcf8c6] text-neutral-900 rounded-tr-none'
-                      : 'bg-white text-neutral-900 rounded-tl-none'
+                      ? 'bg-orange-600 text-white rounded-tr-none'
+                      : 'bg-neutral-800 text-white rounded-tl-none'
                   }`}>
-                    {/* Message Tail */}
-                    <div className={`absolute top-0 h-3 w-3 ${
-                      msg.senderId === currentUser.uid 
-                        ? 'right-[-8px] border-l-[10px] border-l-[#dcf8c6] border-b-[10px] border-b-transparent' 
-                        : 'left-[-8px] border-r-[10px] border-r-white border-b-[10px] border-b-transparent'
-                    }`}></div>
-
                     <p className="text-sm leading-relaxed pr-12">{msg.content}</p>
-                    <div className="absolute bottom-1 right-2 flex items-center gap-1">
-                      <span className="text-[9px] text-neutral-400">
+                    <div className="absolute bottom-1 right-3 flex items-center gap-1">
+                      <span className="text-[9px] text-white/60">
                         {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
                       </span>
                       {msg.senderId === currentUser.uid && (
-                        msg.status === 'seen' ? <CheckCheck size={14} className="text-blue-400" /> : <Check size={14} className="text-neutral-400" />
+                        msg.status === 'seen' ? <CheckCheck size={14} className="text-orange-200" /> : <Check size={14} className="text-white/40" />
                       )}
                     </div>
                   </div>
@@ -289,7 +282,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
               ))}
               {otherUserTyping && (
                 <div className="flex justify-start">
-                  <div className="rounded-lg bg-white px-3 py-2 text-xs text-neutral-500 shadow-sm italic">
+                  <div className="rounded-2xl bg-neutral-800 px-4 py-2 text-xs text-neutral-400 shadow-sm italic">
                     typing...
                   </div>
                 </div>
@@ -297,11 +290,11 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             </div>
 
             {/* Input Area */}
-            <div className="relative z-10 bg-[#f0f2f5] p-3">
-              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2">
-                <div className="flex gap-2 text-neutral-500">
-                  <button type="button" className="hover:text-neutral-700"><Smile size={24} /></button>
-                  <button type="button" className="hover:text-neutral-700"><Paperclip size={24} /></button>
+            <div className="relative z-10 bg-neutral-900 p-4 border-t border-white/5">
+              <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-3">
+                <div className="flex gap-3 text-neutral-400">
+                  <button type="button" className="hover:text-orange-500 transition-colors"><Smile size={24} /></button>
+                  <button type="button" className="hover:text-orange-500 transition-colors"><Paperclip size={24} /></button>
                 </div>
                 <input
                   type="text"
@@ -313,17 +306,17 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                     setIsTyping(true);
                   }}
                   placeholder="Type a message"
-                  className="flex-1 rounded-xl border-none bg-white px-4 py-2.5 text-sm focus:outline-none"
+                  className="flex-1 rounded-xl border border-white/5 bg-neutral-950 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
                 />
                 {newMessage.trim() ? (
                   <button 
                     type="submit"
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00a884] text-white shadow-md transition-all active:scale-95"
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg shadow-orange-900/20 transition-all active:scale-95"
                   >
                     <Send size={20} />
                   </button>
                 ) : (
-                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00a884] text-white shadow-md transition-all">
+                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg shadow-orange-900/20 transition-all">
                     <Mic size={20} />
                   </button>
                 )}
@@ -331,17 +324,17 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             </div>
           </>
         ) : (
-          <div className="relative z-10 flex flex-1 items-center justify-center p-8 bg-[#f8f9fa] border-b-4 border-[#25d366]">
+          <div className="relative z-10 flex flex-1 items-center justify-center p-8 bg-neutral-950 border-b-4 border-orange-600">
             <div className="text-center max-w-md">
-              <div className="mx-auto mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-neutral-100">
-                <MessageSquare size={64} className="text-neutral-300" />
+              <div className="mx-auto mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-neutral-900 border border-white/5">
+                <MessageSquare size={64} className="text-neutral-700" />
               </div>
-              <h3 className="text-3xl font-light text-neutral-600 mb-4">WhatsApp Web</h3>
-              <p className="text-sm text-neutral-500 leading-relaxed">
-                Send and receive messages without keeping your phone online.<br/>
-                Use WhatsApp on up to 4 linked devices and 1 phone at the same time.
+              <h3 className="text-3xl font-light text-white mb-4">STYN Chat</h3>
+              <p className="text-sm text-neutral-400 leading-relaxed">
+                Send and receive messages in real-time.<br/>
+                Connect with your friends and share your moments.
               </p>
-              <div className="mt-12 flex items-center justify-center gap-2 text-neutral-400">
+              <div className="mt-12 flex items-center justify-center gap-2 text-neutral-600">
                 <Shield size={14} />
                 <span className="text-xs">End-to-end encrypted</span>
               </div>

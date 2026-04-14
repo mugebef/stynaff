@@ -46,15 +46,15 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-bold text-orange-600 ring-1 ring-orange-200"
+          className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-600/10 px-4 py-2 text-sm font-bold text-orange-500 ring-1 ring-orange-500/20"
         >
           <Sparkles size={18} />
           STYN PREMIUM ACCESS
         </motion.div>
-        <h1 className="mb-4 text-4xl font-black tracking-tight text-neutral-900 md:text-5xl">
+        <h1 className="mb-4 text-4xl font-black tracking-tight text-white md:text-5xl">
           Elevate Your <span className="text-orange-600">Experience</span>
         </h1>
-        <p className="mx-auto max-w-2xl text-lg text-neutral-500">
+        <p className="mx-auto max-w-2xl text-lg text-neutral-400">
           Choose the perfect tier to unlock exclusive features and boost your presence across Africa's leading social super-app.
         </p>
       </div>
@@ -66,7 +66,7 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className={`relative flex flex-col overflow-hidden rounded-[2.5rem] border border-neutral-200 bg-white p-8 shadow-xl ring-1 ring-neutral-200 transition-all hover:shadow-2xl ${user.tier === tier.name ? 'ring-4 ring-orange-600' : ''}`}
+            className={`relative flex flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-neutral-900 p-8 shadow-xl ring-1 ring-white/5 transition-all hover:shadow-2xl hover:border-orange-600/30 ${user.tier === tier.name ? 'ring-4 ring-orange-600' : ''}`}
           >
             {user.tier === tier.name && (
               <div className="absolute -right-12 top-6 rotate-45 bg-orange-600 px-12 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
@@ -78,16 +78,16 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
               {tier.icon}
             </div>
 
-            <h3 className="mb-1 text-2xl font-black text-neutral-900">{tier.name}</h3>
+            <h3 className="mb-1 text-2xl font-black text-white">{tier.name}</h3>
             <div className="mb-6 flex items-baseline gap-1">
-              <span className="text-3xl font-black text-neutral-900">${tier.price}</span>
-              <span className="text-sm font-bold text-neutral-400">/month</span>
+              <span className="text-3xl font-black text-white">${tier.price}</span>
+              <span className="text-sm font-bold text-neutral-500">/month</span>
             </div>
 
             <ul className="mb-8 flex-1 space-y-4">
               {tier.features.map((feature, j) => (
-                <li key={j} className="flex items-start gap-3 text-sm font-medium text-neutral-600">
-                  <CheckCircle size={18} className="mt-0.5 shrink-0 text-green-500" />
+                <li key={j} className="flex items-start gap-3 text-sm font-medium text-neutral-400">
+                  <CheckCircle size={18} className="mt-0.5 shrink-0 text-orange-500" />
                   {feature}
                 </li>
               ))}
@@ -98,8 +98,8 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
               disabled={user.tier === tier.name}
               className={`w-full rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 ${
                 user.tier === tier.name 
-                ? 'bg-neutral-100 text-neutral-400 cursor-default' 
-                : 'bg-orange-600 text-white shadow-lg shadow-orange-200 hover:bg-orange-700'
+                ? 'bg-neutral-800 text-neutral-500 cursor-default' 
+                : 'bg-orange-600 text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700'
               }`}
             >
               {user.tier === tier.name ? 'Active Plan' : `Upgrade to ${tier.name}`}
@@ -109,32 +109,32 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
       </div>
 
       {/* Comparison Section */}
-      <div className="rounded-[3rem] border border-neutral-200 bg-white p-12 shadow-2xl ring-1 ring-neutral-200">
+      <div className="rounded-[3rem] border border-white/5 bg-neutral-900 p-12 shadow-2xl ring-1 ring-white/5">
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-black text-neutral-900">Why Go Premium?</h2>
-          <p className="text-neutral-500">Premium members get 10x more engagement on average.</p>
+          <h2 className="text-3xl font-black text-white">Why Go Premium?</h2>
+          <p className="text-neutral-400">Premium members get 10x more engagement on average.</p>
         </div>
         <div className="grid gap-12 md:grid-cols-3">
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-inner">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-neutral-950 text-orange-500 shadow-inner border border-white/5">
               <TrendingUp size={32} />
             </div>
-            <h4 className="mb-2 text-xl font-bold text-neutral-900">Boost Visibility</h4>
-            <p className="text-sm text-neutral-500 leading-relaxed">Your posts appear higher in the feed and are recommended to more users across the platform.</p>
+            <h4 className="mb-2 text-xl font-bold text-white">Boost Visibility</h4>
+            <p className="text-sm text-neutral-400 leading-relaxed">Your posts appear higher in the feed and are recommended to more users across the platform.</p>
           </div>
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-50 text-purple-600 shadow-inner">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-neutral-950 text-orange-500 shadow-inner border border-white/5">
               <Star size={32} />
             </div>
-            <h4 className="mb-2 text-xl font-bold text-neutral-900">Exclusive Badges</h4>
-            <p className="text-sm text-neutral-500 leading-relaxed">Stand out with a unique badge that shows your commitment to the STYN community.</p>
+            <h4 className="mb-2 text-xl font-bold text-white">Exclusive Badges</h4>
+            <p className="text-sm text-neutral-400 leading-relaxed">Stand out with a unique badge that shows your commitment to the STYN community.</p>
           </div>
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-green-50 text-green-600 shadow-inner">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-neutral-950 text-orange-500 shadow-inner border border-white/5">
               <Shield size={32} />
             </div>
-            <h4 className="mb-2 text-xl font-bold text-neutral-900">Priority Support</h4>
-            <p className="text-sm text-neutral-500 leading-relaxed">Get faster responses from our moderation team and dedicated account assistance.</p>
+            <h4 className="mb-2 text-xl font-bold text-white">Priority Support</h4>
+            <p className="text-sm text-neutral-400 leading-relaxed">Get faster responses from our moderation team and dedicated account assistance.</p>
           </div>
         </div>
       </div>

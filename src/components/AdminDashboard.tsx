@@ -116,8 +116,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   return (
     <div className="space-y-8 pb-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-neutral-900">Admin Dashboard</h1>
-        <div className="flex items-center gap-2 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white">
+        <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+        <div className="flex items-center gap-2 rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-orange-900/20">
           <TrendingUp size={18} />
           Super Admin Access
         </div>
@@ -126,89 +126,89 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <div key={i} className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50 shadow-inner">
+          <div key={i} className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-950 shadow-inner border border-white/5">
               {stat.icon}
             </div>
-            <p className="text-sm font-bold uppercase tracking-widest text-neutral-400">{stat.label}</p>
-            <p className="text-3xl font-bold text-neutral-900">{stat.value}</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">{stat.label}</p>
+            <p className="text-3xl font-bold text-white">{stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* App Configuration */}
       {appConfig && (
-        <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-xl ring-1 ring-neutral-200">
+        <div className="rounded-3xl border border-white/5 bg-neutral-900 p-8 shadow-xl ring-1 ring-white/5">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600/10 text-orange-500">
               <Settings size={20} />
             </div>
-            <h2 className="text-xl font-bold text-neutral-900">App Configuration</h2>
+            <h2 className="text-xl font-bold text-white">App Configuration</h2>
           </div>
           <form onSubmit={handleUpdateConfig} className="grid gap-6 md:grid-cols-3">
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Point Conversion Rate ($ per point)</label>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Point Conversion Rate ($ per point)</label>
               <input 
                 type="number" 
                 step="0.001"
                 value={appConfig.pointsToCashRate || 0.01}
                 onChange={(e) => setAppConfig({ ...appConfig, pointsToCashRate: parseFloat(e.target.value) })}
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+                className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm font-bold text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Post Boost Price ($)</label>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Post Boost Price ($)</label>
               <input 
                 type="number" 
                 step="0.01"
                 value={appConfig.boostPricePerDay || 5.00}
                 onChange={(e) => setAppConfig({ ...appConfig, boostPricePerDay: parseFloat(e.target.value) })}
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+                className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm font-bold text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Verification Fee ($)</label>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Verification Fee ($)</label>
               <input 
                 type="number" 
                 step="0.01"
                 value={appConfig.verificationPrice || 10.00}
                 onChange={(e) => setAppConfig({ ...appConfig, verificationPrice: parseFloat(e.target.value) })}
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+                className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm font-bold text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Points per Post</label>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Points per Post</label>
               <input 
                 type="number" 
                 value={appConfig.pointsPerPost || 10}
                 onChange={(e) => setAppConfig({ ...appConfig, pointsPerPost: parseInt(e.target.value) })}
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+                className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm font-bold text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Points per Like</label>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Points per Like</label>
               <input 
                 type="number" 
                 value={appConfig.pointsPerLike || 1}
                 onChange={(e) => setAppConfig({ ...appConfig, pointsPerLike: parseInt(e.target.value) })}
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+                className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm font-bold text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-400">Premium Monthly Price ($)</label>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">Premium Monthly Price ($)</label>
               <input 
                 type="number" 
                 step="0.01"
                 value={appConfig.premiumMonthlyPrice || 9.99}
                 onChange={(e) => setAppConfig({ ...appConfig, premiumMonthlyPrice: parseFloat(e.target.value) })}
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold focus:border-orange-600 focus:outline-none"
+                className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm font-bold text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
             <div className="md:col-span-3">
               <button 
                 type="submit"
                 disabled={isSavingConfig}
-                className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
               >
                 {isSavingConfig ? 'Saving...' : 'Save Configuration'}
               </button>
@@ -218,25 +218,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       )}
 
       {/* User Management */}
-      <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
-        <div className="border-b border-neutral-100 p-6">
+      <div className="rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+        <div className="border-b border-white/5 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-neutral-900">User Management</h2>
+            <h2 className="text-xl font-bold text-white">User Management</h2>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={18} />
               <input
                 type="text"
                 placeholder="Search users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="rounded-full border border-neutral-200 bg-neutral-50 py-2 pl-10 pr-4 text-sm focus:border-orange-600 focus:outline-none"
+                className="rounded-full border border-white/5 bg-neutral-950 py-2 pl-10 pr-4 text-sm text-white focus:border-orange-600 focus:outline-none"
               />
             </div>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-neutral-50 text-xs font-bold uppercase tracking-widest text-neutral-400">
+            <thead className="bg-neutral-950 text-xs font-bold uppercase tracking-widest text-neutral-500">
               <tr>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Tier</th>
@@ -246,16 +246,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-white/5">
               {filteredUsers.map((user) => (
-                <tr key={user.uid} className="hover:bg-neutral-50 transition-colors">
+                <tr key={user.uid} className="hover:bg-neutral-800 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-100">
-                        {user.photoURL ? <img src={user.photoURL} alt="" className="h-full w-full object-cover" /> : <Users className="m-2 text-neutral-400" />}
+                      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
+                        {user.photoURL ? <img src={user.photoURL} alt="" className="h-full w-full object-cover" /> : <Users className="m-2 text-neutral-500" />}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-neutral-900">{user.displayName}</p>
+                        <p className="text-sm font-bold text-white">{user.displayName}</p>
                         <p className="text-xs text-neutral-500">{user.email}</p>
                       </div>
                     </div>
@@ -264,7 +264,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                     <select
                       value={user.tier}
                       onChange={(e) => onUpdateUser(user.uid, { tier: e.target.value as any })}
-                      className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-bold text-neutral-700"
+                      className="rounded-lg border border-white/5 bg-neutral-950 px-2 py-1 text-xs font-bold text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-600"
                     >
                       {['General', 'Bronze', 'Silver', 'Gold', 'Platinum'].map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -273,8 +273,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                     <select
                       value={user.role}
                       onChange={(e) => onUpdateUser(user.uid, { role: e.target.value as any })}
-                      className={`rounded-lg border px-2 py-1 text-xs font-bold ${
-                        user.role === 'admin' ? 'border-orange-200 bg-orange-50 text-orange-600' : 'border-neutral-200 bg-white text-neutral-700'
+                      className={`rounded-lg border px-2 py-1 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-orange-600 ${
+                        user.role === 'admin' ? 'border-orange-600/20 bg-orange-600/10 text-orange-500' : 'border-white/5 bg-neutral-950 text-neutral-300'
                       }`}
                     >
                       <option value="user">User</option>
@@ -287,8 +287,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                         onClick={() => onUpdateUser(user.uid, { isVerified: !user.isVerified, verificationRequested: false })}
                         className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ring-1 ring-inset transition-all ${
                           user.isVerified 
-                            ? 'bg-blue-50 text-blue-600 ring-blue-600/20' 
-                            : 'bg-neutral-50 text-neutral-400 ring-neutral-200 hover:bg-blue-50 hover:text-blue-600 hover:ring-blue-600/20'
+                            ? 'bg-orange-600/10 text-orange-500 ring-orange-600/20' 
+                            : 'bg-neutral-800 text-neutral-500 ring-white/5 hover:bg-orange-600/10 hover:text-orange-500 hover:ring-orange-600/20'
                         }`}
                       >
                         <CheckCircle size={10} /> {user.isVerified ? 'VERIFIED' : 'UNVERIFIED'}
@@ -303,21 +303,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-neutral-400">$</span>
+                        <span className="text-xs font-bold text-neutral-500">$</span>
                         <input 
                           type="number"
                           value={user.walletBalance || 0}
                           onChange={(e) => onUpdateUser(user.uid, { walletBalance: parseFloat(e.target.value) })}
-                          className="w-16 rounded border border-neutral-200 bg-transparent px-1 py-0.5 text-xs font-bold text-neutral-900 focus:border-orange-600 focus:outline-none"
+                          className="w-16 rounded border border-white/5 bg-neutral-950 px-1 py-0.5 text-xs font-bold text-white focus:border-orange-600 focus:outline-none"
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <Award size={10} className="text-neutral-400" />
+                        <Award size={10} className="text-neutral-500" />
                         <input 
                           type="number"
                           value={user.points || 0}
                           onChange={(e) => onUpdateUser(user.uid, { points: parseInt(e.target.value) })}
-                          className="w-16 rounded border border-neutral-200 bg-transparent px-1 py-0.5 text-[10px] font-bold text-neutral-500 focus:border-orange-600 focus:outline-none"
+                          className="w-16 rounded border border-white/5 bg-neutral-950 px-1 py-0.5 text-[10px] font-bold text-neutral-400 focus:border-orange-600 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -329,11 +329,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                           const newName = prompt('Enter new display name:', user.displayName);
                           if (newName) onUpdateUser(user.uid, { displayName: newName });
                         }}
-                        className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-orange-600 transition-all"
+                        className="rounded-lg p-2 text-neutral-500 hover:bg-neutral-800 hover:text-orange-500 transition-all"
                       >
                         <Edit size={18} />
                       </button>
-                      <button className="rounded-lg p-2 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                      <button className="rounded-lg p-2 text-neutral-500 hover:bg-red-500/10 hover:text-red-500 transition-all">
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -346,18 +346,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       </div>
 
       {/* Ads & Sponsored Content Management */}
-      <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
-        <div className="border-b border-neutral-100 p-6">
+      <div className="rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+        <div className="border-b border-white/5 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600/10 text-orange-500">
                 <Megaphone size={20} />
               </div>
-              <h2 className="text-xl font-bold text-neutral-900">Ads & Sponsored Content</h2>
+              <h2 className="text-xl font-bold text-white">Ads & Sponsored Content</h2>
             </div>
             <button 
               onClick={() => setIsAdModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+              className="flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
             >
               <Plus size={18} />
               Create New Ad
@@ -367,24 +367,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         <div className="p-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {ads.map((ad) => (
-              <div key={ad.id} className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-4 transition-all hover:shadow-md">
-                <div className="mb-4 aspect-video w-full overflow-hidden rounded-xl bg-neutral-200">
+              <div key={ad.id} className="relative overflow-hidden rounded-2xl border border-white/5 bg-neutral-950 p-4 transition-all hover:shadow-md hover:border-orange-600/30">
+                <div className="mb-4 aspect-video w-full overflow-hidden rounded-xl bg-neutral-900 border border-white/5">
                   <img src={ad.imageUrl} alt={ad.title} className="h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-1 text-sm font-bold text-neutral-900">{ad.title}</h3>
-                <p className="mb-4 line-clamp-2 text-xs text-neutral-500">{ad.description}</p>
+                <h3 className="mb-1 text-sm font-bold text-white">{ad.title}</h3>
+                <p className="mb-4 line-clamp-2 text-xs text-neutral-400">{ad.description}</p>
                 <div className="flex items-center justify-between">
                   <button 
                     onClick={() => toggleAdStatus(ad.id, ad.active)}
-                    className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-all ${
-                      ad.active ? 'bg-green-100 text-green-600' : 'bg-neutral-200 text-neutral-500'
+                    className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest transition-all ${
+                      ad.active ? 'bg-orange-600/10 text-orange-500 ring-1 ring-orange-600/20' : 'bg-neutral-800 text-neutral-500'
                     }`}
                   >
                     {ad.active ? 'Active' : 'Inactive'}
                   </button>
                   <button 
                     onClick={() => deleteAd(ad.id)}
-                    className="rounded-full bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-all"
+                    className="rounded-full bg-red-500/10 p-2 text-red-500 hover:bg-red-500/20 transition-all"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -398,62 +398,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       {/* Ad Creation Modal */}
       {isAdModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm" onClick={() => setIsAdModalOpen(false)} />
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAdModalOpen(false)} />
+          <div className="relative w-full max-w-md rounded-3xl bg-neutral-900 p-8 shadow-2xl border border-white/5">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-neutral-900">Create Sponsored Ad</h2>
-              <button onClick={() => setIsAdModalOpen(false)} className="text-neutral-400 hover:text-neutral-600">
+              <h2 className="text-2xl font-bold text-white">Create Sponsored Ad</h2>
+              <button onClick={() => setIsAdModalOpen(false)} className="text-neutral-500 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
             <form onSubmit={handleCreateAd} className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Ad Title</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Ad Title</label>
                 <input 
                   type="text" 
                   required
                   value={newAd.title}
                   onChange={(e) => setNewAd({ ...newAd, title: e.target.value })}
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                   placeholder="e.g. Upgrade to Platinum"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Description</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Description</label>
                 <textarea 
                   required
                   value={newAd.description}
                   onChange={(e) => setNewAd({ ...newAd, description: e.target.value })}
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                   rows={3}
                   placeholder="Describe your ad..."
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Image URL</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Image URL</label>
                 <input 
                   type="url" 
                   required
                   value={newAd.imageUrl}
                   onChange={(e) => setNewAd({ ...newAd, imageUrl: e.target.value })}
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-400">Destination Link</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Destination Link</label>
                 <input 
                   type="url" 
                   required
                   value={newAd.link}
                   onChange={(e) => setNewAd({ ...newAd, link: e.target.value })}
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm focus:border-orange-600 focus:outline-none"
+                  className="w-full rounded-xl border border-white/5 bg-neutral-950 px-4 py-2 text-sm text-white focus:border-orange-600 focus:outline-none"
                   placeholder="https://example.com"
                 />
               </div>
               <button 
                 type="submit"
-                className="w-full rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95"
+                className="w-full rounded-xl bg-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
               >
                 Create Ad
               </button>
@@ -463,13 +463,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       )}
 
       {/* Post Management */}
-      <div className="rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
-        <div className="border-b border-neutral-100 p-6">
-          <h2 className="text-xl font-bold text-neutral-900">Recent Posts Moderation</h2>
+      <div className="rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+        <div className="border-b border-white/5 p-6">
+          <h2 className="text-xl font-bold text-white">Recent Posts Moderation</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-neutral-50 text-xs font-bold uppercase tracking-widest text-neutral-400">
+            <thead className="bg-neutral-950 text-xs font-bold uppercase tracking-widest text-neutral-500">
               <tr>
                 <th className="px-6 py-4">Author</th>
                 <th className="px-6 py-4">Content</th>
@@ -477,18 +477,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-white/5">
               {posts.slice(0, 10).map((post) => (
-                <tr key={post.id} className="hover:bg-neutral-50 transition-colors">
+                <tr key={post.id} className="hover:bg-neutral-800 transition-colors">
                   <td className="px-6 py-4">
-                    <p className="text-sm font-bold text-neutral-900">{post.authorName}</p>
+                    <p className="text-sm font-bold text-white">{post.authorName}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="line-clamp-1 text-sm text-neutral-600">{post.content}</p>
+                    <p className="line-clamp-1 text-sm text-neutral-400">{post.content}</p>
                   </td>
                   <td className="px-6 py-4">
                     {post.isBoosted && (
-                      <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-600 ring-1 ring-inset ring-orange-600/20">
+                      <span className="rounded-full bg-orange-600/10 px-2 py-1 text-[10px] font-bold text-orange-500 ring-1 ring-inset ring-orange-600/20">
                         BOOSTED
                       </span>
                     )}
@@ -501,7 +501,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                           setPosts(posts.filter(p => p.id !== post.id));
                         }
                       }}
-                      className="rounded-lg p-2 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                      className="rounded-lg p-2 text-neutral-500 hover:bg-red-500/10 hover:text-red-500 transition-all"
                     >
                       <Trash2 size={18} />
                     </button>

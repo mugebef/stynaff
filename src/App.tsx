@@ -16,14 +16,11 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { Wallet } from './components/Wallet';
 import { Reels } from './components/Reels';
 import { Live } from './components/Live';
-import { Pages } from './components/Pages';
-import { Groups } from './components/Groups';
 import { Status } from './components/Status';
 import { Footer } from './components/Footer';
 import { Upgrade } from './components/Upgrade';
-import { Marketplace, Jobs, Events } from './components/Marketplace';
 import { FriendsPage } from './components/FriendsPage';
-import { Post, User as UserType, Notification, Page, Group } from './types';
+import { Post, User as UserType, Notification } from './types';
 import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,7 +53,8 @@ import {
   arrayRemove, 
   deleteDoc,
   getDocFromServer,
-  where
+  where,
+  increment
 } from 'firebase/firestore';
 
 enum OperationType {
@@ -117,8 +115,6 @@ export default function App() {
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
   const [profileUser, setProfileUser] = React.useState<UserType | null>(null);
-  const [pages, setPages] = React.useState<Page[]>([]);
-  const [groups, setGroups] = React.useState<Group[]>([]);
   const [appConfig, setAppConfig] = React.useState<any>(null);
   const [users, setUsers] = React.useState<UserType[]>([]);
   const [ads, setAds] = React.useState<any[]>([]);
@@ -207,8 +203,6 @@ export default function App() {
               swipedLeft: [],
               swipedRight: [],
               matches: [],
-              joinedGroups: [],
-              followedPages: [],
               walletBalance: 0,
               points: 0,
               profileViews: 0,
@@ -256,7 +250,7 @@ export default function App() {
     if (!user) return;
     const q = query(collection(db, 'users'));
     const unsubscribe = onSnapshot(q, (snap) => {
-      setUsers(snap.docs.map(d => d.data() as UserType));
+      setUsers(snap.docs.map(d => ({ ...d.data(), uid: d.id } as UserType)));
     });
     return () => unsubscribe();
   }, [user]);
@@ -368,21 +362,6 @@ export default function App() {
     });
   }, [user]);
 
-  // Pages & Groups Listeners
-  React.useEffect(() => {
-    if (!user) return;
-    const unsubPages = onSnapshot(collection(db, 'pages'), (snap) => {
-      setPages(snap.docs.map(d => ({ id: d.id, ...d.data() } as Page)));
-    });
-    const unsubGroups = onSnapshot(collection(db, 'groups'), (snap) => {
-      setGroups(snap.docs.map(d => ({ id: d.id, ...d.data() } as Group)));
-    });
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-      setUsers(snap.docs.map(d => ({ ...d.data() } as UserType)));
-    });
-    return () => { unsubPages(); unsubGroups(); unsubUsers(); };
-  }, [user]);
-
   // App Config Listener
   React.useEffect(() => {
     const unsub = onSnapshot(doc(db, 'appConfig', 'main'), (snap) => {
@@ -416,8 +395,6 @@ export default function App() {
       sentRequests: [],
       followers: [],
       following: [],
-      joinedGroups: [],
-      followedPages: [],
       walletBalance: 0,
       points: 0,
       profileViews: 0,
@@ -826,6 +803,51 @@ export default function App() {
     }
   };
 
+  const handleShare = async (postId: string) => {
+    if (!user) return;
+    const postRef = doc(db, 'posts', postId);
+    try {
+      await updateDoc(postRef, {
+        shares: increment(1)
+      });
+      // Copy link to clipboard
+      const url = window.location.href;
+      await navigator.clipboard.writeText(`${url}?post=${postId}`);
+    } catch (error) {
+      console.error('Error sharing post:', error);
+    }
+  };
+
+  const handleFollow = async (targetUid: string) => {
+    if (!user || user.uid === targetUid) return;
+    const userRef = doc(db, 'users', user.uid);
+    const targetRef = doc(db, 'users', targetUid);
+    
+    const isFollowing = user.following?.includes(targetUid);
+    
+    try {
+      await updateDoc(userRef, {
+        following: isFollowing ? arrayRemove(targetUid) : arrayUnion(targetUid)
+      });
+      await updateDoc(targetRef, {
+        followers: isFollowing ? arrayRemove(user.uid) : arrayUnion(user.uid)
+      });
+
+      if (!isFollowing) {
+        await addDoc(collection(db, 'notifications'), {
+          type: 'follow',
+          fromId: user.uid,
+          fromName: user.displayName,
+          toId: targetUid,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error('Error following user:', error);
+    }
+  };
+
   if (!isAuthReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
@@ -852,7 +874,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900">
+    <div className="min-h-screen bg-neutral-950 font-sans text-white">
       <Navbar 
         user={user} 
         onLogout={handleLogout} 
@@ -883,6 +905,7 @@ export default function App() {
             onDeclineFriend={handleDeclineFriend}
             onCancelFriendRequest={handleCancelFriendRequest}
             onUnfriend={handleUnfriend}
+            onFollow={handleFollow}
           />
         ) : activeMenu === 'friends' ? (
           <FriendsPage 
@@ -906,21 +929,24 @@ export default function App() {
         ) : activeMenu === 'wallet' ? (
           <Wallet user={user} onUpdateUser={handleUpdateProfile} />
         ) : activeMenu === 'reels' ? (
-          <Reels posts={posts} currentUser={user} onLike={handleLike} onComment={handleComment} onUpload={handleReelUpload} />
+          <Reels 
+            posts={posts} 
+            currentUser={user} 
+            onLike={handleLike} 
+            onComment={handleComment} 
+            onUpload={handleReelUpload}
+            onFollow={handleFollow}
+            onShare={handleShare}
+            onChat={(targetUser) => {
+              setSelectedChatUser(targetUser);
+              setActiveMenu('chat');
+            }}
+            users={users}
+          />
         ) : activeMenu === 'live' ? (
           <Live />
-        ) : activeMenu === 'pages' ? (
-          <Pages pages={pages} currentUser={user} />
-        ) : activeMenu === 'groups' ? (
-          <Groups groups={groups} currentUser={user} />
         ) : activeMenu === 'upgrade' ? (
           <Upgrade user={user} onUpgrade={(tier) => handleUpdateProfile({ tier: tier as any })} />
-        ) : activeMenu === 'marketplace' ? (
-          <Marketplace />
-        ) : activeMenu === 'jobs' ? (
-          <Jobs />
-        ) : activeMenu === 'events' ? (
-          <Events />
         ) : (
           <div className="flex gap-8">
             {/* Left Sidebar - Profile & Requests */}
@@ -958,6 +984,21 @@ export default function App() {
                   {activeMenu === 'blockbuster' && (
                     <Blockbuster onUpload={handleMovieUpload} />
                   )}
+                  {(activeMenu === 'feed' || activeMenu === 'reels') && (
+                    <Feed 
+                      posts={posts} 
+                      currentUser={user} 
+                      users={users}
+                      onPost={handlePost} 
+                      onLike={handleLike}
+                      onDelete={handleDelete}
+                      onComment={handleComment}
+                      onBoost={handleBoost}
+                      onFollow={handleFollow}
+                      onShare={handleShare}
+                      ads={ads}
+                    />
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -966,7 +1007,7 @@ export default function App() {
             <div className="hidden w-80 flex-col gap-6 xl:flex">
               {/* Sponsored Card */}
               {ads.filter(a => a.active).length > 0 ? (
-                <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+                <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
                   <div className="relative aspect-video">
                     <img src={ads.filter(a => a.active)[0].imageUrl} alt="Ad" className="h-full w-full object-cover" />
                     <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
@@ -974,20 +1015,20 @@ export default function App() {
                     </div>
                   </div>
                   <div className="p-6">
-                    <h4 className="mb-2 text-sm font-black text-neutral-900">{ads.filter(a => a.active)[0].title}</h4>
-                    <p className="mb-4 text-xs leading-relaxed text-neutral-500">{ads.filter(a => a.active)[0].description}</p>
+                    <h4 className="mb-2 text-sm font-black text-white">{ads.filter(a => a.active)[0].title}</h4>
+                    <p className="mb-4 text-xs leading-relaxed text-neutral-400">{ads.filter(a => a.active)[0].description}</p>
                     <a 
                       href={ads.filter(a => a.active)[0].link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95"
+                      className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                     >
                       Learn More
                     </a>
                   </div>
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl ring-1 ring-neutral-200">
+                <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
                   <div className="relative aspect-video">
                     <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
                     <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
@@ -995,34 +1036,41 @@ export default function App() {
                     </div>
                   </div>
                   <div className="p-6">
-                    <h4 className="mb-2 text-sm font-black text-neutral-900">Explore the Serengeti</h4>
-                    <p className="mb-4 text-xs leading-relaxed text-neutral-500">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
-                    <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all active:scale-95">
+                    <h4 className="mb-2 text-sm font-black text-white">Explore the Serengeti</h4>
+                    <p className="mb-4 text-xs leading-relaxed text-neutral-400">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
+                    <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95">
                       Book Now
                     </button>
                   </div>
                 </div>
               )}
 
-              <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl ring-1 ring-neutral-200">
-                <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-900">Suggested Friends</h4>
+              <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
+                <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
                 <div className="space-y-4">
                   {users.filter(u => u.uid !== user.uid).slice(0, 5).map(u => (
                     <div key={u.uid} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-100">
+                        <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
                           {u.photoURL ? (
                             <img src={u.photoURL} alt="" className="h-full w-full object-cover" />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                            <div className="flex h-full w-full items-center justify-center text-neutral-500">
                               <User size={20} />
                             </div>
                           )}
                         </div>
-                        <span className="text-sm font-bold text-neutral-900">{u.displayName}</span>
+                        <span className="text-sm font-bold text-white">{u.displayName}</span>
                       </div>
-                      <button className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-600 hover:bg-orange-100 transition-all">
-                        Connect
+                      <button 
+                        onClick={() => handleFollow(u.uid)}
+                        className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                          user.following?.includes(u.uid) 
+                            ? 'bg-neutral-800 text-neutral-400' 
+                            : 'bg-orange-600/10 text-orange-500 hover:bg-orange-600 hover:text-white'
+                        }`}
+                      >
+                        {user.following?.includes(u.uid) ? 'Following' : 'Follow'}
                       </button>
                     </div>
                   ))}
