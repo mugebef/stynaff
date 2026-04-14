@@ -10,11 +10,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists
-const uploadsDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-console.log(`>>> Uploads directory: ${uploadsDir}`);
+const baseUploadsDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
+const videoUploadDir = process.env.VIDEO_UPLOAD_DIR || path.join(baseUploadsDir, "videos");
+const imageUploadDir = process.env.IMAGE_UPLOAD_DIR || path.join(baseUploadsDir, "images");
+
+[baseUploadsDir, videoUploadDir, imageUploadDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+console.log(`>>> Base Uploads directory: ${baseUploadsDir}`);
+console.log(`>>> Video Uploads directory: ${videoUploadDir}`);
+console.log(`>>> Image Uploads directory: ${imageUploadDir}`);
 
 // Configure multer for local storage
 const storage = multer.memoryStorage(); // Use memory storage for sharp processing
@@ -29,7 +37,7 @@ async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
-  app.use("/uploads", express.static(uploadsDir));
+  app.use("/uploads", express.static(baseUploadsDir));
 
   // 1. API Routes
   app.get("/api/health", (req, res) => {
@@ -47,9 +55,13 @@ async function startServer() {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
+    const isVideo = req.file.mimetype.startsWith("video/");
+    const targetDir = isVideo ? videoUploadDir : imageUploadDir;
+    const subPath = isVideo ? "videos" : "images";
+
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const filename = uniqueSuffix + "-" + req.file.originalname.replace(/\s+/g, '-');
-    const outputPath = path.join(uploadsDir, filename);
+    const outputPath = path.join(targetDir, filename);
 
     try {
       if (req.file.mimetype.startsWith("image/")) {
@@ -63,7 +75,7 @@ async function startServer() {
         fs.writeFileSync(outputPath, req.file.buffer);
       }
 
-      const fileUrl = `/uploads/${filename}`;
+      const fileUrl = `/uploads/${subPath}/${filename}`;
       res.json({ url: fileUrl });
     } catch (err) {
       console.error("Upload error:", err);
