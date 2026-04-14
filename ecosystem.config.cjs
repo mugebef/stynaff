@@ -2,7 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'stynaff',
-      script: 'server.ts',
+      script: './server.ts',
+      cwd: '/home/styni.com/stynaff',
       interpreter: 'node',
       interpreter_args: '--import tsx',
       env: {
