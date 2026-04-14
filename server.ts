@@ -115,6 +115,15 @@ async function startServer() {
     });
   }
 
+  // Global Error Handler - Ensure all errors return JSON
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(">>> Server Error:", err);
+    res.status(err.status || 500).json({
+      error: err.message || "Internal Server Error",
+      code: err.code || "UNKNOWN_ERROR"
+    });
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
     console.log(`>>> Domain: styni.com`);

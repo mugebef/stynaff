@@ -486,6 +486,17 @@ export default function App() {
           method: 'POST',
           body: formData
         });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
+          } catch {
+            throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
+          }
+        }
+        
         const data = await res.json();
         mediaUrl = data.url;
         mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
@@ -570,7 +581,16 @@ export default function App() {
         body: formData
       });
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.error || `Upload failed with status ${response.status}`);
+        } catch {
+          throw new Error(`Upload failed with status ${response.status}. Server returned non-JSON response.`);
+        }
+      }
+      
       const data = await response.json();
 
       await addDoc(collection(db, 'posts'), {
@@ -579,8 +599,8 @@ export default function App() {
         mediaType: 'video',
         isReel: true,
         authorId: user.uid,
-        authorName: user.name,
-        authorPhoto: user.profilePic || '',
+        authorName: user.displayName,
+        authorPhoto: user.photoURL || null,
         authorVerified: user.isVerified || false,
         likes: [],
         comments: [],
