@@ -19,10 +19,21 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type.startsWith('video/')) {
+    if (selectedFile) {
+      if (!selectedFile.type.startsWith('video/')) {
+        setStatus('error');
+        setErrorMessage('Please select a valid video file.');
+        return;
+      }
+      if (selectedFile.size > 100 * 1024 * 1024) { // 100MB limit
+        setStatus('error');
+        setErrorMessage('Video file is too large. Max size is 100MB.');
+        return;
+      }
       setFile(selectedFile);
       setPreview(URL.createObjectURL(selectedFile));
       setStatus('idle');
+      setErrorMessage(null);
     }
   };
 
