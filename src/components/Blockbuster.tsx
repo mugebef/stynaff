@@ -14,7 +14,6 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ onUpload }) => {
       <div className="mb-12 flex items-center justify-between">
         <div>
           <h2 className="text-4xl font-bold tracking-tight text-white">Blockbuster</h2>
-          <p className="mt-2 text-lg text-neutral-400">Discover the latest movies and shows from across Africa.</p>
         </div>
         <div className="flex gap-4">
           <button className="rounded-full bg-neutral-900 p-4 text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 transition-all border border-white/5">

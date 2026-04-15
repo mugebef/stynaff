@@ -42,14 +42,17 @@ export const Navbar: React.FC<NavbarProps> = ({
     <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#0c0c0c]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
         {/* Logo */}
-        <div className="flex flex-col items-start cursor-pointer" onClick={() => onMenuClick('feed')}>
+        <div className="flex flex-col items-start cursor-pointer group" onClick={() => onMenuClick('feed')}>
           <div className="flex items-center gap-2">
-            <span className="font-serif text-3xl font-black italic tracking-tighter text-orange-500 drop-shadow-sm">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-900/20 group-hover:scale-110 transition-all">
+              <span className="text-xl font-black italic">S</span>
+            </div>
+            <span className="font-serif text-3xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors">
               Styn
             </span>
           </div>
-          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-neutral-400 leading-none mt-0.5">
-            A UNIQUE EXPERIENCE.
+          <span className="text-[7px] font-black uppercase tracking-[0.4em] text-orange-500 leading-none mt-1 opacity-80">
+            A UNIQUE EXPERIENCE
           </span>
         </div>
 

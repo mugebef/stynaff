@@ -97,22 +97,6 @@ service cloud.firestore {
              data.active is bool &&
              data.createdAt is timestamp;
     }
-    function isValidPage(data) {
-      return data.keys().hasAll(['name', 'description', 'ownerId', 'isVerified', 'followers', 'createdAt']) &&
-             data.name is string && data.name.size() > 0 &&
-             data.ownerId is string &&
-             data.isVerified is bool &&
-             data.followers is list &&
-             data.createdAt is timestamp;
-    }
-    function isValidGroup(data) {
-      return data.keys().hasAll(['name', 'description', 'ownerId', 'members', 'isPrivate', 'createdAt']) &&
-             data.name is string && data.name.size() > 0 &&
-             data.ownerId is string &&
-             data.members is list &&
-             data.isPrivate is bool &&
-             data.createdAt is timestamp;
-    }
     function isValidComment(data) {
       return data.keys().hasAll(['authorId', 'authorName', 'content', 'createdAt']) &&
              data.authorId is string &&
@@ -127,15 +111,6 @@ service cloud.firestore {
              data.content is string &&
              data.createdAt is timestamp &&
              data.read is bool;
-    }
-    function isValidStatus(data) {
-      return data.keys().hasAll(['userId', 'userName', 'mediaUrl', 'mediaType', 'createdAt', 'expiresAt']) &&
-             data.userId is string &&
-             data.userName is string &&
-             data.mediaUrl is string &&
-             data.mediaType in ['image', 'video'] &&
-             data.createdAt is timestamp &&
-             data.expiresAt is timestamp;
     }
 
     // ===============================================================
@@ -166,26 +141,6 @@ service cloud.firestore {
       }
     }
 
-    match /pages/{pageId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidPage(request.resource.data);
-      allow update: if (isAuthenticated() && (
-        (request.auth.uid == resource.data.ownerId && isValidPage(request.resource.data)) ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers']))
-      )) || isAdmin();
-      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.ownerId) || isAdmin();
-    }
-
-    match /groups/{groupId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidGroup(request.resource.data);
-      allow update: if (isAuthenticated() && (
-        (request.auth.uid == resource.data.ownerId && isValidGroup(request.resource.data)) ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']))
-      )) || isAdmin();
-      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.ownerId) || isAdmin();
-    }
-
     match /notifications/{notificationId} {
       allow read: if isAuthenticated() && request.auth.uid == resource.data.toId;
       allow create: if isAuthenticated();
@@ -210,12 +165,6 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.senderId && isValidMessage(request.resource.data);
       allow update: if isAuthenticated() && request.auth.uid == resource.data.receiverId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if isAuthenticated() && request.auth.uid == resource.data.senderId;
-    }
-
-    match /statuses/{statusId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId && isValidStatus(request.resource.data);
-      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
     match /sponsoredContent/{adId} {

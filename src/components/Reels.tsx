@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X } from 'lucide-react';
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadReel } from './UploadReel';
@@ -33,6 +33,8 @@ export const Reels: React.FC<ReelsProps> = ({
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
+  const [showComments, setShowComments] = React.useState<string | null>(null);
+  const [newComment, setNewComment] = React.useState('');
   const containerRef = React.useRef<HTMLDivElement>(null);
   const videoRefs = React.useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
@@ -212,8 +214,7 @@ export const Reels: React.FC<ReelsProps> = ({
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    const author = users.find(u => u.uid === reel.authorId);
-                    if (author) onChat(author);
+                    setShowComments(reel.id);
                   }}
                   className="flex flex-col items-center gap-1 group"
                 >
@@ -311,6 +312,89 @@ export const Reels: React.FC<ReelsProps> = ({
         onClose={() => setIsUploadOpen(false)} 
         onUpload={onUpload}
       />
+
+      {/* Comments Drawer */}
+      <AnimatePresence>
+        {showComments && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowComments(null)}
+              className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm rounded-3xl"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              className="absolute bottom-0 left-0 right-0 z-[70] h-[60%] rounded-t-[2.5rem] bg-neutral-900 p-6 shadow-2xl border-t border-white/5"
+            >
+              <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-neutral-800" />
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black uppercase tracking-widest text-white">Comments</h3>
+                <button onClick={() => setShowComments(null)} className="text-neutral-500 hover:text-white">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="h-[calc(100%-120px)] overflow-y-auto space-y-4 pr-2 no-scrollbar">
+                {reels.find(r => r.id === showComments)?.comments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-neutral-500 gap-2">
+                    <MessageCircle size={40} className="opacity-20" />
+                    <p className="text-sm font-bold">No comments yet</p>
+                    <p className="text-xs">Start the conversation!</p>
+                  </div>
+                ) : (
+                  reels.find(r => r.id === showComments)?.comments.map((comment: any) => (
+                    <div key={comment.id} className="flex gap-3">
+                      <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800 border border-white/10">
+                        {users.find(u => u.uid === comment.authorId)?.photoURL && (
+                          <img src={users.find(u => u.uid === comment.authorId)?.photoURL} className="h-full w-full rounded-full object-cover" alt="" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-black text-white">{comment.authorName}</span>
+                          <span className="text-[10px] text-neutral-600">2h ago</span>
+                        </div>
+                        <p className="text-sm text-neutral-300 leading-relaxed">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="absolute bottom-0 left-0 right-0 p-6 bg-neutral-900 border-t border-white/5">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newComment.trim()) return;
+                    onComment(showComments, newComment);
+                    setNewComment('');
+                  }}
+                  className="flex items-center gap-3"
+                >
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 rounded-xl border border-white/5 bg-neutral-950 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!newComment.trim()}
+                    className="rounded-full bg-orange-600 p-2.5 text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 disabled:opacity-50 transition-all active:scale-95"
+                  >
+                    <Send size={20} />
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -16,7 +16,6 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { Wallet } from './components/Wallet';
 import { Reels } from './components/Reels';
 import { Live } from './components/Live';
-import { Status } from './components/Status';
 import { Footer } from './components/Footer';
 import { Upgrade } from './components/Upgrade';
 import { FriendsPage } from './components/FriendsPage';
@@ -593,25 +592,33 @@ export default function App() {
   const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File }) => {
     if (!user) return;
     try {
+      const uploadFile = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
+          } catch {
+            throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
+          }
+        }
+        return await res.json();
+      };
+
       // Upload thumbnail
-      const thumbFormData = new FormData();
-      thumbFormData.append('file', movieData.thumbnailFile);
-      const thumbRes = await fetch('/api/upload', { method: 'POST', body: thumbFormData });
-      const thumbData = await thumbRes.json();
+      const thumbData = await uploadFile(movieData.thumbnailFile);
 
       // Upload movie
-      const movieFormData = new FormData();
-      movieFormData.append('file', movieData.movieFile);
-      const movieRes = await fetch('/api/upload', { method: 'POST', body: movieFormData });
-      const movieDataRes = await movieRes.json();
+      const movieDataRes = await uploadFile(movieData.movieFile);
 
       // Upload trailer if exists
       let trailerUrl = null;
       if (movieData.trailerFile) {
-        const trailerFormData = new FormData();
-        trailerFormData.append('file', movieData.trailerFile);
-        const trailerRes = await fetch('/api/upload', { method: 'POST', body: trailerFormData });
-        const trailerData = await trailerRes.json();
+        const trailerData = await uploadFile(movieData.trailerFile);
         trailerUrl = trailerData.url;
       }
 
@@ -629,6 +636,7 @@ export default function App() {
       });
     } catch (error) {
       console.error('Error uploading movie:', error);
+      alert(error instanceof Error ? error.message : 'Failed to upload movie');
       throw error;
     }
   };
@@ -856,46 +864,67 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className="relative mx-auto mb-12 flex h-32 w-32 items-center justify-center">
+          <div className="relative mx-auto mb-12 flex h-40 w-40 items-center justify-center">
             <motion.div 
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-              className="absolute inset-0 rounded-[2.5rem] border-2 border-dashed border-orange-600/30"
+              transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+              className="absolute inset-0 rounded-[3rem] border-2 border-dashed border-orange-600/20"
             />
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-orange-600 text-white shadow-2xl shadow-orange-900/40">
-              <Globe size={48} className="animate-pulse" />
+            <motion.div 
+              animate={{ rotate: -360 }}
+              transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+              className="absolute inset-4 rounded-[2.5rem] border border-orange-600/10"
+            />
+            <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-orange-500 to-orange-700 text-white shadow-2xl shadow-orange-900/40 overflow-hidden">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+              <span className="relative text-4xl font-black italic tracking-tighter">S</span>
             </div>
             
             {/* Floating Icons */}
             <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2, delay: 0 }}
-              className="absolute -top-4 -right-4 rounded-full bg-neutral-900 p-3 text-pink-500 shadow-xl border border-white/5"
+              animate={{ 
+                y: [0, -15, 0],
+                rotate: [0, 10, 0]
+              }}
+              transition={{ repeat: Infinity, duration: 3, delay: 0 }}
+              className="absolute -top-6 -right-6 rounded-2xl bg-neutral-900 p-4 text-pink-500 shadow-2xl border border-white/5 backdrop-blur-xl"
             >
-              <Heart size={20} fill="currentColor" />
+              <Heart size={24} fill="currentColor" />
             </motion.div>
             <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
-              className="absolute -bottom-4 -left-4 rounded-full bg-neutral-900 p-3 text-red-600 shadow-xl border border-white/5"
+              animate={{ 
+                y: [0, -15, 0],
+                rotate: [0, -10, 0]
+              }}
+              transition={{ repeat: Infinity, duration: 3, delay: 0.7 }}
+              className="absolute -bottom-6 -left-6 rounded-2xl bg-neutral-900 p-4 text-orange-500 shadow-2xl border border-white/5 backdrop-blur-xl"
             >
-              <Play size={20} fill="currentColor" />
+              <Play size={24} fill="currentColor" />
             </motion.div>
             <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2, delay: 1 }}
-              className="absolute top-1/2 -left-8 -translate-y-1/2 rounded-full bg-neutral-900 p-3 text-indigo-500 shadow-xl border border-white/5"
+              animate={{ 
+                x: [0, -10, 0],
+                y: [0, 10, 0]
+              }}
+              transition={{ repeat: Infinity, duration: 4, delay: 1.4 }}
+              className="absolute top-1/2 -left-12 -translate-y-1/2 rounded-2xl bg-neutral-900 p-4 text-indigo-500 shadow-2xl border border-white/5 backdrop-blur-xl"
             >
-              <MessageSquare size={20} fill="currentColor" />
+              <MessageSquare size={24} fill="currentColor" />
             </motion.div>
           </div>
           
-          <h1 className="mb-2 text-4xl font-black italic tracking-tighter text-white">
-            STYN
-          </h1>
-          <p className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-orange-500">
-            Unique Experience
-          </p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <h1 className="mb-2 text-6xl font-black italic tracking-tighter text-white">
+              STYN
+            </h1>
+            <p className="mb-12 text-xs font-black uppercase tracking-[0.5em] text-orange-500">
+              Unique Experience
+            </p>
+          </motion.div>
           
           <div className="flex flex-col items-center gap-4">
             <div className="h-1 w-48 overflow-hidden rounded-full bg-neutral-900">
@@ -1010,7 +1039,6 @@ export default function App() {
 
             {/* Main Content Area */}
             <div className="flex-1">
-              <Status user={user} />
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeMenu}

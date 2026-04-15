@@ -257,32 +257,54 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             </div>
             
             {/* Messages Area */}
-            <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`relative max-w-[85%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${
-                    msg.senderId === currentUser.uid
-                      ? 'bg-orange-600 text-white rounded-tr-none'
-                      : 'bg-neutral-800 text-white rounded-tl-none'
-                  }`}>
-                    <p className="text-sm leading-relaxed pr-12">{msg.content}</p>
-                    <div className="absolute bottom-1 right-3 flex items-center gap-1">
-                      <span className="text-[9px] text-white/60">
-                        {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
-                      </span>
-                      {msg.senderId === currentUser.uid && (
-                        msg.status === 'seen' ? <CheckCheck size={14} className="text-orange-200" /> : <Check size={14} className="text-white/40" />
+            <div 
+              ref={scrollRef} 
+              className="relative z-10 flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#0b141a]"
+              style={{
+                backgroundImage: `url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')`,
+                backgroundBlendMode: 'overlay',
+                backgroundColor: '#0b141a'
+              }}
+            >
+              {messages.map((msg, idx) => {
+                const isFirstInGroup = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}
+                  >
+                    <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-md ${
+                      msg.senderId === currentUser.uid
+                        ? 'bg-[#005c4b] text-[#e9edef] rounded-lg rounded-tr-none'
+                        : 'bg-[#202c33] text-[#e9edef] rounded-lg rounded-tl-none'
+                    }`}>
+                      {/* Bubble Tail */}
+                      {isFirstInGroup && (
+                        <div className={`absolute top-0 h-3 w-3 ${
+                          msg.senderId === currentUser.uid 
+                            ? '-right-2 bg-[#005c4b]' 
+                            : '-left-2 bg-[#202c33]'
+                        }`} 
+                        style={{ clipPath: msg.senderId === currentUser.uid ? 'polygon(0 0, 0 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)' }}
+                        />
                       )}
+                      
+                      <p className="text-[14.2px] leading-relaxed pr-16">{msg.content}</p>
+                      <div className="absolute bottom-1 right-2 flex items-center gap-1">
+                        <span className="text-[11px] text-[#8696a0]">
+                          {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                        </span>
+                        {msg.senderId === currentUser.uid && (
+                          msg.status === 'seen' ? <CheckCheck size={14} className="text-[#53bdeb]" /> : <Check size={14} className="text-[#8696a0]" />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {otherUserTyping && (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl bg-neutral-800 px-4 py-2 text-xs text-neutral-400 shadow-sm italic">
+                <div className="flex justify-start mt-2">
+                  <div className="rounded-lg bg-[#202c33] px-3 py-1.5 text-[13px] text-[#8696a0] shadow-sm italic">
                     typing...
                   </div>
                 </div>

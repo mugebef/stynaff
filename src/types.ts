@@ -119,17 +119,6 @@ export interface Message {
   reactions?: { [uid: string]: string };
 }
 
-export interface Status {
-  id: string;
-  userId: string;
-  userName: string;
-  userPhoto?: string;
-  mediaUrl: string;
-  mediaType: 'image' | 'video';
-  createdAt: any;
-  expiresAt: any;
-}
-
 export interface DatingMatch {
   id: string;
   users: string[]; // [uid1, uid2]
