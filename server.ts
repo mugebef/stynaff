@@ -13,6 +13,15 @@ const multer = require("multer");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const logFile = path.join(process.cwd(), "server.log");
+const log = (msg: string) => {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  try {
+    fs.appendFileSync(logFile, line);
+  } catch (e) {}
+  console.log(msg);
+};
+
 // Ensure uploads directory exists within the workspace
 const baseUploadsDir = path.join(process.cwd(), "uploads");
 const videoUploadDir = path.join(baseUploadsDir, "videos");
@@ -21,34 +30,53 @@ const imageUploadDir = path.join(baseUploadsDir, "images");
 [baseUploadsDir, videoUploadDir, imageUploadDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    log(`Created directory: ${dir}`);
   }
 });
 
-console.log(`>>> Base Uploads directory: ${baseUploadsDir}`);
-console.log(`>>> Video Uploads directory: ${videoUploadDir}`);
-console.log(`>>> Image Uploads directory: ${imageUploadDir}`);
+// Test writability
+try {
+  const testFile = path.join(baseUploadsDir, "test.txt");
+  fs.writeFileSync(testFile, "test");
+  fs.unlinkSync(testFile);
+  log("Uploads directory is writable");
+} catch (err: any) {
+  log(`Uploads directory NOT writable: ${err.message}`);
+}
 
 // Configure multer for local storage
 const storage = multer.diskStorage({
   destination: function (req: any, file: any, cb: any) {
     const isVideo = file.mimetype.startsWith("video/");
     const targetDir = isVideo ? videoUploadDir : imageUploadDir;
+    log(`Multer destination: ${targetDir}`);
     cb(null, targetDir);
   },
   filename: function (req: any, file: any, cb: any) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + "-" + file.originalname.replace(/\s+/g, '-'));
+    const name = uniqueSuffix + "-" + file.originalname.replace(/\s+/g, '-');
+    log(`Multer filename: ${name}`);
+    cb(null, name);
   }
 });
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 200 * 1024 * 1024 } // 200MB limit
+  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
 });
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  app.use((req, res, next) => {
+    req.on('close', () => {
+      if (!res.writableEnded) {
+        log(`>>> Request closed prematurely: ${req.method} ${req.url}`);
+      }
+    });
+    next();
+  });
 
   app.use(express.json());
   app.use("/uploads", express.static(baseUploadsDir));
@@ -64,47 +92,39 @@ async function startServer() {
     });
   });
 
+  app.get("/api/logs", (req, res) => {
+    if (fs.existsSync(logFile)) {
+      res.send(fs.readFileSync(logFile, "utf8"));
+    } else {
+      res.send("No logs found");
+    }
+  });
+
   app.post("/api/upload", (req, res) => {
+    log(">>> Starting upload request");
     upload.single("file")(req, res, async (err: any) => {
-      if (err instanceof multer.MulterError) {
-        console.error(">>> Multer Error:", err);
+      if (err) {
+        log(`>>> Multer Error: ${err.message}`);
         return res.status(400).json({ error: `Upload error: ${err.message}` });
-      } else if (err) {
-        console.error(">>> Unknown Upload Error:", err);
-        return res.status(500).json({ error: "An unknown error occurred during upload" });
       }
 
       if (!req.file) {
-        console.error(">>> Upload Error: No file received in request");
+        log(">>> Upload Error: No file received");
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      console.log(`>>> Uploaded: ${req.file.filename} (${req.file.mimetype}, ${req.file.size} bytes)`);
+      log(`>>> File received: ${req.file.filename} (${req.file.size} bytes)`);
 
       const isVideo = req.file.mimetype.startsWith("video/");
       const subPath = isVideo ? "videos" : "images";
 
       try {
-        if (req.file.mimetype.startsWith("image/")) {
-          const outputPath = req.file.path + ".webp";
-          // Compress image using sharp
-          await sharp(req.file.path)
-            .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: 80 })
-            .toFile(outputPath);
-          
-          // Delete original file
-          fs.unlinkSync(req.file.path);
-          
-          const fileUrl = `/uploads/${subPath}/${path.basename(outputPath)}`;
-          res.json({ url: fileUrl });
-        } else {
-          // For videos, it's already saved by multer
-          const fileUrl = `/uploads/${subPath}/${req.file.filename}`;
-          res.json({ url: fileUrl });
-        }
-      } catch (err) {
-        console.error("Processing error:", err);
+        // Skip sharp for now to rule out memory issues
+        const fileUrl = `/uploads/${subPath}/${req.file.filename}`;
+        log(`>>> Upload successful: ${fileUrl}`);
+        res.json({ url: fileUrl });
+      } catch (err: any) {
+        log(`>>> Processing error: ${err.message}`);
         res.status(500).json({ error: "Failed to process upload" });
       }
     });
