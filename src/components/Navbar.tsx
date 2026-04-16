@@ -11,6 +11,7 @@ interface NavbarProps {
   notificationCount: number;
   notifications: any[];
   onMarkRead: (id: string) => void;
+  appConfig?: any;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -20,7 +21,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeMenu, 
   notificationCount,
   notifications,
-  onMarkRead
+  onMarkRead,
+  appConfig
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
@@ -44,16 +46,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Logo */}
         <div className="flex flex-col items-start cursor-pointer group" onClick={() => onMenuClick('feed')}>
           <div className="flex items-center gap-2">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-900/20 group-hover:scale-110 transition-all">
-              <span className="text-xl font-black italic">S</span>
-            </div>
-            <span className="font-serif text-3xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors">
-              Styn
-            </span>
+            {appConfig?.logoUrl ? (
+              <img src={appConfig.logoUrl} alt="Logo" className="h-8 w-auto object-contain group-hover:scale-110 transition-all" />
+            ) : (
+              <>
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-900/20 group-hover:scale-110 transition-all">
+                  <span className="text-xl font-black italic">S</span>
+                </div>
+                <span className="font-serif text-3xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors">
+                  Styn
+                </span>
+              </>
+            )}
           </div>
-          <span className="text-[7px] font-black uppercase tracking-[0.4em] text-orange-500 leading-none mt-1 opacity-80">
-            A UNIQUE EXPERIENCE
-          </span>
+          {!appConfig?.logoUrl && (
+            <span className="text-[7px] font-black uppercase tracking-[0.4em] text-orange-500 leading-none mt-1 opacity-80">
+              A UNIQUE EXPERIENCE
+            </span>
+          )}
         </div>
 
         {/* Desktop Menu */}

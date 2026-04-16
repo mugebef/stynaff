@@ -166,6 +166,19 @@ export default function App() {
     testConnection();
   }, []);
 
+  // Favicon handling
+  React.useEffect(() => {
+    if (appConfig?.faviconUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = appConfig.faviconUrl;
+    }
+  }, [appConfig?.faviconUrl]);
+
   // Auth Listener
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -877,7 +890,11 @@ export default function App() {
             />
             <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-orange-500 to-orange-700 text-white shadow-2xl shadow-orange-900/40 overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-              <span className="relative text-4xl font-black italic tracking-tighter">S</span>
+              {appConfig?.logoUrl ? (
+                <img src={appConfig.logoUrl} alt="Logo" className="relative h-full w-full object-contain p-4" />
+              ) : (
+                <span className="relative text-4xl font-black italic tracking-tighter">S</span>
+              )}
             </div>
             
             {/* Floating Icons */}
@@ -959,6 +976,7 @@ export default function App() {
         notificationCount={notifications.filter(n => !n.read).length}
         notifications={notifications}
         onMarkRead={handleMarkNotificationRead}
+        appConfig={appConfig}
       />
 
       <main className="mx-auto max-w-7xl px-4 pt-20 pb-12 md:px-6">

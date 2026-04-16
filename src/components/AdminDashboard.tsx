@@ -30,6 +30,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   
   const [isAdModalOpen, setIsAdModalOpen] = React.useState(false);
   const [newAd, setNewAd] = React.useState({ title: '', description: '', imageUrl: '', link: '' });
+  const [isUploadingLogo, setIsUploadingLogo] = React.useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = React.useState(false);
+
+  const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    if (type === 'logo') setIsUploadingLogo(true);
+    else setIsUploadingFavicon(true);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.url) {
+        const updatedConfig = { ...appConfig, [type + 'Url']: data.url };
+        setAppConfig(updatedConfig);
+        await setDoc(doc(db, 'appConfig', 'main'), updatedConfig);
+        alert(`${type === 'logo' ? 'Logo' : 'Favicon'} updated successfully!`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Upload failed');
+    } finally {
+      if (type === 'logo') setIsUploadingLogo(false);
+      else setIsUploadingFavicon(false);
+    }
+  };
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -134,6 +164,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
             <p className="text-3xl font-bold text-white">{stat.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Site Identity */}
+      <div className="rounded-3xl border border-white/5 bg-neutral-900 p-8 shadow-xl ring-1 ring-white/5">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600/10 text-orange-500">
+            <Zap size={20} />
+          </div>
+          <h2 className="text-xl font-bold text-white">Site Identity</h2>
+        </div>
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Logo Upload */}
+          <div className="space-y-4">
+            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500">Site Logo</label>
+            <div className="flex items-center gap-6">
+              <div className="h-20 w-20 overflow-hidden rounded-2xl bg-neutral-950 border border-white/5 flex items-center justify-center">
+                {appConfig?.logoUrl ? (
+                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                ) : (
+                  <span className="text-2xl font-black italic text-orange-500">S</span>
+                )}
+              </div>
+              <div className="flex-1">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'logo')}
+                  className="hidden" 
+                  id="logo-upload"
+                />
+                <label 
+                  htmlFor="logo-upload"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-neutral-800 px-4 py-2 text-sm font-bold text-white hover:bg-neutral-700 transition-all"
+                >
+                  {isUploadingLogo ? 'Uploading...' : 'Change Logo'}
+                </label>
+                <p className="mt-2 text-[10px] text-neutral-500">Recommended size: 200x200px. PNG or SVG.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Favicon Upload */}
+          <div className="space-y-4">
+            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500">Site Favicon</label>
+            <div className="flex items-center gap-6">
+              <div className="h-12 w-12 overflow-hidden rounded-xl bg-neutral-950 border border-white/5 flex items-center justify-center">
+                {appConfig?.faviconUrl ? (
+                  <img src={appConfig.faviconUrl} alt="Favicon" className="h-8 w-8 object-contain" />
+                ) : (
+                  <div className="h-6 w-6 rounded bg-orange-600"></div>
+                )}
+              </div>
+              <div className="flex-1">
+                <input 
+                  type="file" 
+                  accept="image/x-icon,image/png,image/svg+xml"
+                  onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'favicon')}
+                  className="hidden" 
+                  id="favicon-upload"
+                />
+                <label 
+                  htmlFor="favicon-upload"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-neutral-800 px-4 py-2 text-sm font-bold text-white hover:bg-neutral-700 transition-all"
+                >
+                  {isUploadingFavicon ? 'Uploading...' : 'Change Favicon'}
+                </label>
+                <p className="mt-2 text-[10px] text-neutral-500">Recommended size: 32x32px. ICO, PNG or SVG.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* App Configuration */}
