@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserPlus, Check, X, User, Search, Users, UserMinus, Clock } from 'lucide-react';
 import { User as UserType } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface FriendsPageProps {
   currentUser: UserType;

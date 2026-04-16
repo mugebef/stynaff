@@ -1,7 +1,7 @@
 import React from 'react';
 import { Heart, X, MapPin, User as UserIcon, CheckCircle, Info, Star, ShieldCheck, Loader2, MessageSquare, Sparkles, Crown } from 'lucide-react';
 import { User } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 

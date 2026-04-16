@@ -1,6 +1,6 @@
 import React from 'react';
 import { Radio, Users, MessageCircle, Heart, Share2, MoreHorizontal, Shield, Send } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 export const Live: React.FC = () => {
   const [selectedStream, setSelectedStream] = React.useState<any>(null);

@@ -2,7 +2,7 @@ import React from 'react';
 import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, User, Zap, CheckCircle, X } from 'lucide-react';
 import { Post, User as UserType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface PostCardProps {
   post: Post;

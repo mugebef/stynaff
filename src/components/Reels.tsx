@@ -1,7 +1,7 @@
 import React from 'react';
 import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X } from 'lucide-react';
 import { Post, User } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
 
 interface ReelsProps {

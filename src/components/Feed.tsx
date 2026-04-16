@@ -2,7 +2,7 @@ import React from 'react';
 import { Image, Video, Send, Loader2, User, Plus, Sparkles, TrendingUp } from 'lucide-react';
 import { PostCard } from './PostCard';
 import { Post } from '../types';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 interface FeedProps {
   posts: Post[];

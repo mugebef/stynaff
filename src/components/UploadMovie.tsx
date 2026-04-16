@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Upload, Film, Loader2, CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface UploadMovieProps {
   isOpen: boolean;

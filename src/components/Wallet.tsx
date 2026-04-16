@@ -1,6 +1,6 @@
 import React from 'react';
 import { Wallet as WalletIcon, DollarSign, Award, TrendingUp, ArrowUpRight, ArrowDownLeft, Clock, CreditCard, Plus, Loader2, Smartphone, ExternalLink, Sparkles, Zap, Star, Shield, Info, ArrowRight, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { User, Transaction } from '../types';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';

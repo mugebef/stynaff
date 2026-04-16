@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle, ShoppingBag, Calendar, Briefcase, Sparkles, Radio, Play } from 'lucide-react';
 import { User as UserType } from '../types';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
   switch (tier) {

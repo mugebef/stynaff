@@ -22,7 +22,7 @@ import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification } from './types';
 import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   auth, 
   db, 

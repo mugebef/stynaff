@@ -1,7 +1,7 @@
 import React from 'react';
 import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X, LayoutDashboard, Video, Wallet as WalletIcon, Bell, Radio } from 'lucide-react';
 import { APP_NAME } from '../constants';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NavbarProps {
   user: any;

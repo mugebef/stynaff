@@ -1,5 +1,6 @@
 import React from 'react';
-import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle } from 'lucide-react';
+import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { UploadMovie } from './UploadMovie';
 import { MoviePlayer } from './MoviePlayer';
 import { User as UserType } from '../types';
@@ -71,31 +72,57 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             muted
             loop
             playsInline
-            className="h-full w-full object-cover opacity-60 transition-all duration-1000"
+            className="h-full w-full object-cover opacity-60 transition-all duration-1000 scale-105 group-hover:scale-100"
             onEnded={() => setShowTrailer(false)}
           />
         ) : (
           <img
             src={featuredMovie?.thumbnailUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=2000"}
             alt="Featured Movie"
-            className="h-full w-full object-cover opacity-80 transition-all duration-1000"
+            className="h-full w-full object-cover opacity-80 transition-all duration-1000 scale-105 group-hover:scale-100"
             referrerPolicy="no-referrer"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/80 via-transparent to-transparent"></div>
         
-        <div className="absolute bottom-0 left-0 w-full p-12 text-white">
-          <div className="flex items-center gap-4 text-sm font-bold uppercase tracking-widest text-orange-500">
-            <Star size={16} fill="currentColor" />
-            {featuredMovie ? 'Featured Today' : 'Coming Soon'}
-          </div>
-          <h3 className="mt-4 text-6xl font-bold leading-tight">
+        <div className="absolute bottom-0 left-0 w-full p-12 text-white z-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-4 text-sm font-black uppercase tracking-[0.3em] text-orange-500 mb-6"
+          >
+            <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
+            <div className="flex items-center gap-2">
+              <Star size={16} fill="currentColor" />
+              {featuredMovie ? 'Featured Blockbuster' : 'Coming Soon'}
+            </div>
+          </motion.div>
+          
+          <motion.h3 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-7xl font-black leading-none tracking-tighter uppercase italic"
+          >
             {featuredMovie?.title || "The African Dream"}
-          </h3>
-          <p className="mt-6 max-w-2xl text-xl leading-relaxed text-neutral-300">
+          </motion.h3>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-8 max-w-2xl text-lg leading-relaxed text-neutral-400 font-medium"
+          >
             {featuredMovie?.description || "An epic journey across the continent, exploring the beauty, culture, and resilience of the African spirit."}
-          </p>
-          <div className="mt-10 flex gap-6">
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-12 flex flex-wrap gap-6"
+          >
             {featuredMovie && (
               <>
                 <button 
@@ -106,27 +133,29 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                       handlePurchaseClick(featuredMovie);
                     }
                   }}
-                  className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                  className="group relative flex items-center gap-4 overflow-hidden rounded-full bg-orange-600 px-12 py-6 text-xl font-black text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
                 >
-                  <Play size={24} fill="currentColor" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                  <Play size={28} fill="currentColor" />
                   {hasAccess(featuredMovie) ? 'Watch Full Movie' : `Unlock for ${featuredMovie.price} Points`}
                 </button>
                 
                 {featuredMovie.trailerUrl && (
                   <button 
                     onClick={() => openPlayer(featuredMovie, true)}
-                    className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-xl font-bold text-white backdrop-blur-md hover:bg-white/10 transition-all active:scale-95"
+                    className="flex items-center gap-4 rounded-full border border-white/10 bg-white/5 px-12 py-6 text-xl font-black text-white backdrop-blur-xl hover:bg-white/10 transition-all active:scale-95"
                   >
-                    <PlayCircle size={24} />
+                    <PlayCircle size={28} />
                     Watch Trailer
                   </button>
                 )}
               </>
             )}
-            <button className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-xl font-bold text-white backdrop-blur-md hover:bg-white/10 transition-all active:scale-95">
-              More Info
+            <button className="flex items-center gap-4 rounded-full border border-white/10 bg-white/5 px-12 py-6 text-xl font-black text-white backdrop-blur-xl hover:bg-white/10 transition-all active:scale-95">
+              <Info size={28} />
+              Details
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -156,27 +185,34 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 <img
                   src={movie.thumbnailUrl}
                   alt={movie.title}
-                  className={`h-full w-full object-cover transition-all duration-700 ${hasAccess(movie) ? 'group-hover:scale-110' : 'blur-[2px] brightness-50'}`}
+                  className={`h-full w-full object-cover transition-all duration-700 ${hasAccess(movie) ? 'group-hover:scale-110' : 'group-hover:scale-105'}`}
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20 backdrop-blur-[2px]">
                   <div className="rounded-full bg-orange-600 p-6 text-white shadow-xl shadow-orange-900/40 transform scale-75 group-hover:scale-100 transition-transform duration-500">
                     {hasAccess(movie) ? <Play size={32} fill="currentColor" /> : (movie.trailerUrl ? <PlayCircle size={32} /> : <Lock size={32} />)}
                   </div>
                 </div>
+                
                 {!hasAccess(movie) && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-[2px]">
-                    {movie.trailerUrl && (
-                      <div className="mb-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10">
-                        Watch Trailer
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-6">
+                    <div className="w-full space-y-2">
+                      {movie.trailerUrl && (
+                        <div className="flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10">
+                          <PlayCircle size={14} />
+                          Watch Trailer
+                        </div>
+                      )}
+                      <div className="flex items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-2xl">
+                        <CreditCard size={14} />
+                        {movie.price} Points
                       </div>
-                    )}
-                    <div className="rounded-2xl bg-orange-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-2xl">
-                      {movie.price} Points
                     </div>
                   </div>
                 )}
-                <div className="absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/10">
+                <div className="absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 text-[10px] font-black text-white backdrop-blur-md border border-white/10 tracking-widest uppercase">
                   {movie.price > 0 ? 'PREMIUM' : 'FREE'}
                 </div>
               </div>

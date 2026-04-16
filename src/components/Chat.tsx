@@ -3,7 +3,7 @@ import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, Arro
 import { User as UserType, Message as MessageType } from '../types';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc, limit } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 
 interface ChatProps {
