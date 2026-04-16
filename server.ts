@@ -22,6 +22,14 @@ const log = (msg: string) => {
   console.log(msg);
 };
 
+process.on('uncaughtException', (err) => {
+  log(`>>> UNCAUGHT EXCEPTION: ${err.message}\n${err.stack}`);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  log(`>>> UNHANDLED REJECTION: ${reason}`);
+});
+
 // Ensure uploads directory exists within the workspace
 const baseUploadsDir = path.join(process.cwd(), "uploads");
 const videoUploadDir = path.join(baseUploadsDir, "videos");
@@ -45,24 +53,11 @@ try {
 }
 
 // Configure multer for local storage
-const storage = multer.diskStorage({
-  destination: function (req: any, file: any, cb: any) {
-    const isVideo = file.mimetype.startsWith("video/");
-    const targetDir = isVideo ? videoUploadDir : imageUploadDir;
-    log(`Multer destination: ${targetDir}`);
-    cb(null, targetDir);
-  },
-  filename: function (req: any, file: any, cb: any) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const name = uniqueSuffix + "-" + file.originalname.replace(/\s+/g, '-');
-    log(`Multer filename: ${name}`);
-    cb(null, name);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // Reduced to 50MB for debugging
 });
 
 async function startServer() {
@@ -114,14 +109,19 @@ async function startServer() {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      log(`>>> File received: ${req.file.filename} (${req.file.size} bytes)`);
+      log(`>>> File received in memory: ${req.file.originalname} (${req.file.size} bytes)`);
 
       const isVideo = req.file.mimetype.startsWith("video/");
       const subPath = isVideo ? "videos" : "images";
+      const targetDir = isVideo ? videoUploadDir : imageUploadDir;
+      
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      const filename = uniqueSuffix + "-" + req.file.originalname.replace(/\s+/g, '-');
+      const filePath = path.join(targetDir, filename);
 
       try {
-        // Skip sharp for now to rule out memory issues
-        const fileUrl = `/uploads/${subPath}/${req.file.filename}`;
+        fs.writeFileSync(filePath, req.file.buffer);
+        const fileUrl = `/uploads/${subPath}/${filename}`;
         log(`>>> Upload successful: ${fileUrl}`);
         res.json({ url: fileUrl });
       } catch (err: any) {
