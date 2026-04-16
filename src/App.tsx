@@ -1094,19 +1094,21 @@ export default function App() {
         ) : (
           <div className="flex gap-8">
             {/* Left Sidebar - Profile & Requests */}
-            <Sidebar 
-              user={user} 
-              users={users}
-              friendRequests={user?.friendRequests || []} 
-              onAcceptFriend={handleAcceptFriend} 
-              onDeclineFriend={handleDeclineFriend} 
-              onSendFriendRequest={handleSendFriendRequest}
-              onProfileClick={() => {
-                setActiveMenu('profile');
-                setProfileUser(user);
-              }}
-              onMenuClick={setActiveMenu}
-            />
+            {activeMenu !== 'blockbuster' && (
+              <Sidebar 
+                user={user} 
+                users={users}
+                friendRequests={user?.friendRequests || []} 
+                onAcceptFriend={handleAcceptFriend} 
+                onDeclineFriend={handleDeclineFriend} 
+                onSendFriendRequest={handleSendFriendRequest}
+                onProfileClick={() => {
+                  setActiveMenu('profile');
+                  setProfileUser(user);
+                }}
+                onMenuClick={setActiveMenu}
+              />
+            )}
 
             {/* Main Content Area */}
             <div className="flex-1">
@@ -1130,6 +1132,7 @@ export default function App() {
                       currentUser={user} 
                       onUpload={handleMovieUpload} 
                       onPurchase={handlePurchaseMovie}
+                      onDeposit={() => setActiveMenu('wallet')}
                     />
                   )}
                   {(activeMenu === 'feed' || activeMenu === 'reels') && (
@@ -1152,79 +1155,81 @@ export default function App() {
             </div>
 
             {/* Right Sidebar - Suggestions & Ads */}
-            <div className="hidden w-80 flex-col gap-6 xl:flex">
-              {/* Sponsored Card */}
-              {ads.filter(a => a.active).length > 0 ? (
-                <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
-                  <div className="relative aspect-video">
-                    <img src={ads.filter(a => a.active)[0].imageUrl} alt="Ad" className="h-full w-full object-cover" />
-                    <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                      Sponsored
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h4 className="mb-2 text-sm font-black text-white">{ads.filter(a => a.active)[0].title}</h4>
-                    <p className="mb-4 text-xs leading-relaxed text-neutral-400">{ads.filter(a => a.active)[0].description}</p>
-                    <a 
-                      href={ads.filter(a => a.active)[0].link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
-                    >
-                      Learn More
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
-                  <div className="relative aspect-video">
-                    <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
-                    <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                      Sponsored
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h4 className="mb-2 text-sm font-black text-white">Explore the Serengeti</h4>
-                    <p className="mb-4 text-xs leading-relaxed text-neutral-400">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
-                    <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95">
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
-                <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
-                <div className="space-y-4">
-                  {users.filter(u => u.uid !== user.uid).slice(0, 5).map(u => (
-                    <div key={u.uid} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
-                          {u.photoURL ? (
-                            <img src={u.photoURL} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-neutral-500">
-                              <User size={20} />
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-sm font-bold text-white">{u.displayName}</span>
+            {activeMenu !== 'blockbuster' && (
+              <div className="hidden w-80 flex-col gap-6 xl:flex">
+                {/* Sponsored Card */}
+                {ads.filter(a => a.active).length > 0 ? (
+                  <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+                    <div className="relative aspect-video">
+                      <img src={ads.filter(a => a.active)[0].imageUrl} alt="Ad" className="h-full w-full object-cover" />
+                      <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                        Sponsored
                       </div>
-                      <button 
-                        onClick={() => handleFollow(u.uid)}
-                        className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
-                          user.following?.includes(u.uid) 
-                            ? 'bg-neutral-800 text-neutral-400' 
-                            : 'bg-orange-600/10 text-orange-500 hover:bg-orange-600 hover:text-white'
-                        }`}
+                    </div>
+                    <div className="p-6">
+                      <h4 className="mb-2 text-sm font-black text-white">{ads.filter(a => a.active)[0].title}</h4>
+                      <p className="mb-4 text-xs leading-relaxed text-neutral-400">{ads.filter(a => a.active)[0].description}</p>
+                      <a 
+                        href={ads.filter(a => a.active)[0].link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                       >
-                        {user.following?.includes(u.uid) ? 'Following' : 'Follow'}
+                        Learn More
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+                    <div className="relative aspect-video">
+                      <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
+                      <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                        Sponsored
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h4 className="mb-2 text-sm font-black text-white">Explore the Serengeti</h4>
+                      <p className="mb-4 text-xs leading-relaxed text-neutral-400">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
+                      <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95">
+                        Book Now
                       </button>
                     </div>
-                  ))}
+                  </div>
+                )}
+
+                <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
+                  <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
+                  <div className="space-y-4">
+                    {users.filter(u => u.uid !== user.uid).slice(0, 5).map(u => (
+                      <div key={u.uid} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
+                            {u.photoURL ? (
+                              <img src={u.photoURL} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-neutral-500">
+                                <User size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-sm font-bold text-white">{u.displayName}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleFollow(u.uid)}
+                          className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                            user.following?.includes(u.uid) 
+                              ? 'bg-neutral-800 text-neutral-400' 
+                              : 'bg-orange-600/10 text-orange-500 hover:bg-orange-600 hover:text-white'
+                          }`}
+                        >
+                          {user.following?.includes(u.uid) ? 'Following' : 'Follow'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </main>

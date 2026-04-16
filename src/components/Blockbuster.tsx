@@ -8,11 +8,13 @@ interface BlockbusterProps {
   currentUser: UserType | null;
   onUpload?: (data: any) => Promise<void>;
   onPurchase?: (movieId: string, price: number) => Promise<void>;
+  onDeposit?: () => void;
 }
 
-export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onPurchase }) => {
+export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onPurchase, onDeposit }) => {
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [selectedMovie, setSelectedMovie] = React.useState<any | null>(null);
+  const [showTrailer, setShowTrailer] = React.useState(true);
 
   const isAdmin = currentUser?.role === 'admin';
   const featuredMovie = movies.length > 0 ? movies[0] : null;
@@ -22,6 +24,17 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
     if (isAdmin) return true;
     if (!movie.price || movie.price === 0) return true;
     return currentUser.purchasedMovies?.includes(movie.id);
+  };
+
+  const handlePurchaseClick = (movie: any) => {
+    if (!currentUser) return;
+    if ((currentUser.points || 0) < movie.price) {
+      if (window.confirm(`You need ${movie.price} points to watch this movie. You currently have ${currentUser.points || 0} points. Would you like to deposit points now?`)) {
+        onDeposit?.();
+      }
+      return;
+    }
+    onPurchase?.(movie.id, movie.price);
   };
 
   return (
@@ -42,12 +55,24 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
 
       {/* Featured Movie */}
       <div className="group relative mb-16 aspect-[21/9] w-full overflow-hidden rounded-[40px] bg-neutral-950 shadow-2xl border border-white/5">
-        <img
-          src={featuredMovie?.thumbnailUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=2000"}
-          alt="Featured Movie"
-          className="h-full w-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-1000"
-          referrerPolicy="no-referrer"
-        />
+        {featuredMovie?.trailerUrl && showTrailer ? (
+          <video
+            src={featuredMovie.trailerUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="h-full w-full object-cover opacity-60 transition-all duration-1000"
+            onEnded={() => setShowTrailer(false)}
+          />
+        ) : (
+          <img
+            src={featuredMovie?.thumbnailUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=2000"}
+            alt="Featured Movie"
+            className="h-full w-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-1000"
+            referrerPolicy="no-referrer"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent"></div>
         
         <div className="absolute bottom-0 left-0 w-full p-12 text-white">
@@ -69,15 +94,15 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                   className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                 >
                   <Play size={24} fill="currentColor" />
-                  Watch Now
+                  Watch Full Movie
                 </button>
               ) : (
                 <button 
-                  onClick={() => onPurchase?.(featuredMovie.id, featuredMovie.price)}
+                  onClick={() => handlePurchaseClick(featuredMovie)}
                   className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                 >
                   <CreditCard size={24} />
-                  Unlock for {featuredMovie.price} Points
+                  Unlock Full Movie for {featuredMovie.price} Points
                 </button>
               )
             )}
@@ -104,7 +129,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 if (hasAccess(movie)) {
                   window.open(movie.videoUrl, '_blank');
                 } else {
-                  onPurchase?.(movie.id, movie.price);
+                  handlePurchaseClick(movie);
                 }
               }}
             >
