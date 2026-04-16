@@ -1,17 +1,28 @@
 import React from 'react';
-import { Play, Search, Filter, Star, Clock, User, Plus, Film } from 'lucide-react';
+import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard } from 'lucide-react';
 import { UploadMovie } from './UploadMovie';
+import { User as UserType } from '../types';
 
 interface BlockbusterProps {
   movies: any[];
+  currentUser: UserType | null;
   onUpload?: (data: any) => Promise<void>;
+  onPurchase?: (movieId: string, price: number) => Promise<void>;
 }
 
-export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, onUpload }) => {
+export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onPurchase }) => {
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
+  const [selectedMovie, setSelectedMovie] = React.useState<any | null>(null);
 
+  const isAdmin = currentUser?.role === 'admin';
   const featuredMovie = movies.length > 0 ? movies[0] : null;
-  const otherMovies = movies.length > 1 ? movies.slice(1) : movies;
+  
+  const hasAccess = (movie: any) => {
+    if (!currentUser) return false;
+    if (isAdmin) return true;
+    if (!movie.price || movie.price === 0) return true;
+    return currentUser.purchasedMovies?.includes(movie.id);
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 relative">
@@ -51,13 +62,25 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, onUpload }) =>
             {featuredMovie?.description || "An epic journey across the continent, exploring the beauty, culture, and resilience of the African spirit."}
           </p>
           <div className="mt-10 flex gap-6">
-            <button 
-              onClick={() => featuredMovie && window.open(featuredMovie.videoUrl, '_blank')}
-              className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
-            >
-              <Play size={24} fill="currentColor" />
-              Watch Now
-            </button>
+            {featuredMovie && (
+              hasAccess(featuredMovie) ? (
+                <button 
+                  onClick={() => window.open(featuredMovie.videoUrl, '_blank')}
+                  className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                >
+                  <Play size={24} fill="currentColor" />
+                  Watch Now
+                </button>
+              ) : (
+                <button 
+                  onClick={() => onPurchase?.(featuredMovie.id, featuredMovie.price)}
+                  className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                >
+                  <CreditCard size={24} />
+                  Unlock for {featuredMovie.price} Points
+                </button>
+              )
+            )}
             <button className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-xl font-bold text-white backdrop-blur-md hover:bg-white/10 transition-all active:scale-95">
               More Info
             </button>
@@ -74,21 +97,38 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, onUpload }) =>
           </div>
         ) : (
           movies.map((movie) => (
-            <div key={movie.id} className="group cursor-pointer" onClick={() => window.open(movie.videoUrl, '_blank')}>
+            <div 
+              key={movie.id} 
+              className="group cursor-pointer" 
+              onClick={() => {
+                if (hasAccess(movie)) {
+                  window.open(movie.videoUrl, '_blank');
+                } else {
+                  onPurchase?.(movie.id, movie.price);
+                }
+              }}
+            >
               <div className="relative aspect-[2/3] w-full overflow-hidden rounded-3xl bg-neutral-900 shadow-xl transition-all hover:shadow-2xl border border-white/5 group-hover:border-orange-600/30">
                 <img
                   src={movie.thumbnailUrl}
                   alt={movie.title}
-                  className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                  className={`h-full w-full object-cover transition-all duration-700 ${hasAccess(movie) ? 'grayscale group-hover:grayscale-0' : 'blur-sm grayscale'}`}
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="rounded-full bg-orange-600 p-6 text-white shadow-xl shadow-orange-900/40 transform scale-75 group-hover:scale-100 transition-transform duration-500">
-                    <Play size={32} fill="currentColor" />
+                    {hasAccess(movie) ? <Play size={32} fill="currentColor" /> : <Lock size={32} />}
                   </div>
                 </div>
+                {!hasAccess(movie) && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-[2px]">
+                    <div className="rounded-2xl bg-orange-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-2xl">
+                      {movie.price} Points
+                    </div>
+                  </div>
+                )}
                 <div className="absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/10">
-                  HD
+                  {movie.price > 0 ? 'PREMIUM' : 'FREE'}
                 </div>
               </div>
               <div className="mt-6">
@@ -115,15 +155,17 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, onUpload }) =>
         )}
       </div>
 
-      {/* Upload Button - Fixed + Button Lower Right */}
-      <div className="fixed bottom-10 right-10 z-50">
-        <button
-          onClick={() => setIsUploadOpen(true)}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] hover:scale-110 transition-all active:scale-95 ring-4 ring-neutral-950"
-        >
-          <Plus size={32} strokeWidth={3} />
-        </button>
-      </div>
+      {/* Upload Button - Only for Admins */}
+      {isAdmin && (
+        <div className="fixed bottom-10 right-10 z-50">
+          <button
+            onClick={() => setIsUploadOpen(true)}
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] hover:scale-110 transition-all active:scale-95 ring-4 ring-neutral-950"
+          >
+            <Plus size={32} strokeWidth={3} />
+          </button>
+        </div>
+      )}
 
       {onUpload && (
         <UploadMovie 

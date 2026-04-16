@@ -75,14 +75,12 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
                 {authorName}
               </h4>
               {authorVerified && <CheckCircle size={14} className="fill-blue-500 text-white" />}
-              {!isAuthor && onFollow && (
+              {!isAuthor && onFollow && !isFollowing && (
                 <button 
                   onClick={() => onFollow(post.authorId)}
-                  className={`ml-2 text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 ${
-                    isFollowing ? 'text-neutral-500' : 'text-orange-500'
-                  }`}
+                  className="ml-2 text-[10px] font-black uppercase tracking-widest text-orange-500 transition-all hover:scale-105"
                 >
-                  {isFollowing ? 'Following' : 'Follow'}
+                  Follow
                 </button>
               )}
               {(post.isSponsored || post.isBoosted) && (

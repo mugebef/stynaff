@@ -213,15 +213,17 @@ export const Reels: React.FC<ReelsProps> = ({
                   <div className="h-12 w-12 overflow-hidden rounded-full border-2 border-orange-600 bg-neutral-900 shadow-xl">
                     {reel.authorPhoto ? <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" /> : <UserIcon className="m-2" />}
                   </div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onFollow(reel.authorId);
-                    }}
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-orange-600 p-1 text-white shadow-lg hover:scale-110 transition-all"
-                  >
-                    <Plus size={12} strokeWidth={3} />
-                  </button>
+                  {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFollow(reel.authorId);
+                      }}
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-orange-600 p-1 text-white shadow-lg hover:scale-110 transition-all"
+                    >
+                      <Plus size={12} strokeWidth={3} />
+                    </button>
+                  )}
                 </div>
 
                 <button 
@@ -286,15 +288,17 @@ export const Reels: React.FC<ReelsProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-black tracking-tight">@{reel.authorName.toLowerCase().replace(/\s/g, '')}</span>
                     {reel.authorVerified && <CheckCircle size={16} className="fill-blue-500 text-white" />}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onFollow(reel.authorId);
-                      }}
-                      className="rounded-md bg-orange-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md hover:bg-orange-700 transition-all"
-                    >
-                      {currentUser.following?.includes(reel.authorId) ? 'Following' : 'Follow'}
-                    </button>
+                    {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onFollow(reel.authorId);
+                        }}
+                        className="rounded-md bg-orange-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md hover:bg-orange-700 transition-all"
+                      >
+                        Follow
+                      </button>
+                    )}
                   </div>
                   <p className="text-sm line-clamp-2 font-medium leading-relaxed text-white/90 drop-shadow-sm">{reel.content}</p>
                   <div className="flex items-center gap-2 overflow-hidden bg-black/20 backdrop-blur-sm rounded-full px-3 py-1 w-fit">

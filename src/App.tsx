@@ -57,9 +57,9 @@ import {
   arrayUnion, 
   arrayRemove, 
   deleteDoc,
+  increment,
   getDocFromServer,
-  where,
-  increment
+  where
 } from 'firebase/firestore';
 
 enum OperationType {
@@ -618,8 +618,8 @@ export default function App() {
     }
   };
 
-  const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File }) => {
-    if (!user) return;
+  const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File; price: number }) => {
+    if (!user || user.role !== 'admin') return;
     try {
       const uploadFile = async (file: File) => {
         const formData = new FormData();
@@ -655,10 +655,12 @@ export default function App() {
         thumbnailUrl: thumbUrl,
         videoUrl: movieUrl,
         trailerUrl: trailerUrl,
+        price: movieData.price,
         authorId: user.uid,
         createdAt: serverTimestamp(),
         rating: 0,
-        views: 0
+        views: 0,
+        genre: 'African Cinema'
       });
       
       alert('Movie published successfully!');
@@ -666,6 +668,42 @@ export default function App() {
       console.error('Error uploading movie:', error);
       alert(error instanceof Error ? error.message : 'Failed to upload movie');
       throw error;
+    }
+  };
+
+  const handlePurchaseMovie = async (movieId: string, price: number) => {
+    if (!user) return;
+    
+    if ((user.points || 0) < price) {
+      alert(`Insufficient points. You need ${price} points to unlock this movie.`);
+      return;
+    }
+
+    if (user.purchasedMovies?.includes(movieId)) {
+      alert('You already own this movie.');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        points: increment(-price),
+        purchasedMovies: arrayUnion(movieId)
+      });
+
+      await addDoc(collection(db, 'transactions'), {
+        userId: user.uid,
+        amount: price,
+        type: 'movie_purchase',
+        status: 'completed',
+        method: 'points',
+        movieId: movieId,
+        createdAt: serverTimestamp()
+      });
+
+      alert('Movie unlocked successfully! Enjoy watching.');
+    } catch (err) {
+      console.error('Purchase Error:', err);
+      alert('Failed to process purchase.');
     }
   };
 
@@ -1087,7 +1125,12 @@ export default function App() {
                     <Dating currentUser={user} onSwipe={handleSwipe} />
                   )}
                   {activeMenu === 'blockbuster' && (
-                    <Blockbuster movies={movies} onUpload={handleMovieUpload} />
+                    <Blockbuster 
+                      movies={movies} 
+                      currentUser={user} 
+                      onUpload={handleMovieUpload} 
+                      onPurchase={handlePurchaseMovie}
+                    />
                   )}
                   {(activeMenu === 'feed' || activeMenu === 'reels') && (
                     <Feed 

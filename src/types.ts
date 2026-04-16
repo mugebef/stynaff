@@ -43,6 +43,7 @@ export interface User {
   gettingStarted?: boolean;
   isDemo?: boolean;
   emailVerified?: boolean;
+  purchasedMovies?: string[]; // Array of Movie IDs
 }
 
 export interface Post {

@@ -5,15 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface UploadMovieProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (data: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File }) => Promise<void>;
+  onUpload: (data: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File; price: number }) => Promise<void>;
 }
 
 export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpload }) => {
+  const [step, setStep] = React.useState(1);
   const [movieFile, setMovieFile] = React.useState<File | null>(null);
   const [trailerFile, setTrailerFile] = React.useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = React.useState<File | null>(null);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [price, setPrice] = React.useState(50);
   const [loading, setLoading] = React.useState(false);
   const [status, setStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
 
@@ -29,7 +31,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
 
     setLoading(true);
     try {
-      await onUpload({ title, description, movieFile, trailerFile: trailerFile || undefined, thumbnailFile });
+      await onUpload({ title, description, movieFile, trailerFile: trailerFile || undefined, thumbnailFile, price });
       setStatus('success');
       setTimeout(() => {
         onClose();
@@ -48,8 +50,13 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
     setThumbnailFile(null);
     setTitle('');
     setDescription('');
+    setPrice(50);
+    setStep(1);
     setStatus('idle');
   };
+
+  const nextStep = () => setStep(prev => prev + 1);
+  const prevStep = () => setStep(prev => prev - 1);
 
   return (
     <AnimatePresence>
@@ -73,7 +80,11 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
             <div className="flex items-center justify-between border-b border-white/5 p-8">
               <div>
                 <h3 className="text-2xl font-black tracking-tight text-white">Upload to Blockbuster</h3>
-                <p className="text-sm text-neutral-400">Share your cinematic masterpiece with Africa.</p>
+                <p className="text-sm text-neutral-400">Step {step} of 4: {
+                  step === 1 ? 'Basic Info' : 
+                  step === 2 ? 'Media Assets' : 
+                  step === 3 ? 'Full Movie' : 'Pricing & Publish'
+                }</p>
               </div>
               <button 
                 onClick={onClose}
@@ -83,124 +94,197 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-8">
-              <div className="grid gap-8 md:grid-cols-2">
-                {/* Left Column: Files */}
-                <div className="space-y-6">
-                  {/* Thumbnail Upload */}
-                  <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Poster (Thumbnail)</label>
-                    <div 
-                      onClick={() => document.getElementById('thumb-input')?.click()}
-                      className={`relative aspect-[2/3] cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed transition-all ${
-                        thumbnailFile ? 'border-orange-600' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
-                      }`}
+            <div className="p-8">
+              {/* Progress Bar */}
+              <div className="mb-8 flex gap-2">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
+                ))}
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <AnimatePresence mode="wait">
+                  {step === 1 && (
+                    <motion.div
+                      key="step1"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-6"
                     >
-                      {thumbnailFile ? (
-                        <img src={URL.createObjectURL(thumbnailFile)} className="h-full w-full object-cover" alt="Preview" />
-                      ) : (
-                        <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-                          <Film size={32} className="text-neutral-700" />
-                          <p className="text-xs font-bold text-neutral-500">Click to upload poster</p>
+                      <div>
+                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Title</label>
+                        <input
+                          type="text"
+                          required
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          placeholder="Enter movie title"
+                          className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Description</label>
+                        <textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="What is this movie about?"
+                          className="h-32 w-full resize-none rounded-2xl border border-white/5 bg-neutral-950 p-5 text-sm font-medium text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
+                        />
+                      </div>
+                      <button type="button" onClick={nextStep} disabled={!title} className="w-full rounded-2xl bg-orange-600 py-4 font-bold text-white disabled:opacity-50">Next Step</button>
+                    </motion.div>
+                  )}
+
+                  {step === 2 && (
+                    <motion.div
+                      key="step2"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-6"
+                    >
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <div>
+                          <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Poster</label>
+                          <div 
+                            onClick={() => document.getElementById('thumb-input')?.click()}
+                            className={`relative aspect-[2/3] cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed transition-all ${
+                              thumbnailFile ? 'border-orange-600' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
+                            }`}
+                          >
+                            {thumbnailFile ? (
+                              <img src={URL.createObjectURL(thumbnailFile)} className="h-full w-full object-cover" alt="Preview" />
+                            ) : (
+                              <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                                <Film size={32} className="text-neutral-700" />
+                                <p className="text-xs font-bold text-neutral-500">Click to upload poster</p>
+                              </div>
+                            )}
+                            <input id="thumb-input" type="file" accept="image/*" className="hidden" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} />
+                          </div>
+                        </div>
+                        <div className="space-y-6">
+                          <div>
+                            <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Trailer (Optional)</label>
+                            <div 
+                              onClick={() => document.getElementById('trailer-input')?.click()}
+                              className={`relative rounded-2xl border-2 border-dashed p-4 transition-all ${
+                                trailerFile ? 'border-orange-600 bg-orange-600/10' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <PlayCircle size={24} className={trailerFile ? 'text-orange-500' : 'text-neutral-700'} />
+                                <span className="text-xs font-bold text-neutral-400 truncate">
+                                  {trailerFile ? trailerFile.name : 'Upload Trailer Video'}
+                                </span>
+                              </div>
+                              <input id="trailer-input" type="file" accept="video/*" className="hidden" onChange={(e) => setTrailerFile(e.target.files?.[0] || null)} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-4">
+                        <button type="button" onClick={prevStep} className="flex-1 rounded-2xl bg-neutral-800 py-4 font-bold text-white">Back</button>
+                        <button type="button" onClick={nextStep} disabled={!thumbnailFile} className="flex-[2] rounded-2xl bg-orange-600 py-4 font-bold text-white disabled:opacity-50">Next Step</button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {step === 3 && (
+                    <motion.div
+                      key="step3"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-6"
+                    >
+                      <div>
+                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Full Movie File</label>
+                        <div 
+                          onClick={() => document.getElementById('movie-input')?.click()}
+                          className={`relative rounded-2xl border-2 border-dashed p-12 transition-all ${
+                            movieFile ? 'border-orange-600 bg-orange-600/10' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-4 text-center">
+                            <Upload size={48} className={movieFile ? 'text-orange-500' : 'text-neutral-700'} />
+                            <div>
+                              <p className="text-sm font-bold text-white">
+                                {movieFile ? movieFile.name : 'Select Full Movie Video'}
+                              </p>
+                              <p className="text-xs text-neutral-500 mt-1">Max file size: 500MB</p>
+                            </div>
+                          </div>
+                          <input id="movie-input" type="file" accept="video/*" required className="hidden" onChange={(e) => setMovieFile(e.target.files?.[0] || null)} />
+                        </div>
+                      </div>
+                      <div className="flex gap-4">
+                        <button type="button" onClick={prevStep} className="flex-1 rounded-2xl bg-neutral-800 py-4 font-bold text-white">Back</button>
+                        <button type="button" onClick={nextStep} disabled={!movieFile} className="flex-[2] rounded-2xl bg-orange-600 py-4 font-bold text-white disabled:opacity-50">Next Step</button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {step === 4 && (
+                    <motion.div
+                      key="step4"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-6"
+                    >
+                      <div>
+                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Access Fee (Points)</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            required
+                            value={price}
+                            onChange={(e) => setPrice(Number(e.target.value))}
+                            className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
+                          />
+                          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-500">POINTS</span>
+                        </div>
+                        <p className="mt-2 text-[10px] text-neutral-500">Users will need to pay this amount to unlock the full movie.</p>
+                      </div>
+
+                      {status === 'success' && (
+                        <div className="flex items-center gap-2 rounded-2xl bg-orange-600/10 p-4 text-sm font-bold text-orange-500">
+                          <CheckCircle2 size={20} />
+                          Movie uploaded successfully!
                         </div>
                       )}
-                      <input id="thumb-input" type="file" accept="image/*" className="hidden" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} />
-                    </div>
-                  </div>
 
-                  {/* Trailer Upload */}
-                  <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Trailer (Optional)</label>
-                    <div 
-                      onClick={() => document.getElementById('trailer-input')?.click()}
-                      className={`relative rounded-2xl border-2 border-dashed p-4 transition-all ${
-                        trailerFile ? 'border-orange-600 bg-orange-600/10' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <PlayCircle size={24} className={trailerFile ? 'text-orange-500' : 'text-neutral-700'} />
-                        <span className="text-xs font-bold text-neutral-400">
-                          {trailerFile ? trailerFile.name : 'Upload Trailer Video'}
-                        </span>
+                      {status === 'error' && (
+                        <div className="flex items-center gap-2 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500">
+                          <AlertCircle size={20} />
+                          Failed to upload movie.
+                        </div>
+                      )}
+
+                      <div className="flex gap-4">
+                        <button type="button" onClick={prevStep} className="flex-1 rounded-2xl bg-neutral-800 py-4 font-bold text-white">Back</button>
+                        <button
+                          type="submit"
+                          disabled={!movieFile || !thumbnailFile || !title || loading || status === 'success'}
+                          className="flex-[2] flex items-center justify-center gap-3 rounded-2xl bg-orange-600 py-4 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <Loader2 className="animate-spin" size={24} />
+                          ) : (
+                            <>
+                              <Film size={24} />
+                              Publish Movie
+                            </>
+                          )}
+                        </button>
                       </div>
-                      <input id="trailer-input" type="file" accept="video/*" className="hidden" onChange={(e) => setTrailerFile(e.target.files?.[0] || null)} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column: Details */}
-                <div className="space-y-6">
-                  <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter movie title"
-                      className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Description</label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="What is this movie about?"
-                      className="h-32 w-full resize-none rounded-2xl border border-white/5 bg-neutral-950 p-5 text-sm font-medium text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Full Movie File</label>
-                    <div 
-                      onClick={() => document.getElementById('movie-input')?.click()}
-                      className={`relative rounded-2xl border-2 border-dashed p-6 transition-all ${
-                        movieFile ? 'border-orange-600 bg-orange-600/10' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-2 text-center">
-                        <Upload size={24} className={movieFile ? 'text-orange-500' : 'text-neutral-700'} />
-                        <span className="text-xs font-bold text-neutral-400">
-                          {movieFile ? movieFile.name : 'Select Full Movie Video'}
-                        </span>
-                      </div>
-                      <input id="movie-input" type="file" accept="video/*" required className="hidden" onChange={(e) => setMovieFile(e.target.files?.[0] || null)} />
-                    </div>
-                  </div>
-
-                  {status === 'success' && (
-                    <div className="flex items-center gap-2 rounded-2xl bg-orange-600/10 p-4 text-sm font-bold text-orange-500">
-                      <CheckCircle2 size={20} />
-                      Movie uploaded successfully!
-                    </div>
+                    </motion.div>
                   )}
-
-                  {status === 'error' && (
-                    <div className="flex items-center gap-2 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500">
-                      <AlertCircle size={20} />
-                      Failed to upload movie.
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={!movieFile || !thumbnailFile || !title || loading || status === 'success'}
-                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 py-5 text-lg font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 className="animate-spin" size={24} />
-                    ) : (
-                      <>
-                        <Film size={24} />
-                        Publish Movie
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
+                </AnimatePresence>
+              </form>
+            </div>
           </motion.div>
         </div>
       )}

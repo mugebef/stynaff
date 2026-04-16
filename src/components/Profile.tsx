@@ -224,18 +224,14 @@ export const Profile: React.FC<ProfileProps> = ({
                 Edit Profile
               </button>
             )}
-            {!isOwnProfile && !isEditing && (
+            {!isOwnProfile && !isEditing && !isFollowing && (
               <div className="flex flex-wrap gap-2">
                 <button 
                   onClick={() => onFollow(user.uid)}
-                  className={`flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all active:scale-95 ${
-                    isFollowing 
-                      ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' 
-                      : 'bg-orange-600 text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700'
-                  }`}
+                  className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                 >
                   <UserPlus size={18} />
-                  {isFollowing ? 'Following' : 'Follow'}
+                  Follow
                 </button>
                 {currentUser.friends?.includes(user.uid) ? (
                   <button 
