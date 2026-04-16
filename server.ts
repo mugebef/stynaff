@@ -70,6 +70,7 @@ async function startServer() {
   const PORT = 3000;
 
   app.use((req, res, next) => {
+    log(`${req.method} ${req.url}`);
     req.on('close', () => {
       if (!res.writableEnded) {
         log(`>>> Request closed prematurely: ${req.method} ${req.url}`);
@@ -101,7 +102,7 @@ async function startServer() {
   });
 
   app.post("/api/upload", (req, res) => {
-    log(">>> Starting upload request");
+    log(`>>> Starting upload request. Content-Type: ${req.headers['content-type']}`);
     upload.single("file")(req, res, async (err: any) => {
       if (err) {
         log(`>>> Multer Error: ${err.message}`);
@@ -109,7 +110,7 @@ async function startServer() {
       }
 
       if (!req.file) {
-        log(">>> Upload Error: No file received");
+        log(">>> Upload Error: No file received. Body keys: " + Object.keys(req.body).join(", "));
         return res.status(400).json({ error: "No file uploaded" });
       }
 

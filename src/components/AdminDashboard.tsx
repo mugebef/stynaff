@@ -45,6 +45,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         method: 'POST',
         body: formData
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Server responded with ${res.status}: ${errorText}`);
+      }
+
       const data = await res.json();
       if (data.url) {
         const updatedConfig = { ...appConfig, [type + 'Url']: data.url };
@@ -52,9 +58,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         await setDoc(doc(db, 'appConfig', 'main'), updatedConfig);
         alert(`${type === 'logo' ? 'Logo' : 'Favicon'} updated successfully!`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Upload failed');
+      alert(`Upload failed: ${err.message}`);
     } finally {
       if (type === 'logo') setIsUploadingLogo(false);
       else setIsUploadingFavicon(false);
