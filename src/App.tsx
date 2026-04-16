@@ -117,6 +117,7 @@ export default function App() {
   const [user, setUser] = React.useState<UserType | null>(null);
   const [activeMenu, setActiveMenu] = React.useState('reels');
   const [posts, setPosts] = React.useState<Post[]>([]);
+  const [allReels, setAllReels] = React.useState<Post[]>([]);
   const [movies, setMovies] = React.useState<any[]>([]);
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
@@ -338,6 +339,9 @@ export default function App() {
         id: doc.id,
         ...doc.data()
       })) as Post[];
+      
+      const reelsData = postsData.filter(p => p.isReel);
+      setAllReels(reelsData);
       
       // Algorithm: Filter to self/friends/sponsored, then sort
       const filteredPosts = postsData.filter(p => 
@@ -1032,7 +1036,7 @@ export default function App() {
           <Wallet user={user} onUpdateUser={handleUpdateProfile} />
         ) : activeMenu === 'reels' ? (
           <Reels 
-            posts={posts} 
+            posts={allReels} 
             currentUser={user} 
             onLike={handleLike} 
             onComment={handleComment} 

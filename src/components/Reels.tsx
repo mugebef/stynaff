@@ -32,6 +32,7 @@ export const Reels: React.FC<ReelsProps> = ({
   const [isMuted, setIsMuted] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
+  const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [showComments, setShowComments] = React.useState<string | null>(null);
   const [newComment, setNewComment] = React.useState('');
@@ -86,11 +87,20 @@ export const Reels: React.FC<ReelsProps> = ({
     setReels(posts.filter(p => p.isReel && p.mediaType === 'video'));
   }, [posts]);
 
+  const handleLikeWithFeedback = (postId: string) => {
+    onLike(postId);
+    const reel = reels.find(r => r.id === postId);
+    if (reel && !reel.likes.includes(currentUser.uid)) {
+      setLikedMessage('Liked!');
+      setTimeout(() => setLikedMessage(null), 1500);
+    }
+  };
+
   const handleDoubleTap = (e: React.MouseEvent, postId: string) => {
     if (e.detail === 2) {
       const rect = e.currentTarget.getBoundingClientRect();
       setShowHeart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-      onLike(postId);
+      handleLikeWithFeedback(postId);
       setTimeout(() => setShowHeart(null), 1000);
     } else {
       // Single tap to play/pause
@@ -167,12 +177,28 @@ export const Reels: React.FC<ReelsProps> = ({
                 {showHeart && (
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1.5, opacity: 1 }}
+                    animate={{ scale: [0, 1.5, 1.2], opacity: [0, 1, 1] }}
                     exit={{ scale: 2, opacity: 0 }}
                     style={{ left: showHeart.x - 40, top: showHeart.y - 40 }}
                     className="pointer-events-none absolute z-50 text-white"
                   >
                     <Heart size={80} className="fill-current text-orange-500 drop-shadow-2xl" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Liked Confirmation Message */}
+              <AnimatePresence>
+                {likedMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none"
+                  >
+                    <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+                      <p className="text-white font-black uppercase tracking-[0.2em] text-sm">Liked!</p>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -199,10 +225,11 @@ export const Reels: React.FC<ReelsProps> = ({
                 </div>
 
                 <button 
-                  onClick={(e) => { e.stopPropagation(); onLike(reel.id); }}
+                  onClick={(e) => { e.stopPropagation(); handleLikeWithFeedback(reel.id); }}
                   className="flex flex-col items-center gap-1 group"
                 >
                   <motion.div 
+                    animate={reel.likes.includes(currentUser.uid) ? { scale: [1, 1.4, 1] } : {}}
                     whileTap={{ scale: 0.8 }}
                     className={`rounded-full p-3 transition-all ${reel.likes.includes(currentUser.uid) ? 'text-orange-500' : 'text-white'}`}
                   >
