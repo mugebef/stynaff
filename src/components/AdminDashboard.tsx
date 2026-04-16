@@ -3,7 +3,7 @@ import { Users, FileText, CheckCircle, TrendingUp, DollarSign, Award, Edit, Tras
 import { User, Post, Transaction } from '../types';
 import { db, storage } from '../firebase';
 import { collection, query, getDocs, updateDoc, doc, deleteDoc, onSnapshot, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 interface SponsoredAd {
   id: string;
@@ -34,30 +34,56 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   const [isUploadingLogo, setIsUploadingLogo] = React.useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = React.useState(false);
 
+  const [uploadProgress, setUploadProgress] = React.useState<number | null>(null);
+
   const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
     if (type === 'logo') setIsUploadingLogo(true);
     else setIsUploadingFavicon(true);
+    setUploadProgress(0);
 
     try {
+      console.log(`Starting upload for ${type}: ${file.name} (${file.size} bytes)`);
+      
       // Create a storage reference
       const storageRef = ref(storage, `site-identity/${type}-${Date.now()}-${file.name}`);
       
-      // Upload the file
-      const snapshot = await uploadBytes(storageRef, file);
-      
-      // Get the download URL
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      // Start resumable upload to track progress
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-      if (downloadURL) {
-        const updatedConfig = { ...appConfig, [type + 'Url']: downloadURL };
-        setAppConfig(updatedConfig);
-        await setDoc(doc(db, 'appConfig', 'main'), updatedConfig);
-        alert(`${type === 'logo' ? 'Logo' : 'Favicon'} updated successfully via Cloud Storage!`);
-      }
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload is ${progress}% done`);
+          setUploadProgress(progress);
+        }, 
+        (error) => {
+          console.error('Upload task failed:', error);
+          alert(`Upload failed: ${error.message}`);
+          setUploadProgress(null);
+          if (type === 'logo') setIsUploadingLogo(false);
+          else setIsUploadingFavicon(false);
+        }, 
+        async () => {
+          // Handle successful uploads on complete
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log('File available at', downloadURL);
+
+          if (downloadURL) {
+            const updatedConfig = { ...appConfig, [type + 'Url']: downloadURL };
+            setAppConfig(updatedConfig);
+            await setDoc(doc(db, 'appConfig', 'main'), updatedConfig);
+            console.log('App config updated in Firestore');
+            alert(`${type === 'logo' ? 'Logo' : 'Favicon'} updated successfully!`);
+          }
+          setUploadProgress(null);
+          if (type === 'logo') setIsUploadingLogo(false);
+          else setIsUploadingFavicon(false);
+        }
+      );
     } catch (err: any) {
-      console.error('Firebase Storage Error:', err);
+      console.error('General Upload Error:', err);
       alert(`Upload failed: ${err.message}`);
-    } finally {
+      setUploadProgress(null);
       if (type === 'logo') setIsUploadingLogo(false);
       else setIsUploadingFavicon(false);
     }
@@ -200,7 +226,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                   htmlFor="logo-upload"
                   className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-neutral-800 px-4 py-2 text-sm font-bold text-white hover:bg-neutral-700 transition-all"
                 >
-                  {isUploadingLogo ? 'Uploading...' : 'Change Logo'}
+                  {isUploadingLogo ? (uploadProgress !== null ? `Uploading ${Math.round(uploadProgress)}%` : 'Uploading...') : 'Change Logo'}
                 </label>
                 <p className="mt-2 text-[10px] text-neutral-500">Recommended size: 200x200px. PNG or SVG.</p>
               </div>
@@ -230,7 +256,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                   htmlFor="favicon-upload"
                   className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-neutral-800 px-4 py-2 text-sm font-bold text-white hover:bg-neutral-700 transition-all"
                 >
-                  {isUploadingFavicon ? 'Uploading...' : 'Change Favicon'}
+                  {isUploadingFavicon ? (uploadProgress !== null ? `Uploading ${Math.round(uploadProgress)}%` : 'Uploading...') : 'Change Favicon'}
                 </label>
                 <p className="mt-2 text-[10px] text-neutral-500">Recommended size: 32x32px. ICO, PNG or SVG.</p>
               </div>
