@@ -924,31 +924,90 @@ export default function App() {
 
   if (!isAuthReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0c]">
+      <div className="flex min-h-screen items-center justify-center bg-white overflow-hidden relative">
+        {/* Water Splash Effect */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ scale: 0, opacity: 0.8 }}
+              animate={{ 
+                scale: [1, 4, 8], 
+                opacity: [0.6, 0.2, 0],
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity, 
+                delay: i * 0.5,
+                ease: "easeOut" 
+              }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-orange-500/20"
+              style={{ width: '100px', height: '100px' }}
+            />
+          ))}
+          
+          {/* Splashing Droplets */}
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`drop-${i}`}
+              initial={{ x: 0, y: 0, scale: 0 }}
+              animate={{ 
+                x: (Math.random() - 0.5) * 600,
+                y: (Math.random() - 0.5) * 600,
+                scale: [0, 1, 0],
+                opacity: [0, 1, 0]
+              }}
+              transition={{ 
+                duration: 2 + Math.random() * 2, 
+                repeat: Infinity, 
+                delay: Math.random() * 2,
+                ease: "circOut" 
+              }}
+              className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-orange-500/40"
+            />
+          ))}
+        </div>
+
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center relative z-10"
         >
-          <div className="relative mx-auto mb-12 flex h-40 w-40 items-center justify-center">
+          <div className="relative mx-auto mb-12 flex h-48 w-48 items-center justify-center">
+            {/* Spinning Outer Rings */}
             <motion.div 
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
-              className="absolute inset-0 rounded-[3rem] border-2 border-dashed border-orange-600/20"
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+              className="absolute inset-0 rounded-[3.5rem] border-4 border-orange-500/10"
             />
             <motion.div 
               animate={{ rotate: -360 }}
-              transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
-              className="absolute inset-4 rounded-[2.5rem] border border-orange-600/10"
+              transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+              className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/20"
             />
-            <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-orange-500 to-orange-700 text-white shadow-2xl shadow-orange-900/40 overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-              {appConfig?.logoUrl ? (
-                <img src={appConfig.logoUrl} alt="Logo" className="relative h-full w-full object-contain p-4" />
-              ) : (
-                <span className="relative text-4xl font-black italic tracking-tighter">S</span>
-              )}
-            </div>
+            
+            {/* Spinning Logo Container */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+              className="relative flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-700"></div>
+              <motion.div 
+                animate={{ rotate: -360 }}
+                transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                className="relative flex items-center justify-center w-full h-full"
+              >
+                {appConfig?.logoUrl ? (
+                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain p-5" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Globe className="w-12 h-12 mb-1" />
+                    <span className="text-xs font-black tracking-tighter uppercase">Siite</span>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
             
             {/* Floating Icons */}
             <motion.div 
@@ -957,7 +1016,7 @@ export default function App() {
                 rotate: [0, 10, 0]
               }}
               transition={{ repeat: Infinity, duration: 3, delay: 0 }}
-              className="absolute -top-6 -right-6 rounded-2xl bg-neutral-900 p-4 text-pink-500 shadow-2xl border border-white/5 backdrop-blur-xl"
+              className="absolute -top-6 -right-6 rounded-2xl bg-white p-4 text-pink-500 shadow-xl border border-neutral-100"
             >
               <Heart size={24} fill="currentColor" />
             </motion.div>
@@ -967,46 +1026,54 @@ export default function App() {
                 rotate: [0, -10, 0]
               }}
               transition={{ repeat: Infinity, duration: 3, delay: 0.7 }}
-              className="absolute -bottom-6 -left-6 rounded-2xl bg-neutral-900 p-4 text-orange-500 shadow-2xl border border-white/5 backdrop-blur-xl"
+              className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-4 text-orange-500 shadow-xl border border-neutral-100"
             >
               <Play size={24} fill="currentColor" />
-            </motion.div>
-            <motion.div 
-              animate={{ 
-                x: [0, -10, 0],
-                y: [0, 10, 0]
-              }}
-              transition={{ repeat: Infinity, duration: 4, delay: 1.4 }}
-              className="absolute top-1/2 -left-12 -translate-y-1/2 rounded-2xl bg-neutral-900 p-4 text-indigo-500 shadow-2xl border border-white/5 backdrop-blur-xl"
-            >
-              <MessageSquare size={24} fill="currentColor" />
             </motion.div>
           </div>
           
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
           >
-            <h1 className="mb-2 text-6xl font-black italic tracking-tighter text-white">
-              STYN
+            <h1 className="text-4xl font-black text-neutral-900 tracking-tighter mb-2">
+              {APP_NAME}
             </h1>
-            <p className="mb-12 text-xs font-black uppercase tracking-[0.5em] text-orange-500">
-              Unique Experience
-            </p>
-          </motion.div>
-          
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-1 w-48 overflow-hidden rounded-full bg-neutral-900">
+            
+            <div className="flex items-center justify-center gap-3 mb-6">
+              {['Reels', 'Movies', 'Dating'].map((word, i) => (
+                <React.Fragment key={word}>
+                  <motion.span 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 + (i * 0.2) }}
+                    className="text-sm font-semibold text-orange-600 uppercase tracking-widest"
+                  >
+                    {word}
+                  </motion.span>
+                  {i < 2 && <span className="w-1.5 h-1.5 rounded-full bg-orange-100" />}
+                </React.Fragment>
+              ))}
+            </div>
+
+            <div className="relative w-64 mx-auto h-2 bg-neutral-100 rounded-full overflow-hidden shadow-inner">
               <motion.div 
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                className="h-full w-full bg-gradient-to-r from-transparent via-orange-600 to-transparent"
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Initializing Secure Connection</p>
-          </div>
+            
+            <motion.p 
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="mt-4 text-[11px] font-bold text-neutral-400 uppercase tracking-[0.3em]"
+            >
+              Launching Experience
+            </motion.p>
+          </motion.div>
         </motion.div>
       </div>
     );
