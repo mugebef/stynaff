@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, X, MapPin, User as UserIcon, CheckCircle, Info, Star, ShieldCheck, Loader2, MessageSquare, Sparkles } from 'lucide-react';
+import { Heart, X, MapPin, User as UserIcon, CheckCircle, Info, Star, ShieldCheck, Loader2, MessageSquare, Sparkles, Crown } from 'lucide-react';
 import { User } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
@@ -126,7 +126,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
       {/* Tinder Card */}
       <div 
         onClick={() => window.dispatchEvent(new CustomEvent('viewProfile', { detail: currentMatch.uid }))}
-        className="relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[2.5rem] bg-neutral-900 shadow-2xl ring-1 ring-white/5 border border-white/5"
+        className="relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[3rem] bg-neutral-900 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] ring-1 ring-white/10 border border-white/10 group"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -139,13 +139,13 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
               rotate: direction === 'left' ? -20 : direction === 'right' ? 20 : 0
             }}
             exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
+            transition={{ type: "spring", damping: 20, stiffness: 100 }}
             className="absolute inset-0"
           >
             {currentMatch.photoURL ? (
-              <img src={currentMatch.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              <img src={currentMatch.photoURL} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-neutral-700">
+              <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-neutral-800">
                 <UserIcon size={120} />
               </div>
             )}
@@ -153,30 +153,42 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
             {/* Info Overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-neutral-950"></div>
             
-            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-              <div className="flex items-center gap-2">
-                <h2 className="text-3xl font-bold">{currentMatch.displayName}, {currentMatch.age || '??'}</h2>
-                {currentMatch.isVerified && <CheckCircle size={24} className="fill-orange-500 text-white" />}
-                {currentMatch.tier === 'Platinum' && <ShieldCheck size={24} className="text-orange-400" />}
+            <div className="absolute bottom-0 left-0 right-0 p-10 text-white">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-4xl font-black tracking-tighter">{currentMatch.displayName}, {currentMatch.age || '??'}</h2>
+                {currentMatch.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
+                {currentMatch.tier === 'Platinum' && <Crown size={24} className="text-yellow-500" />}
               </div>
-              <div className="mt-2 flex items-center gap-2 text-sm font-medium text-neutral-400">
-                <MapPin size={16} />
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-neutral-400">
+                <MapPin size={14} className="text-orange-500" />
                 <span>{currentMatch.location?.city || 'Nearby'}, {currentMatch.location?.country || 'SA'}</span>
               </div>
               
               {/* Interests */}
               {currentMatch.interests && currentMatch.interests.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-6 flex flex-wrap gap-2">
                   {currentMatch.interests.slice(0, 3).map((interest, i) => (
-                    <span key={i} className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase backdrop-blur-md border border-white/5">
+                    <span key={i} className="rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest backdrop-blur-xl border border-white/10">
                       {interest}
                     </span>
                   ))}
                 </div>
               )}
               
-              <p className="mt-4 text-sm line-clamp-2 text-neutral-300">{currentMatch.bio || "No bio provided."}</p>
+              <p className="mt-6 text-sm font-medium leading-relaxed text-neutral-300 line-clamp-3">{currentMatch.bio || "No bio provided."}</p>
             </div>
+
+            {/* Swipe Indicators */}
+            {direction === 'right' && (
+              <div className="absolute top-10 left-10 rotate-[-20deg] rounded-2xl border-4 border-green-500 px-6 py-2 text-4xl font-black uppercase tracking-widest text-green-500 backdrop-blur-sm">
+                Like
+              </div>
+            )}
+            {direction === 'left' && (
+              <div className="absolute top-10 right-10 rotate-[20deg] rounded-2xl border-4 border-red-500 px-6 py-2 text-4xl font-black uppercase tracking-widest text-red-500 backdrop-blur-sm">
+                Nope
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

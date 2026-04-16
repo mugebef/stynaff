@@ -56,43 +56,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* User Profile Card */}
       <div 
         onClick={onProfileClick}
-        className="group cursor-pointer overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-xl ring-1 ring-white/5 transition-all hover:shadow-2xl active:scale-[0.98]"
+        className="group cursor-pointer overflow-hidden rounded-[2rem] border border-white/5 bg-neutral-900/50 p-5 shadow-2xl ring-1 ring-white/5 transition-all hover:bg-neutral-800/80 active:scale-[0.98] backdrop-blur-xl"
       >
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 overflow-hidden rounded-2xl bg-neutral-800 ring-2 ring-orange-900/20 transition-all group-hover:ring-orange-500/30">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-neutral-500">
-                <User size={24} />
-              </div>
-            )}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="h-14 w-14 overflow-hidden rounded-2xl bg-neutral-800 ring-2 ring-orange-500/20 transition-all group-hover:ring-orange-500/50">
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-neutral-500">
+                  <User size={28} />
+                </div>
+              )}
+            </div>
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-neutral-900 bg-green-500 shadow-lg"></div>
           </div>
           <div className="flex-1 overflow-hidden">
-            <div className="flex items-center gap-1">
-              <h3 className="truncate text-sm font-bold text-white">{user?.displayName}</h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="truncate text-[15px] font-black text-white tracking-tight">{user?.displayName}</h3>
               {user?.isVerified && <CheckCircle size={14} className="fill-blue-500 text-white shrink-0" />}
             </div>
-            <div className="flex items-center gap-1">
-              <TierIcon tier={user?.tier || 'General'} size={12} />
-              <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{user?.tier}</p>
-              <span className="text-[10px] font-bold text-neutral-600">•</span>
-              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{user?.points || 0} Points</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-0.5 border border-orange-500/20">
+                <TierIcon tier={user?.tier || 'General'} size={10} />
+                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{user?.tier}</p>
+              </div>
+              <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">{user?.points || 0} Pts</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Navigation Menu */}
-      <div className="rounded-3xl border border-white/5 bg-neutral-900 p-2 shadow-xl ring-1 ring-white/5">
+      <div className="rounded-[2rem] border border-white/5 bg-neutral-900/50 p-2 shadow-2xl ring-1 ring-white/5 backdrop-blur-xl">
         <div className="space-y-1">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onMenuClick(item.id)}
-              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-neutral-400 transition-all hover:bg-neutral-800 hover:text-white"
+              className="flex w-full items-center gap-4 rounded-2xl px-5 py-3.5 text-sm font-black uppercase tracking-widest text-neutral-500 transition-all hover:bg-orange-600/10 hover:text-orange-500 group"
             >
-              {item.icon}
+              <div className="transition-transform group-hover:scale-110 group-hover:rotate-6">
+                {item.icon}
+              </div>
               {item.label}
             </button>
           ))}
@@ -100,52 +106,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* STYN Premium Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-600 to-orange-800 p-6 text-white shadow-xl shadow-orange-900/20">
+      <div className="relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-orange-600 via-orange-500 to-orange-700 p-8 text-white shadow-[0_20px_40px_-10px_rgba(234,88,12,0.3)] transition-all hover:scale-[1.02]">
         <div className="relative z-10">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
-            <Sparkles size={20} className="text-yellow-300" />
+          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-xl shadow-inner">
+            <Sparkles size={24} className="text-yellow-300" />
           </div>
-          <h4 className="mb-1 text-lg font-bold">STYN Premium</h4>
-          <p className="mb-4 text-xs font-medium text-orange-100">Unlock exclusive features, boost your profile, and more!</p>
+          <h4 className="mb-2 text-xl font-black uppercase tracking-tighter">STYN Premium</h4>
+          <p className="mb-6 text-xs font-bold text-orange-100/80 leading-relaxed">Unlock exclusive features, boost your profile, and more!</p>
           <button 
             onClick={() => onMenuClick('upgrade')}
-            className="w-full rounded-xl bg-white py-2.5 text-xs font-bold text-orange-600 shadow-lg transition-all hover:bg-orange-50 active:scale-95"
+            className="w-full rounded-2xl bg-white py-3.5 text-xs font-black uppercase tracking-widest text-orange-600 shadow-2xl transition-all hover:bg-neutral-50 active:scale-95"
           >
             Upgrade Now
           </button>
         </div>
-        <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
-        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl"></div>
+        <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-3xl transition-transform group-hover:scale-150 duration-700"></div>
+        <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-black/10 blur-3xl"></div>
       </div>
 
       {/* Suggested Friends */}
-      <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
-        <div className="mb-4 flex items-center justify-between">
-          <h4 className="text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
+      <div className="rounded-[2rem] border border-white/5 bg-neutral-900/50 p-6 shadow-2xl ring-1 ring-white/5 backdrop-blur-xl">
+        <div className="mb-6 flex items-center justify-between">
+          <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-neutral-500">Suggested</h4>
+          <div className="h-px flex-1 bg-white/5 ml-4"></div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-5">
           {suggestedFriends.map((sUser) => (
-            <div key={sUser.uid} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800 ring-2 ring-orange-900/20">
+            <div key={sUser.uid} className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-neutral-800 ring-2 ring-orange-900/20">
                   {sUser.photoURL ? (
                     <img src={sUser.photoURL} alt={sUser.displayName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-neutral-500">
-                      <User size={20} />
+                      <User size={22} />
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col overflow-hidden">
-                  <span className="truncate text-xs font-bold text-white">{sUser.displayName}</span>
-                  <span className="text-[10px] text-neutral-500">{sUser.location?.city || 'Africa'}</span>
+                  <span className="truncate text-sm font-black text-white tracking-tight">{sUser.displayName}</span>
+                  <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{sUser.location?.city || 'Africa'}</span>
                 </div>
               </div>
               <button 
                 onClick={() => onSendFriendRequest(sUser.uid)}
-                className="rounded-full bg-orange-600/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-500 hover:bg-orange-600 hover:text-white transition-all active:scale-95"
+                className="rounded-xl bg-orange-600/10 p-2 text-orange-500 hover:bg-orange-600 hover:text-white transition-all active:scale-90"
               >
-                Connect
+                <UserPlus size={16} />
               </button>
             </div>
           ))}

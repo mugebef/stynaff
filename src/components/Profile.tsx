@@ -168,99 +168,103 @@ export const Profile: React.FC<ProfileProps> = ({
       </div>
 
       {/* Profile Info Header */}
-      <div className="relative px-4 md:px-8">
-        <div className="flex flex-col items-center md:flex-row md:items-end md:gap-6">
+      <div className="relative px-4 md:px-10">
+        <div className="flex flex-col items-center md:flex-row md:items-end md:gap-8">
           {/* Profile Photo */}
-          <div className="relative -mt-20 h-40 w-40 overflow-hidden rounded-full border-4 border-neutral-950 bg-neutral-900 shadow-2xl md:-mt-24 md:h-48 md:w-48">
+          <div className="relative -mt-24 h-48 w-48 overflow-hidden rounded-[2.5rem] border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] md:-mt-32 md:h-56 md:w-56 group">
             {photoPreview || user.photoURL ? (
               <img 
                 src={photoPreview || user.photoURL} 
                 alt={user.displayName} 
-                className="h-full w-full object-cover" 
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
                 referrerPolicy="no-referrer"
               />
             ) : (
               <div className={`flex h-full w-full items-center justify-center ${user.gender === 'Female' ? 'bg-pink-500/10 text-pink-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                <UserIcon size={80} />
+                <UserIcon size={100} />
               </div>
             )}
             {canEdit && isEditing && (
-              <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100">
-                <Camera size={32} />
+              <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/60 text-white opacity-0 transition-opacity hover:opacity-100 backdrop-blur-sm">
+                <Camera size={40} />
                 <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
               </label>
             )}
           </div>
 
           {/* Name & Actions */}
-          <div className="mt-4 flex flex-1 flex-col items-center text-center md:mb-4 md:items-start md:text-left">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold text-white">{user.displayName}</h1>
+          <div className="mt-6 flex flex-1 flex-col items-center text-center md:mb-6 md:items-start md:text-left">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-4xl font-black text-white tracking-tighter uppercase">{user.displayName}</h1>
               {user.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
             </div>
-            <div className="flex items-center gap-4 text-sm font-bold text-neutral-400">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm font-black text-neutral-500 uppercase tracking-widest">
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-xs text-neutral-500 uppercase tracking-widest">User ID</span>
-                <span className="text-lg text-white">{user.uid.slice(0, 8)}</span>
+                <span className="text-[10px] text-neutral-600 mb-1">STYN ID</span>
+                <span className="text-white tracking-tighter">#{user.uid.slice(0, 8)}</span>
               </div>
+              <div className="h-8 w-px bg-white/5 hidden md:block"></div>
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-xs text-neutral-500 uppercase tracking-widest">Friends</span>
-                <span className="text-lg text-white">{user.friends?.length || 0}</span>
+                <span className="text-[10px] text-neutral-600 mb-1">Friends</span>
+                <span className="text-white tracking-tighter">{user.friends?.length || 0}</span>
               </div>
+              <div className="h-8 w-px bg-white/5 hidden md:block"></div>
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-xs text-neutral-500 uppercase tracking-widest">Followers</span>
-                <span className="text-lg text-white">{user.followers?.length || 0}</span>
+                <span className="text-[10px] text-neutral-600 mb-1">Followers</span>
+                <span className="text-white tracking-tighter">{user.followers?.length || 0}</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-2 md:mb-4 md:justify-start">
+          <div className="mt-8 flex flex-wrap justify-center gap-3 md:mb-6 md:justify-start">
             {canEdit && !isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 rounded-xl bg-orange-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                className="flex items-center gap-3 rounded-2xl bg-orange-600 px-10 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_20px_40px_-10px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
               >
-                <Edit3 size={18} />
+                <Edit3 size={18} strokeWidth={3} />
                 Edit Profile
               </button>
             )}
-            {!isOwnProfile && !isEditing && !isFollowing && (
-              <div className="flex flex-wrap gap-2">
-                <button 
-                  onClick={() => onFollow(user.uid)}
-                  className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
-                >
-                  <UserPlus size={18} />
-                  Follow
-                </button>
+            {!isOwnProfile && !isEditing && (
+              <div className="flex flex-wrap justify-center gap-3">
+                {!isFollowing && (
+                  <button 
+                    onClick={() => onFollow(user.uid)}
+                    className="flex items-center gap-3 rounded-2xl bg-orange-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_20px_40px_-10px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
+                  >
+                    <UserPlus size={18} strokeWidth={3} />
+                    Follow
+                  </button>
+                )}
                 {currentUser.friends?.includes(user.uid) ? (
                   <button 
                     onClick={() => onUnfriend(user.uid)}
-                    className="flex items-center gap-2 rounded-xl bg-green-500/10 px-6 py-2.5 text-sm font-bold text-green-500 ring-1 ring-inset ring-green-600/20 hover:bg-red-500/10 hover:text-red-500 hover:ring-red-600/20 transition-all"
+                    className="flex items-center gap-3 rounded-2xl bg-green-500/10 px-8 py-4 text-xs font-black uppercase tracking-widest text-green-500 border border-green-500/20 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all"
                   >
-                    <CheckCircle size={18} />
+                    <CheckCircle size={18} strokeWidth={3} />
                     Friends
                   </button>
                 ) : currentUser.sentRequests?.includes(user.uid) ? (
                   <button 
                     onClick={() => onCancelFriendRequest(user.uid)}
-                    className="flex items-center gap-2 rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-400 hover:bg-red-500/10 hover:text-red-500 transition-all"
+                    className="flex items-center gap-3 rounded-2xl bg-neutral-900 px-8 py-4 text-xs font-black uppercase tracking-widest text-neutral-400 border border-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all"
                   >
-                    <Loader2 className="animate-spin" size={18} />
-                    Cancel Request
+                    <Loader2 className="animate-spin" size={18} strokeWidth={3} />
+                    Pending
                   </button>
                 ) : currentUser.friendRequests?.includes(user.uid) ? (
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button 
                       onClick={() => onAcceptFriend(user.uid)}
-                      className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                      className="flex items-center gap-3 rounded-2xl bg-orange-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_20px_40px_-10px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
                     >
-                      <UserPlus size={18} />
+                      <UserPlus size={18} strokeWidth={3} />
                       Accept
                     </button>
                     <button 
                       onClick={() => onDeclineFriend(user.uid)}
-                      className="flex items-center gap-2 rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-200 hover:bg-neutral-700 transition-all active:scale-95"
+                      className="flex items-center gap-3 rounded-2xl bg-neutral-900 px-8 py-4 text-xs font-black uppercase tracking-widest text-neutral-400 border border-white/5 hover:bg-neutral-800 transition-all active:scale-95"
                     >
                       Decline
                     </button>
@@ -268,9 +272,9 @@ export const Profile: React.FC<ProfileProps> = ({
                 ) : (
                   <button 
                     onClick={() => onSendFriendRequest(user.uid)}
-                    className="flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                    className="flex items-center gap-3 rounded-2xl bg-orange-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_20px_40px_-10px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
                   >
-                    <UserPlus size={18} />
+                    <UserPlus size={18} strokeWidth={3} />
                     Add Friend
                   </button>
                 )}
@@ -278,10 +282,10 @@ export const Profile: React.FC<ProfileProps> = ({
                   onClick={() => window.dispatchEvent(new CustomEvent('changeMenu', { 
                     detail: { menu: 'chat', targetUser: user }
                   }))}
-                  className="flex items-center gap-2 rounded-xl bg-neutral-800 px-6 py-2.5 text-sm font-bold text-neutral-200 hover:bg-neutral-700 transition-all active:scale-95"
+                  className="flex items-center gap-3 rounded-2xl bg-neutral-900 px-8 py-4 text-xs font-black uppercase tracking-widest text-neutral-200 border border-white/5 hover:bg-neutral-800 transition-all active:scale-95"
                 >
-                  <MessageSquare size={18} />
-                  Chat
+                  <MessageSquare size={18} strokeWidth={3} />
+                  Message
                 </button>
               </div>
             )}

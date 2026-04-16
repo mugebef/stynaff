@@ -78,7 +78,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
           <img
             src={featuredMovie?.thumbnailUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=2000"}
             alt="Featured Movie"
-            className="h-full w-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-1000"
+            className="h-full w-full object-cover opacity-80 transition-all duration-1000"
             referrerPolicy="no-referrer"
           />
         )}
@@ -156,7 +156,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 <img
                   src={movie.thumbnailUrl}
                   alt={movie.title}
-                  className={`h-full w-full object-cover transition-all duration-700 ${hasAccess(movie) ? 'grayscale group-hover:grayscale-0' : 'blur-sm grayscale'}`}
+                  className={`h-full w-full object-cover transition-all duration-700 ${hasAccess(movie) ? 'group-hover:scale-110' : 'blur-[2px] brightness-50'}`}
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500">

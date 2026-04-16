@@ -1032,7 +1032,7 @@ export default function App() {
         appConfig={appConfig}
       />
 
-      <main className="mx-auto max-w-7xl px-4 pt-20 pb-12 md:px-6">
+      <main className={`mx-auto ${activeMenu === 'chat' ? 'max-w-none px-0 pt-16 md:pt-0' : 'max-w-7xl px-4 pt-20 pb-12 md:px-6'}`}>
         {activeMenu === 'profile' && profileUser ? (
           <Profile 
             user={profileUser}
@@ -1094,7 +1094,7 @@ export default function App() {
         ) : (
           <div className="flex gap-8">
             {/* Left Sidebar - Profile & Requests */}
-            {activeMenu !== 'blockbuster' && (
+            {activeMenu !== 'blockbuster' && activeMenu !== 'chat' && (
               <Sidebar 
                 user={user} 
                 users={users}
@@ -1155,7 +1155,7 @@ export default function App() {
             </div>
 
             {/* Right Sidebar - Suggestions & Ads */}
-            {activeMenu !== 'blockbuster' && (
+            {activeMenu !== 'blockbuster' && activeMenu !== 'chat' && (
               <div className="hidden w-80 flex-col gap-6 xl:flex">
                 {/* Sponsored Card */}
                 {ads.filter(a => a.active).length > 0 ? (
