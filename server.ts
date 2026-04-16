@@ -74,28 +74,12 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json());
-  app.use("/uploads", express.static(baseUploadsDir));
+  // Heartbeat to ensure server is alive in logs
+  setInterval(() => {
+    log(">>> Heartbeat: Server is alive");
+  }, 30000);
 
-  // 1. API Routes
-  app.get("/api/health", (req, res) => {
-    res.json({ 
-      status: "online", 
-      server: "STYN VPS",
-      storage: "NVMe",
-      features: ["Reels", "Chat", "Dating", "Blockbuster"],
-      nodeVersion: process.version 
-    });
-  });
-
-  app.get("/api/logs", (req, res) => {
-    if (fs.existsSync(logFile)) {
-      res.send(fs.readFileSync(logFile, "utf8"));
-    } else {
-      res.send("No logs found");
-    }
-  });
-
+  // 1. Upload Route FIRST (before other body parsers)
   app.post("/api/upload", (req, res) => {
     log(`>>> Starting upload request. Content-Type: ${req.headers['content-type']}`);
     upload.single("file")(req, res, async (err: any) => {
@@ -105,7 +89,7 @@ async function startServer() {
       }
 
       if (!req.file) {
-        log(">>> Upload Error: No file received. Body keys: " + Object.keys(req.body).join(", "));
+        log(">>> Upload Error: No file received.");
         return res.status(400).json({ error: "No file uploaded" });
       }
 
@@ -131,7 +115,29 @@ async function startServer() {
     });
   });
 
-  // 2. Vite Integration for Development
+  app.use(express.json());
+  app.use("/uploads", express.static(baseUploadsDir));
+
+  // 2. Other API Routes
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "online", 
+      server: "STYN VPS",
+      storage: "NVMe",
+      features: ["Reels", "Chat", "Dating", "Blockbuster"],
+      nodeVersion: process.version 
+    });
+  });
+
+  app.get("/api/logs", (req, res) => {
+    if (fs.existsSync(logFile)) {
+      res.send(fs.readFileSync(logFile, "utf8"));
+    } else {
+      res.send("No logs found");
+    }
+  });
+
+  // Vite Integration for Development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
