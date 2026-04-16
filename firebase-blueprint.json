@@ -46,6 +46,23 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the comment was created" }
       },
       "required": ["id", "postId", "authorId", "authorName", "content", "createdAt"]
+    },
+    "Movie": {
+      "title": "Movie",
+      "description": "A blockbuster movie or trailer",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Movie title" },
+        "description": { "type": "string", "description": "Movie description" },
+        "thumbnailUrl": { "type": "string", "description": "URL to movie thumbnail" },
+        "videoUrl": { "type": "string", "description": "URL to full movie video" },
+        "trailerUrl": { "type": "string", "description": "URL to movie trailer" },
+        "authorId": { "type": "string", "description": "UID of the user who uploaded the movie" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the movie was uploaded" },
+        "rating": { "type": "number", "description": "Average user rating" },
+        "views": { "type": "number", "description": "Total view count" }
+      },
+      "required": ["title", "description", "thumbnailUrl", "videoUrl", "authorId", "createdAt"]
     }
   },
   "firestore": {
@@ -60,6 +77,10 @@
     "/posts/{postId}/comments/{commentId}": {
       "schema": "Comment",
       "description": "Comments on a post"
+    },
+    "/movies/{movieId}": {
+      "schema": "Movie",
+      "description": "Blockbuster movies and trailers"
     }
   }
 }

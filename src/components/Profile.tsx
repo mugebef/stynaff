@@ -3,6 +3,8 @@ import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, 
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 import { COUNTRIES_AND_CITIES, RELATIONSHIP_STATUSES } from '../constants';
+import { storage } from '../firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
   switch (tier) {
@@ -100,14 +102,19 @@ export const Profile: React.FC<ProfileProps> = ({
       let finalPhotoURL = user.photoURL;
 
       if (photoFile) {
-        const formData = new FormData();
-        formData.append('file', photoFile);
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
+        const storageRef = ref(storage, `profiles/${user.uid}/${Date.now()}_${photoFile.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, photoFile);
+
+        finalPhotoURL = await new Promise<string>((resolve, reject) => {
+          uploadTask.on('state_changed', 
+            null,
+            (error) => reject(error),
+            async () => {
+              const url = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve(url);
+            }
+          );
         });
-        const data = await res.json();
-        finalPhotoURL = data.url;
       }
 
       const updates: Partial<UserType> = {

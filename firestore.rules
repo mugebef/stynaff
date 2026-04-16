@@ -57,19 +57,27 @@ service cloud.firestore {
          (request.auth.token.email == "datingwithbounce@gmail.com" && request.auth.token.email_verified == true));
     }
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'friends', 'friendRequests', 'tier', 'isVerified', 'verificationRequested', 'walletBalance', 'points', 'profileViews', 'createdAt']) &&
+      return data.keys().hasAll(['uid', 'displayName', 'username', 'email', 'gender', 'role', 'tier', 'isVerified', 'verificationRequested', 'friends', 'friendRequests', 'sentRequests', 'followers', 'following', 'walletBalance', 'points', 'profileViews', 'swipedLeft', 'swipedRight', 'matches', 'createdAt']) &&
              data.uid is string && data.uid.size() > 0 &&
              data.displayName is string && data.displayName.size() > 0 &&
+             data.username is string && data.username.size() > 0 &&
              data.email is string &&
+             data.gender in ['Male', 'Female', 'Other'] &&
              data.role in ['user', 'admin'] &&
              data.tier in ['General', 'Bronze', 'Silver', 'Gold', 'Platinum'] &&
              data.isVerified is bool &&
              data.verificationRequested is bool &&
              data.friends is list &&
              data.friendRequests is list &&
+             data.sentRequests is list &&
+             data.followers is list &&
+             data.following is list &&
              data.walletBalance is number &&
              data.points is number &&
              data.profileViews is number &&
+             data.swipedLeft is list &&
+             data.swipedRight is list &&
+             data.matches is list &&
              data.createdAt is timestamp;
     }
     function isValidPost(data) {
@@ -86,7 +94,11 @@ service cloud.firestore {
              (!('mediaType' in data) || data.mediaType == null || data.mediaType is string) &&
              (!('isReel' in data) || data.isReel is bool) &&
              (!('comments' in data) || data.comments is list) &&
-             (!('isSponsored' in data) || data.isSponsored is bool);
+             (!('isSponsored' in data) || data.isSponsored is bool) &&
+             (!('isBoosted' in data) || data.isBoosted is bool) &&
+             (!('boostBudget' in data) || data.boostBudget is number) &&
+             (!('boostDuration' in data) || data.boostDuration is number) &&
+             (!('boostedAt' in data) || data.boostedAt is timestamp);
     }
     function isValidAd(data) {
       return data.keys().hasAll(['title', 'description', 'imageUrl', 'link', 'active', 'createdAt']) &&
@@ -111,6 +123,18 @@ service cloud.firestore {
              data.content is string &&
              data.createdAt is timestamp &&
              data.read is bool;
+    }
+    function isValidMovie(data) {
+      return data.keys().hasAll(['title', 'description', 'thumbnailUrl', 'videoUrl', 'authorId', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 5000 &&
+             data.thumbnailUrl is string && isValidUrl(data.thumbnailUrl) &&
+             data.videoUrl is string && isValidUrl(data.videoUrl) &&
+             data.authorId is string &&
+             data.createdAt is timestamp &&
+             (!('trailerUrl' in data) || data.trailerUrl == null || (data.trailerUrl is string && isValidUrl(data.trailerUrl))) &&
+             (!('rating' in data) || data.rating is number) &&
+             (!('views' in data) || data.views is number);
     }
 
     // ===============================================================
@@ -170,6 +194,16 @@ service cloud.firestore {
     match /sponsoredContent/{adId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+
+    match /movies/{movieId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMovie(request.resource.data);
+      allow update: if (isAuthenticated() && (
+        (request.auth.uid == resource.data.authorId && isValidMovie(request.resource.data)) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'rating']))
+      )) || isAdmin();
+      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.authorId) || isAdmin();
     }
   }
 }
