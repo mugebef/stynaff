@@ -21,6 +21,12 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
     e.preventDefault();
     if (!movieFile || !thumbnailFile || !title) return;
 
+    if (movieFile.size > 500 * 1024 * 1024) {
+      setStatus('error');
+      alert('Movie file is too large. Max size is 500MB.');
+      return;
+    }
+
     setLoading(true);
     try {
       await onUpload({ title, description, movieFile, trailerFile: trailerFile || undefined, thumbnailFile });

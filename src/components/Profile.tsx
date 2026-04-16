@@ -102,19 +102,14 @@ export const Profile: React.FC<ProfileProps> = ({
       let finalPhotoURL = user.photoURL;
 
       if (photoFile) {
-        const storageRef = ref(storage, `profiles/${user.uid}/${Date.now()}_${photoFile.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, photoFile);
-
-        finalPhotoURL = await new Promise<string>((resolve, reject) => {
-          uploadTask.on('state_changed', 
-            null,
-            (error) => reject(error),
-            async () => {
-              const url = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(url);
-            }
-          );
+        const formData = new FormData();
+        formData.append('file', photoFile);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
         });
+        const data = await res.json();
+        finalPhotoURL = data.url;
       }
 
       const updates: Partial<UserType> = {

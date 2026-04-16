@@ -483,35 +483,25 @@ export default function App() {
       let isReel = false;
 
       if (mediaFile) {
-        // Use Firebase Storage for media
-        const storageRef = ref(storage, `posts/${user.uid}/${Date.now()}_${mediaFile.name}`);
-        
-        // Use a timeout for the upload
-        const uploadPromise = new Promise<string>((resolve, reject) => {
-          const uploadTask = uploadBytesResumable(storageRef, mediaFile);
-          const timeout = setTimeout(() => {
-            uploadTask.cancel();
-            reject(new Error('Upload timed out. Please check your connection.'));
-          }, 60000); // 1 minute timeout
-
-          uploadTask.on('state_changed', 
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              console.log(`Post upload is ${progress}% done`);
-            },
-            (error) => {
-              clearTimeout(timeout);
-              reject(error);
-            },
-            async () => {
-              clearTimeout(timeout);
-              const url = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(url);
-            }
-          );
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
         });
-
-        mediaUrl = await uploadPromise;
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
+          } catch {
+            throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
+          }
+        }
+        
+        const data = await res.json();
+        mediaUrl = data.url;
         mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
         if (mediaType === 'video') {
           isReel = true; 
@@ -584,33 +574,25 @@ export default function App() {
     if (!user) return;
     
     try {
-      const storageRef = ref(storage, `reels/${user.uid}/${Date.now()}_${file.name}`);
-      
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        const timeout = setTimeout(() => {
-          uploadTask.cancel();
-          reject(new Error('Reel upload timed out. Large files may take longer, but this connection seems stuck.'));
-        }, 300000); // 5 minute timeout for reels
-
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log(`Reel upload is ${progress}% done`);
-          },
-          (error) => {
-            clearTimeout(timeout);
-            reject(error);
-          },
-          async () => {
-            clearTimeout(timeout);
-            const url = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(url);
-          }
-        );
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
       });
-
-      const videoUrl = await uploadPromise;
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
+        } catch {
+          throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
+        }
+      }
+      
+      const data = await res.json();
+      const videoUrl = data.url;
 
       await addDoc(collection(db, 'posts'), {
         content: caption,
@@ -635,39 +617,32 @@ export default function App() {
   const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File }) => {
     if (!user) return;
     try {
-      const uploadFile = async (file: File, path: string, timeoutMs: number = 300000) => {
-        const storageRef = ref(storage, `${path}/${user.uid}/${Date.now()}_${file.name}`);
-        
-        return new Promise<string>((resolve, reject) => {
-          const uploadTask = uploadBytesResumable(storageRef, file);
-          const timeout = setTimeout(() => {
-            uploadTask.cancel();
-            reject(new Error(`Upload for ${file.name} timed out.`));
-          }, timeoutMs);
-
-          uploadTask.on('state_changed', 
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              console.log(`Uploading ${file.name}: ${progress.toFixed(2)}%`);
-            },
-            (error) => {
-              clearTimeout(timeout);
-              reject(error);
-            },
-            async () => {
-              clearTimeout(timeout);
-              const url = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(url);
-            }
-          );
+      const uploadFile = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
         });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
+          } catch {
+            throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
+          }
+        }
+        const data = await res.json();
+        return data.url;
       };
       
-      const thumbUrl = await uploadFile(movieData.thumbnailFile, 'movies/thumbnails', 60000);
-      const movieUrl = await uploadFile(movieData.movieFile, 'movies/files', 600000); // 10 mins for movie
+      const thumbUrl = await uploadFile(movieData.thumbnailFile);
+      const movieUrl = await uploadFile(movieData.movieFile);
       let trailerUrl = null;
       if (movieData.trailerFile) {
-        trailerUrl = await uploadFile(movieData.trailerFile, 'movies/trailers', 300000);
+        trailerUrl = await uploadFile(movieData.trailerFile);
       }
 
       await addDoc(collection(db, 'movies'), {

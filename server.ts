@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import multer from "multer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,10 +62,41 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json());
+  app.use(express.json({ limit: '500mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '500mb' }));
   app.use("/uploads", express.static(baseUploadsDir));
 
+  // Multer Configuration
+  const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const isVideo = file.mimetype.startsWith('video/');
+      cb(null, isVideo ? videoUploadDir : imageUploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const upload = multer({ 
+    storage: multerStorage,
+    limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
+  });
+
   // 1. API Routes
+  app.post("/api/upload", upload.single("file"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    
+    const isVideo = req.file.mimetype.startsWith('video/');
+    const subDir = isVideo ? 'videos' : 'images';
+    const fileUrl = `/uploads/${subDir}/${req.file.filename}`;
+    
+    log(`File uploaded: ${fileUrl}`);
+    res.json({ url: fileUrl });
+  });
+
   app.get("/api/health", (req, res) => {
     res.json({ 
       status: "online", 
