@@ -1,6 +1,7 @@
 import React from 'react';
-import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard } from 'lucide-react';
+import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle } from 'lucide-react';
 import { UploadMovie } from './UploadMovie';
+import { MoviePlayer } from './MoviePlayer';
 import { User as UserType } from '../types';
 
 interface BlockbusterProps {
@@ -14,6 +15,8 @@ interface BlockbusterProps {
 export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onPurchase, onDeposit }) => {
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [selectedMovie, setSelectedMovie] = React.useState<any | null>(null);
+  const [isPlayerOpen, setIsPlayerOpen] = React.useState(false);
+  const [isTrailerMode, setIsTrailerMode] = React.useState(false);
   const [showTrailer, setShowTrailer] = React.useState(true);
 
   const isAdmin = currentUser?.role === 'admin';
@@ -35,6 +38,12 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
       return;
     }
     onPurchase?.(movie.id, movie.price);
+  };
+
+  const openPlayer = (movie: any, trailer: boolean) => {
+    setSelectedMovie(movie);
+    setIsTrailerMode(trailer);
+    setIsPlayerOpen(true);
   };
 
   return (
@@ -88,23 +97,31 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
           </p>
           <div className="mt-10 flex gap-6">
             {featuredMovie && (
-              hasAccess(featuredMovie) ? (
+              <>
                 <button 
-                  onClick={() => window.open(featuredMovie.videoUrl, '_blank')}
+                  onClick={() => {
+                    if (hasAccess(featuredMovie)) {
+                      openPlayer(featuredMovie, false);
+                    } else {
+                      handlePurchaseClick(featuredMovie);
+                    }
+                  }}
                   className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
                 >
                   <Play size={24} fill="currentColor" />
-                  Watch Full Movie
+                  {hasAccess(featuredMovie) ? 'Watch Full Movie' : `Unlock for ${featuredMovie.price} Points`}
                 </button>
-              ) : (
-                <button 
-                  onClick={() => handlePurchaseClick(featuredMovie)}
-                  className="flex items-center gap-3 rounded-full bg-orange-600 px-10 py-5 text-xl font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
-                >
-                  <CreditCard size={24} />
-                  Unlock Full Movie for {featuredMovie.price} Points
-                </button>
-              )
+                
+                {featuredMovie.trailerUrl && (
+                  <button 
+                    onClick={() => openPlayer(featuredMovie, true)}
+                    className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-xl font-bold text-white backdrop-blur-md hover:bg-white/10 transition-all active:scale-95"
+                  >
+                    <PlayCircle size={24} />
+                    Watch Trailer
+                  </button>
+                )}
+              </>
             )}
             <button className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-xl font-bold text-white backdrop-blur-md hover:bg-white/10 transition-all active:scale-95">
               More Info
@@ -127,7 +144,9 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
               className="group cursor-pointer" 
               onClick={() => {
                 if (hasAccess(movie)) {
-                  window.open(movie.videoUrl, '_blank');
+                  openPlayer(movie, false);
+                } else if (movie.trailerUrl) {
+                  openPlayer(movie, true);
                 } else {
                   handlePurchaseClick(movie);
                 }
@@ -142,11 +161,16 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="rounded-full bg-orange-600 p-6 text-white shadow-xl shadow-orange-900/40 transform scale-75 group-hover:scale-100 transition-transform duration-500">
-                    {hasAccess(movie) ? <Play size={32} fill="currentColor" /> : <Lock size={32} />}
+                    {hasAccess(movie) ? <Play size={32} fill="currentColor" /> : (movie.trailerUrl ? <PlayCircle size={32} /> : <Lock size={32} />)}
                   </div>
                 </div>
                 {!hasAccess(movie) && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-[2px]">
+                    {movie.trailerUrl && (
+                      <div className="mb-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10">
+                        Watch Trailer
+                      </div>
+                    )}
                     <div className="rounded-2xl bg-orange-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-2xl">
                       {movie.price} Points
                     </div>
@@ -199,6 +223,15 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
           onUpload={onUpload} 
         />
       )}
+
+      <MoviePlayer
+        movie={selectedMovie}
+        isTrailer={isTrailerMode}
+        isOpen={isPlayerOpen}
+        onClose={() => setIsPlayerOpen(false)}
+        onPurchase={handlePurchaseClick}
+        hasAccess={selectedMovie ? hasAccess(selectedMovie) : false}
+      />
     </div>
   );
 };
