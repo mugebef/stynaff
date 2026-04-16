@@ -60,7 +60,9 @@
         "authorId": { "type": "string", "description": "UID of the user who uploaded the movie" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the movie was uploaded" },
         "rating": { "type": "number", "description": "Average user rating" },
-        "views": { "type": "number", "description": "Total view count" }
+        "views": { "type": "number", "description": "Total view count" },
+        "price": { "type": "number", "description": "Access fee in points" },
+        "genre": { "type": "string", "description": "Movie genre" }
       },
       "required": ["title", "description", "thumbnailUrl", "videoUrl", "authorId", "createdAt"]
     }

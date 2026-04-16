@@ -51,6 +51,9 @@ service cloud.firestore {
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*") || url.matches("^/uploads/.*"));
+    }
     function isAdmin() {
       return isAuthenticated() && 
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
@@ -134,7 +137,9 @@ service cloud.firestore {
              data.createdAt is timestamp &&
              (!('trailerUrl' in data) || data.trailerUrl == null || (data.trailerUrl is string && isValidUrl(data.trailerUrl))) &&
              (!('rating' in data) || data.rating is number) &&
-             (!('views' in data) || data.views is number);
+             (!('views' in data) || data.views is number) &&
+             (!('price' in data) || data.price is number) &&
+             (!('genre' in data) || data.genre is string);
     }
 
     // ===============================================================
@@ -198,7 +203,7 @@ service cloud.firestore {
 
     match /movies/{movieId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidMovie(request.resource.data);
+      allow create: if isAdmin() && request.resource.data.authorId == request.auth.uid && isValidMovie(request.resource.data);
       allow update: if (isAuthenticated() && (
         (request.auth.uid == resource.data.authorId && isValidMovie(request.resource.data)) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'rating']))
