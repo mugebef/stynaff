@@ -1,8 +1,9 @@
 import React from 'react';
 import { Users, FileText, CheckCircle, TrendingUp, DollarSign, Award, Edit, Trash2, Search, Settings, Zap, Megaphone, Plus, X } from 'lucide-react';
 import { User, Post, Transaction } from '../types';
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
 import { collection, query, getDocs, updateDoc, doc, deleteDoc, onSnapshot, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface SponsoredAd {
   id: string;
@@ -34,32 +35,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   const [isUploadingFavicon, setIsUploadingFavicon] = React.useState(false);
 
   const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
     if (type === 'logo') setIsUploadingLogo(true);
     else setIsUploadingFavicon(true);
 
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
+      // Create a storage reference
+      const storageRef = ref(storage, `site-identity/${type}-${Date.now()}-${file.name}`);
       
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Server responded with ${res.status}: ${errorText}`);
-      }
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
 
-      const data = await res.json();
-      if (data.url) {
-        const updatedConfig = { ...appConfig, [type + 'Url']: data.url };
+      if (downloadURL) {
+        const updatedConfig = { ...appConfig, [type + 'Url']: downloadURL };
         setAppConfig(updatedConfig);
         await setDoc(doc(db, 'appConfig', 'main'), updatedConfig);
-        alert(`${type === 'logo' ? 'Logo' : 'Favicon'} updated successfully!`);
+        alert(`${type === 'logo' ? 'Logo' : 'Favicon'} updated successfully via Cloud Storage!`);
       }
     } catch (err: any) {
-      console.error(err);
+      console.error('Firebase Storage Error:', err);
       alert(`Upload failed: ${err.message}`);
     } finally {
       if (type === 'logo') setIsUploadingLogo(false);

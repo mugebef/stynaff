@@ -3,12 +3,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createRequire } from "module";
 import fs from "fs";
-import sharp from "sharp";
-
-const require = createRequire(import.meta.url);
-const multer = require("multer");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,14 +47,6 @@ try {
   log(`Uploads directory NOT writable: ${err.message}`);
 }
 
-// Configure multer for local storage
-const storage = multer.memoryStorage();
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // Reduced to 50MB for debugging
-});
-
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -74,51 +61,10 @@ async function startServer() {
     next();
   });
 
-  // Heartbeat to ensure server is alive in logs
-  setInterval(() => {
-    log(">>> Heartbeat: Server is alive");
-  }, 30000);
-
-  // 1. Upload Route FIRST (before other body parsers)
-  app.post("/api/upload", (req, res) => {
-    log(`>>> Starting upload request. Content-Type: ${req.headers['content-type']}`);
-    upload.single("file")(req, res, async (err: any) => {
-      if (err) {
-        log(`>>> Multer Error: ${err.message}`);
-        return res.status(400).json({ error: `Upload error: ${err.message}` });
-      }
-
-      if (!req.file) {
-        log(">>> Upload Error: No file received.");
-        return res.status(400).json({ error: "No file uploaded" });
-      }
-
-      log(`>>> File received in memory: ${req.file.originalname} (${req.file.size} bytes)`);
-
-      const isVideo = req.file.mimetype.startsWith("video/");
-      const subPath = isVideo ? "videos" : "images";
-      const targetDir = isVideo ? videoUploadDir : imageUploadDir;
-      
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      const filename = uniqueSuffix + "-" + req.file.originalname.replace(/\s+/g, '-');
-      const filePath = path.join(targetDir, filename);
-
-      try {
-        fs.writeFileSync(filePath, req.file.buffer);
-        const fileUrl = `/uploads/${subPath}/${filename}`;
-        log(`>>> Upload successful: ${fileUrl}`);
-        res.json({ url: fileUrl });
-      } catch (err: any) {
-        log(`>>> Processing error: ${err.message}`);
-        res.status(500).json({ error: "Failed to process upload" });
-      }
-    });
-  });
-
   app.use(express.json());
   app.use("/uploads", express.static(baseUploadsDir));
 
-  // 2. Other API Routes
+  // 1. API Routes
   app.get("/api/health", (req, res) => {
     res.json({ 
       status: "online", 
