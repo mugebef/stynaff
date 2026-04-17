@@ -121,7 +121,46 @@ export default function App() {
   const [movies, setMovies] = React.useState<any[]>([]);
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadMessage, setUploadMessage] = React.useState("");
   const [profileUser, setProfileUser] = React.useState<UserType | null>(null);
+
+  const uploadWithProgress = (file: File, type: string = "file"): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percent);
+          setUploadMessage(`Uploading ${type}: ${percent}%`);
+        }
+      });
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve(data.url);
+            } catch (err) {
+              reject(new Error("Failed to parse upload response"));
+            }
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      
+      xhr.open('POST', '/api/upload');
+      xhr.send(formData);
+    });
+  };
   const [appConfig, setAppConfig] = React.useState<any>(null);
   const [users, setUsers] = React.useState<UserType[]>([]);
   const [ads, setAds] = React.useState<any[]>([]);
@@ -576,27 +615,12 @@ export default function App() {
 
   const handleReelUpload = async (file: File, caption: string) => {
     if (!user) return;
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadMessage("Starting upload...");
     
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        try {
-          const errorJson = JSON.parse(errorText);
-          throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
-        } catch {
-          throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
-        }
-      }
-      
-      const data = await res.json();
-      const videoUrl = data.url;
+      const videoUrl = await uploadWithProgress(file, "Reel");
 
       await addDoc(collection(db, 'posts'), {
         content: caption,
@@ -612,43 +636,34 @@ export default function App() {
         shares: 0,
         createdAt: serverTimestamp()
       });
+      alert('Reel uploaded successfully!');
     } catch (error) {
       console.error('Error uploading reel:', error);
-      throw error;
+      alert('Failed to upload reel.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File; price: number }) => {
     if (!user || user.role !== 'admin') return;
+    setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
-      const uploadFile = async (file: File) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!res.ok) {
-          const errorText = await res.text();
-          try {
-            const errorJson = JSON.parse(errorText);
-            throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
-          } catch {
-            throw new Error(`Upload failed with status ${res.status}. Server returned non-JSON response.`);
-          }
-        }
-        const data = await res.json();
-        return data.url;
-      };
+      setUploadMessage("Uploading Thumbnail...");
+      const thumbUrl = await uploadWithProgress(movieData.thumbnailFile, "Thumbnail");
       
-      const thumbUrl = await uploadFile(movieData.thumbnailFile);
-      const movieUrl = await uploadFile(movieData.movieFile);
+      setUploadMessage("Uploading Movie (this may take a while)...");
+      const movieUrl = await uploadWithProgress(movieData.movieFile, "Movie");
+      
       let trailerUrl = null;
       if (movieData.trailerFile) {
-        trailerUrl = await uploadFile(movieData.trailerFile);
+        setUploadMessage("Uploading Trailer...");
+        trailerUrl = await uploadWithProgress(movieData.trailerFile, "Trailer");
       }
 
+      setUploadMessage("Saving details...");
       await addDoc(collection(db, 'movies'), {
         title: movieData.title,
         description: movieData.description,
@@ -667,7 +682,8 @@ export default function App() {
     } catch (error) {
       console.error('Error uploading movie:', error);
       alert(error instanceof Error ? error.message : 'Failed to upload movie');
-      throw error;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -925,45 +941,66 @@ export default function App() {
   if (!isAuthReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white overflow-hidden relative">
-        {/* Water Splash Effect */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(8)].map((_, i) => (
+        {/* Animated Water Background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(5)].map((_, i) => (
             <motion.div
               key={i}
-              initial={{ scale: 0, opacity: 0.8 }}
+              initial={{ y: "100%", opacity: 0.1 }}
               animate={{ 
-                scale: [1, 4, 8], 
-                opacity: [0.6, 0.2, 0],
+                y: ["100%", "90%", "100%"],
+                opacity: [0.1, 0.2, 0.1]
               }}
               transition={{ 
-                duration: 3, 
+                duration: 5 + i, 
                 repeat: Infinity, 
-                delay: i * 0.5,
+                ease: "easeInOut" 
+              }}
+              className="absolute inset-0 bg-blue-500/5"
+              style={{ bottom: i * 20 }}
+            />
+          ))}
+        </div>
+
+        {/* Water Splash Effect */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ 
+                scale: [0, 4, 10], 
+                opacity: [0.8, 0.3, 0],
+              }}
+              transition={{ 
+                duration: 4, 
+                repeat: Infinity, 
+                delay: i * 0.4,
                 ease: "easeOut" 
               }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-orange-500/20"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-orange-500/30"
               style={{ width: '100px', height: '100px' }}
             />
           ))}
           
           {/* Splashing Droplets */}
-          {[...Array(20)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <motion.div
               key={`drop-${i}`}
               initial={{ x: 0, y: 0, scale: 0 }}
               animate={{ 
-                x: (Math.random() - 0.5) * 600,
-                y: (Math.random() - 0.5) * 600,
-                scale: [0, 1, 0],
-                opacity: [0, 1, 0]
+                x: (Math.random() - 0.5) * 800,
+                y: (Math.random() - 0.5) * 800,
+                scale: [0, 1.5, 0],
+                opacity: [0, 0.8, 0]
               }}
               transition={{ 
-                duration: 2 + Math.random() * 2, 
+                duration: 3 + Math.random() * 2, 
                 repeat: Infinity, 
-                delay: Math.random() * 2,
+                delay: Math.random() * 3,
                 ease: "circOut" 
               }}
-              className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-orange-500/40"
+              className="absolute left-1/2 top-1/2 w-3 h-3 rounded-full bg-gradient-to-br from-orange-400/60 to-blue-400/40"
             />
           ))}
         </div>
@@ -974,40 +1011,55 @@ export default function App() {
           className="text-center relative z-10"
         >
           <div className="relative mx-auto mb-12 flex h-48 w-48 items-center justify-center">
+            {/* Pulsing Water Ring */}
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.2, 0.5]
+              }}
+              transition={{ repeat: Infinity, duration: 4 }}
+              className="absolute inset-0 rounded-full bg-blue-500/5 blur-3xl"
+            />
+
             {/* Spinning Outer Rings */}
             <motion.div 
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-              className="absolute inset-0 rounded-[3.5rem] border-4 border-orange-500/10"
+              transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+              className="absolute inset-0 rounded-[3.5rem] border-4 border-blue-500/10"
             />
             <motion.div 
               animate={{ rotate: -360 }}
-              transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
-              className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/20"
+              transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+              className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/30"
             />
             
-            {/* Spinning Logo Container */}
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-              className="relative flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-700"></div>
+            {/* Liquid Logo Container */}
+            <div className="relative h-32 w-32 flex items-center justify-center rounded-[2.5rem] bg-stone-50 shadow-[0_20px_50px_rgba(234,88,12,0.2)] overflow-hidden">
+              {/* Dynamic Water Wave Interior */}
+              <motion.div
+                animate={{ 
+                  y: [20, 10, 20],
+                  rotate: [0, 5, 0]
+                }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className="absolute inset-y-1/2 left-[-50%] right-[-50%] bg-blue-500/20 blur-xl rounded-[40%]"
+              />
+              
               <motion.div 
-                animate={{ rotate: -360 }}
-                transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                className="relative flex items-center justify-center w-full h-full"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
+                className="relative flex items-center justify-center w-full h-full p-4"
               >
                 {appConfig?.logoUrl ? (
-                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain p-5" />
+                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain filter drop-shadow-[0_0_8px_rgba(234,88,12,0.5)]" />
                 ) : (
-                  <div className="flex flex-col items-center">
-                    <Globe className="w-12 h-12 mb-1" />
-                    <span className="text-xs font-black tracking-tighter uppercase">Siite</span>
+                  <div className="flex flex-col items-center text-orange-600">
+                    <Globe className="w-14 h-14 mb-1" />
+                    <span className="text-[10px] font-black tracking-[0.2em] uppercase">Siite</span>
                   </div>
                 )}
               </motion.div>
-            </motion.div>
+            </div>
             
             {/* Floating Icons */}
             <motion.div 
@@ -1302,6 +1354,70 @@ export default function App() {
       </main>
 
       <Footer />
+
+      {/* Upload Progress Indicator */}
+      <AnimatePresence>
+        {isUploading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-md rounded-3xl bg-neutral-900 p-8 shadow-2xl ring-1 ring-white/10"
+            >
+              <div className="mb-6 flex flex-col items-center">
+                <div className="relative mb-6 h-24 w-24">
+                  <svg className="h-full w-full" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="white"
+                      strokeOpacity="0.1"
+                      strokeWidth="8"
+                    />
+                    <motion.circle
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      fill="none"
+                      stroke="#ea580c"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray="283"
+                      initial={{ strokeDashoffset: 283 }}
+                      animate={{ strokeDashoffset: 283 - (283 * uploadProgress) / 100 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl font-black text-white">{uploadProgress}%</span>
+                  </div>
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-white">Uploading Content</h3>
+                <p className="text-center text-sm text-neutral-400">{uploadMessage}</p>
+              </div>
+
+              <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-800">
+                <motion.div
+                  className="h-full bg-orange-600"
+                  animate={{ width: `${uploadProgress}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+
+              <p className="mt-4 text-center text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                Please do not close the window
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
