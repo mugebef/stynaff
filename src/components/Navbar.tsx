@@ -47,13 +47,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex flex-col items-start cursor-pointer group" onClick={() => onMenuClick('feed')}>
           <div className="flex items-center gap-2">
             {appConfig?.logoUrl ? (
-              <img src={appConfig.logoUrl} alt="Logo" className="h-8 w-auto object-contain group-hover:scale-110 transition-all" />
+              <img 
+                src={appConfig.logoUrl} 
+                alt="Logo" 
+                className="h-16 md:h-20 w-auto object-contain group-hover:scale-110 transition-all drop-shadow-2xl" 
+                referrerPolicy="no-referrer"
+              />
             ) : (
               <>
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-900/20 group-hover:scale-110 transition-all">
-                  <span className="text-xl font-black italic">S</span>
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-xl shadow-orange-900/30 group-hover:scale-110 transition-all border-2 border-white/20">
+                  <span className="text-3xl font-black italic">S</span>
                 </div>
-                <span className="font-serif text-3xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors">
+                <span className="font-serif text-5xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors drop-shadow-md">
                   Styn
                 </span>
               </>
@@ -147,6 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                                     <span className="font-bold text-white">{notif.fromName}</span> {
                                       notif.type === 'like' ? 'liked your post' :
                                       notif.type === 'comment' ? 'commented on your post' :
+                                      notif.type === 'share' ? 'shared your post' :
                                       notif.type === 'friend_request' ? 'sent you a friend request' :
                                       notif.type === 'friend_accepted' ? 'accepted your friend request' :
                                       'interacted with you'

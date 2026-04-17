@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import multer from "multer";
+import ffmpeg from "fluent-ffmpeg";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,16 +85,52 @@ async function startServer() {
   });
 
   // 1. API Routes
-  app.post("/api/upload", upload.single("file"), (req, res) => {
+  app.post("/api/upload", upload.single("file"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
     
     const isVideo = req.file.mimetype.startsWith('video/');
     const subDir = isVideo ? 'videos' : 'images';
-    const fileUrl = `/uploads/${subDir}/${req.file.filename}`;
+    let finalFilename = req.file.filename;
+
+    if (isVideo) {
+      const inputPath = req.file.path;
+      const compressedFilename = `compressed-${req.file.filename}`;
+      const outputPath = path.join(videoUploadDir, compressedFilename);
+      
+      try {
+        log(`Compressing video: ${req.file.filename}`);
+        await new Promise<void>((resolve, reject) => {
+          ffmpeg(inputPath)
+            .output(outputPath)
+            .videoCodec('libx264')
+            .size('720x?') // Optimize for mobile: 720p height
+            .addOptions([
+              '-crf 28',        // Constant Rate Factor: 28 is a good balance
+              '-preset faster', // Faster encoding
+              '-movflags +faststart' // Enable fast start for web streaming
+            ])
+            .on('end', () => resolve())
+            .on('error', (err) => reject(err))
+            .run();
+        });
+        
+        // Remove original and use compressed
+        if (fs.existsSync(outputPath)) {
+          fs.unlinkSync(inputPath);
+          finalFilename = compressedFilename;
+          log(`Compression complete: ${finalFilename}`);
+        }
+      } catch (err: any) {
+        log(`Video compression failed: ${err.message}. Using original file.`);
+        // Fallback to original file if compression fails
+      }
+    }
     
-    log(`File uploaded: ${fileUrl}`);
+    const fileUrl = `/uploads/${subDir}/${finalFilename}`;
+    
+    log(`File ready: ${fileUrl}`);
     res.json({ url: fileUrl });
   });
 

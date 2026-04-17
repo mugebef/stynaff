@@ -11,15 +11,15 @@ export const Footer: React.FC<FooterProps> = ({ appConfig }) => {
     <footer className="border-t border-white/5 bg-neutral-900 py-12">
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 p-2 shadow-lg ring-1 ring-white/10">
+          <div className="flex items-center gap-4">
+            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-neutral-800 p-3 shadow-2xl ring-2 ring-white/10 hover:scale-110 transition-transform duration-500">
               {appConfig?.logoUrl ? (
-                <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
               ) : (
-                <Globe size={24} className="text-orange-500" />
+                <Globe size={60} className="text-orange-500" />
               )}
             </div>
-            <span className="font-display text-2xl font-black tracking-tighter text-white uppercase italic">
+            <span className="font-display text-6xl font-black tracking-tighter text-white uppercase italic drop-shadow-2xl">
               {APP_NAME}
             </span>
           </div>

@@ -62,6 +62,8 @@ export interface Post {
   reactions?: { [uid: string]: string }; // uid -> reaction type (heart, laugh, etc)
   comments: Comment[];
   shares: number;
+  views: number;
+  viewedBy?: string[];
   isSponsored?: boolean;
   isBoosted?: boolean;
   boostBudget?: number;
@@ -80,7 +82,7 @@ export interface Comment {
 
 export interface Notification {
   id: string;
-  type: 'friend_request' | 'friend_accepted' | 'profile_view' | 'like' | 'comment' | 'match';
+  type: 'friend_request' | 'friend_accepted' | 'profile_view' | 'like' | 'comment' | 'match' | 'share';
   fromId: string;
   fromName: string;
   toId: string;

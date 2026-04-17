@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X, Film } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X, Film, Search, Eye } from 'lucide-react';
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
@@ -13,6 +13,7 @@ interface ReelsProps {
   onUpload: (file: File, caption: string) => Promise<void>;
   onFollow: (uid: string) => void;
   onShare: (postId: string) => void;
+  onView?: (postId: string) => void;
   onChat: (targetUser: User) => void;
   onPurchaseMovie?: (movieId: string, price: number) => Promise<void>;
 }
@@ -26,11 +27,68 @@ export const Reels: React.FC<ReelsProps> = ({
   onUpload,
   onFollow,
   onShare,
+  onView,
   onChat,
   onPurchaseMovie
 }) => {
-  const [reels, setReels] = React.useState<Post[]>(posts.filter(p => p.isReel && p.mediaType === 'video'));
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [showSearch, setShowSearch] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  
+  // Recommendation & Filtering Logic
+  const reels = React.useMemo(() => {
+    let list = posts.filter(p => p.isReel && p.mediaType === 'video');
+    
+    // Search Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(r => 
+        r.content.toLowerCase().includes(q) || 
+        r.hashtags?.some(h => h.toLowerCase().includes(q)) ||
+        r.authorName.toLowerCase().includes(q)
+      );
+    }
+    
+    // Recommendation Algorithm
+    return [...list].sort((a, b) => {
+      let scoreA = 0;
+      let scoreB = 0;
+
+      // 1. Followed accounts (Strong boost)
+      if (currentUser.following?.includes(a.authorId)) scoreA += 5000;
+      if (currentUser.following?.includes(b.authorId)) scoreB += 5000;
+
+      // 2. Interests (matching hashtags)
+      const userInterests = currentUser.interests || [];
+      const hashtagsA = a.hashtags || [];
+      const hashtagsB = b.hashtags || [];
+      scoreA += hashtagsA.filter(h => userInterests.some(i => i.toLowerCase() === h.toLowerCase())).length * 500;
+      scoreB += hashtagsB.filter(h => userInterests.some(i => i.toLowerCase() === h.toLowerCase())).length * 500;
+
+      // 3. Interaction History (Authors of previously liked content)
+      const likedAuthorIds = new Set(posts.filter(p => p.likes.includes(currentUser.uid)).map(p => p.authorId));
+      if (likedAuthorIds.has(a.authorId)) scoreA += 1000;
+      if (likedAuthorIds.has(b.authorId)) scoreB += 1000;
+
+      // 4. Boosted/Sponsored
+      if (a.isBoosted || a.isSponsored) scoreA += 10000;
+      if (b.isBoosted || b.isSponsored) scoreB += 10000;
+
+      // 5. Popularity
+      scoreA += (a.views || 0) * 0.1;
+      scoreB += (b.views || 0) * 0.1;
+
+      // 6. Recency (Favor newer content)
+      const now = Date.now() / 1000;
+      const recencyA = a.createdAt?.seconds ? (now - a.createdAt.seconds) / 3600 : 0;
+      const recencyB = b.createdAt?.seconds ? (now - b.createdAt.seconds) / 3600 : 0;
+      scoreA -= Math.min(recencyA, 1000); // Penalty for age, capped
+      scoreB -= Math.min(recencyB, 1000);
+
+      return scoreB - scoreA;
+    });
+  }, [posts, searchQuery, currentUser]);
+
   const [isMuted, setIsMuted] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
@@ -40,6 +98,7 @@ export const Reels: React.FC<ReelsProps> = ({
   const [newComment, setNewComment] = React.useState('');
   const containerRef = React.useRef<HTMLDivElement>(null);
   const videoRefs = React.useRef<{ [key: string]: HTMLVideoElement | null }>({});
+  const viewedReels = React.useRef<Set<string>>(new Set());
 
   // Intersection Observer for auto-play/pause
   React.useEffect(() => {
@@ -56,7 +115,15 @@ export const Reels: React.FC<ReelsProps> = ({
           video.play().catch(() => {});
           setIsPlaying(true);
           const index = Object.values(videoRefs.current).indexOf(video);
-          if (index !== -1) setActiveIndex(index);
+          if (index !== -1) {
+            setActiveIndex(index);
+            // Track view
+            const currentReel = reels[index];
+            if (currentReel && onView && !viewedReels.current.has(currentReel.id)) {
+              onView(currentReel.id);
+              viewedReels.current.add(currentReel.id);
+            }
+          }
         } else {
           video.pause();
         }
@@ -75,20 +142,6 @@ export const Reels: React.FC<ReelsProps> = ({
     };
   }, [reels]);
 
-  // Infinity Scroll Logic
-  const handleScroll = () => {
-    if (containerRef.current) {
-      const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
-      if (scrollTop + clientHeight >= scrollHeight - 100) {
-        setReels(prev => [...prev, ...posts.filter(p => p.isReel && p.mediaType === 'video')]);
-      }
-    }
-  };
-
-  React.useEffect(() => {
-    setReels(posts.filter(p => p.isReel && p.mediaType === 'video'));
-  }, [posts]);
-
   const handleLikeWithFeedback = (postId: string) => {
     onLike(postId);
     const reel = reels.find(r => r.id === postId);
@@ -101,11 +154,20 @@ export const Reels: React.FC<ReelsProps> = ({
   const handleDoubleTap = (e: React.MouseEvent, postId: string) => {
     if (e.detail === 2) {
       const rect = e.currentTarget.getBoundingClientRect();
-      setShowHeart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      setShowHeart({ x, y });
       handleLikeWithFeedback(postId);
+      
+      // Haptic feedback
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+
       setTimeout(() => setShowHeart(null), 1000);
     } else {
-      // Single tap to play/pause
+      // Single tap to play/pause with a small overlay feedback
       const video = videoRefs.current[activeIndex];
       if (video) {
         if (video.paused) {
@@ -121,6 +183,44 @@ export const Reels: React.FC<ReelsProps> = ({
 
   return (
     <div className="relative h-[85vh] w-full max-w-md mx-auto">
+      {/* Search Header */}
+      <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
+        <AnimatePresence>
+          {showSearch ? (
+            <motion.div 
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 240, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              className="flex items-center overflow-hidden rounded-full bg-black/40 backdrop-blur-md border border-white/10"
+            >
+              <input 
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Reels..."
+                className="w-full bg-transparent px-4 py-2 text-sm text-white focus:outline-none"
+              />
+              <button 
+                onClick={() => { setShowSearch(false); setSearchQuery(''); }}
+                className="p-2 text-neutral-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.button 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              onClick={() => setShowSearch(true)}
+              className="rounded-full bg-black/40 p-3 text-white backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all"
+            >
+              <Search size={20} />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+
       {reels.length === 0 ? (
         <div className="flex h-full items-center justify-center rounded-3xl bg-neutral-950 text-white border border-white/5 shadow-2xl">
           <div className="text-center">
@@ -138,7 +238,6 @@ export const Reels: React.FC<ReelsProps> = ({
       ) : (
         <div 
           ref={containerRef}
-          onScroll={handleScroll}
           className="relative h-full w-full snap-y snap-mandatory overflow-y-scroll rounded-3xl bg-black shadow-2xl no-scrollbar border border-white/5"
         >
           {reels.map((reel, index) => (
@@ -178,13 +277,31 @@ export const Reels: React.FC<ReelsProps> = ({
               <AnimatePresence>
                 {showHeart && (
                   <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: [0, 1.5, 1.2], opacity: [0, 1, 1] }}
-                    exit={{ scale: 2, opacity: 0 }}
+                    initial={{ scale: 0, opacity: 0, rotate: -15 }}
+                    animate={{ 
+                      scale: [0, 1.2, 1], 
+                      opacity: [0, 1, 1],
+                      rotate: [-15, 0, 0]
+                    }}
+                    exit={{ 
+                      scale: 2.5, 
+                      opacity: 0,
+                      filter: "blur(20px)"
+                    }}
+                    transition={{ 
+                      duration: 0.6,
+                      ease: "backOut",
+                      times: [0, 0.7, 1]
+                    }}
                     style={{ left: showHeart.x - 40, top: showHeart.y - 40 }}
                     className="pointer-events-none absolute z-50 text-white"
                   >
-                    <Heart size={80} className="fill-current text-orange-500 drop-shadow-2xl" />
+                    <Heart size={80} className="fill-current text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.8)]" />
+                    <motion.div 
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                      className="absolute inset-0 rounded-full bg-white blur-3xl"
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -272,6 +389,16 @@ export const Reels: React.FC<ReelsProps> = ({
                   <span className="text-xs font-black drop-shadow-md">{reel.shares || 0}</span>
                 </button>
 
+                <div className="flex flex-col items-center gap-0">
+                  <div className="rounded-full p-2 text-white">
+                    <Eye size={30} />
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-tighter text-white/50">Unique</span>
+                  <span className="text-xs font-black drop-shadow-md">
+                    {reel.views > 999 ? (reel.views / 1000).toFixed(1) + 'K' : reel.views || 0}
+                  </span>
+                </div>
+
                 {/* Rotating Music Disc */}
                 <motion.div 
                   animate={{ rotate: 360 }}
@@ -304,7 +431,7 @@ export const Reels: React.FC<ReelsProps> = ({
                   </div>
                   <p className="text-sm line-clamp-2 font-medium leading-relaxed text-white/90 drop-shadow-sm">{reel.content}</p>
                   
-                  {reel.isMovieTrailer && (
+                  {reel.isMovieTrailer && reel.authorId !== currentUser.uid && (
                     <div className="flex flex-wrap gap-2">
                       <motion.button
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -317,13 +444,13 @@ export const Reels: React.FC<ReelsProps> = ({
                             onPurchaseMovie(reel.movieId, reel.moviePrice || 0);
                           }
                         }}
-                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/40"
+                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/40 border border-orange-400/20"
                       >
                         <Film size={18} />
                         Pay to see full movie
                       </motion.button>
                       
-                      {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
+                      {!currentUser.following?.includes(reel.authorId) && (
                         <motion.button
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -333,7 +460,7 @@ export const Reels: React.FC<ReelsProps> = ({
                             e.stopPropagation();
                             onFollow(reel.authorId);
                           }}
-                          className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-6 py-3 text-sm font-black uppercase tracking-widest text-white border border-white/20 hover:bg-white/20 transition-all"
+                          className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-6 py-3 text-sm font-black uppercase tracking-widest text-white border border-white/20 hover:bg-white/20 transition-all font-mono"
                         >
                           <Plus size={18} />
                           Follow Studio

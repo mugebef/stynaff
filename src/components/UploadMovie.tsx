@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Upload, Film, Loader2, CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
+import { X, Upload, Film, Loader2, CheckCircle2, AlertCircle, PlayCircle, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { ImageCropper } from './ImageCropper';
 
 interface UploadMovieProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
   const [movieFile, setMovieFile] = React.useState<File | null>(null);
   const [trailerFile, setTrailerFile] = React.useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = React.useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = React.useState<string | null>(null);
+  const [isCropping, setIsCropping] = React.useState(false);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [price, setPrice] = React.useState(50);
@@ -95,6 +98,47 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
             </div>
 
             <div className="p-8">
+              {/* Image Cropper Modal Layer */}
+              <AnimatePresence>
+                {isCropping && thumbnailPreview && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="absolute inset-0 z-[110] bg-neutral-900 p-8 flex flex-col"
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <h4 className="text-xl font-black text-white">Adjust Poster Zoom</h4>
+                      <button onClick={() => setIsCropping(false)} className="text-neutral-400 hover:text-white">
+                        <X size={24} />
+                      </button>
+                    </div>
+                    
+                    <div className="flex-1 min-h-0">
+                      <ImageCropper 
+                        image={thumbnailPreview} 
+                        aspect={2/3}
+                        onCropComplete={(croppedArea, croppedAreaPixels) => {
+                          // We'll store the pixels for later if we want real cropping, 
+                          // but for now we'll just allow the UI interaction.
+                          // Real cropping: setCroppedPixels(croppedAreaPixels);
+                        }} 
+                      />
+                    </div>
+                    
+                    <div className="mt-8 flex gap-4">
+                      <button 
+                        type="button"
+                        onClick={() => setIsCropping(false)}
+                        className="flex-1 rounded-2xl bg-orange-600 py-4 font-bold text-white shadow-xl shadow-orange-900/20"
+                      >
+                        Apply & Continue
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Progress Bar */}
               <div className="mb-8 flex gap-2">
                 {[1, 2, 3, 4].map(i => (
@@ -148,20 +192,54 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                         <div>
                           <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Movie Poster</label>
                           <div 
-                            onClick={() => document.getElementById('thumb-input')?.click()}
-                            className={`relative aspect-[2/3] cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed transition-all ${
-                              thumbnailFile ? 'border-orange-600' : 'border-white/5 hover:border-orange-500 bg-neutral-950'
+                            className={`relative aspect-[2/3] w-full overflow-hidden rounded-3xl border-2 border-dashed transition-all ${
+                              thumbnailFile ? 'border-orange-600' : 'border-white/5 bg-neutral-950'
                             }`}
                           >
-                            {thumbnailFile ? (
-                              <img src={URL.createObjectURL(thumbnailFile)} className="h-full w-full object-cover" alt="Preview" />
+                            {thumbnailPreview ? (
+                              <div className="group relative h-full w-full">
+                                <img src={thumbnailPreview} className="h-full w-full object-cover" alt="Preview" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-all">
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsCropping(true)}
+                                    className="flex items-center gap-2 rounded-full bg-orange-600 px-4 py-2 text-xs font-bold text-white shadow-xl hover:bg-orange-700 transition-all"
+                                  >
+                                    <Maximize2 size={16} />
+                                    Zoom & Crop
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); }}
+                                  className="absolute right-3 top-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-md hover:bg-red-500 transition-all"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
                             ) : (
-                              <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                              <div 
+                                onClick={() => document.getElementById('thumb-input')?.click()}
+                                className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center cursor-pointer hover:border-orange-500 transition-all"
+                              >
                                 <Film size={32} className="text-neutral-700" />
                                 <p className="text-xs font-bold text-neutral-500">Click to upload poster</p>
                               </div>
                             )}
-                            <input id="thumb-input" type="file" accept="image/*" className="hidden" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} />
+                            <input 
+                              id="thumb-input" 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setThumbnailFile(file);
+                                  setThumbnailPreview(URL.createObjectURL(file));
+                                  setIsCropping(true);
+                                }
+                              }} 
+                            />
                           </div>
                         </div>
                         <div className="space-y-6">

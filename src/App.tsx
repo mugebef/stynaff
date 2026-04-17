@@ -380,7 +380,6 @@ export default function App() {
       })) as Post[];
       
       const reelsData = postsData.filter(p => p.isReel);
-      setAllReels(reelsData);
       
       // Algorithm: Filter to self/friends/sponsored, then sort
       const filteredPosts = postsData.filter(p => 
@@ -427,9 +426,11 @@ export default function App() {
       authorName: 'Blockbuster',
       authorPhoto: m.thumbnailUrl,
       authorVerified: true,
-      likes: [],
-      comments: [],
-      shares: 0,
+      likes: m.likes || [],
+      comments: m.comments || [],
+      shares: m.shares || 0,
+      views: m.views || 0,
+      viewedBy: m.viewedBy || [],
       createdAt: m.createdAt
     })) as Post[];
 
@@ -614,6 +615,11 @@ export default function App() {
 
   const handleBoost = async (postId: string, price: number, duration: number) => {
     if (!user) return;
+    const cleanId = String(postId).trim();
+    const isTrailer = cleanId.startsWith('trailer-');
+    const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
+    const collectionName = isTrailer ? 'movies' : 'posts';
+
     if ((user.walletBalance || 0) < price) {
       alert(`Insufficient funds. Boosting costs $${price.toFixed(2)}.`);
       setActiveMenu('wallet');
@@ -621,7 +627,7 @@ export default function App() {
     }
 
     try {
-      await updateDoc(doc(db, 'posts', postId), {
+      await updateDoc(doc(db, collectionName, actualId), {
         isBoosted: true,
         boostBudget: price,
         boostDuration: duration,
@@ -756,32 +762,44 @@ export default function App() {
 
   const handleLike = async (postId: string) => {
     if (!user) return;
-    const postRef = doc(db, 'posts', postId);
-    const post = posts.find(p => p.id === postId);
+    const cleanId = String(postId).trim();
+    const isTrailer = cleanId.startsWith('trailer-');
+    const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
+    const collectionName = isTrailer ? 'movies' : 'posts';
+    const ref = doc(db, collectionName, actualId);
+    
+    const post = isTrailer 
+      ? allReels.find(r => r.id === cleanId)
+      : posts.find(p => p.id === cleanId);
+
     if (!post) return;
-
     const isLiked = post.likes.includes(user.uid);
-    await updateDoc(postRef, {
-      likes: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
-    });
 
-    if (!isLiked) {
-      // Award points for liking
-      const pointsAward = appConfig?.pointsPerLike || 1;
-      await updateDoc(doc(db, 'users', user.uid), {
-        points: (user.points || 0) + pointsAward
+    try {
+      await updateDoc(ref, {
+        likes: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
       });
 
-      if (post.authorId !== user.uid) {
-        await addDoc(collection(db, 'notifications'), {
-          type: 'like',
-          fromId: user.uid,
-          fromName: user.displayName,
-          toId: post.authorId,
-          read: false,
-          createdAt: serverTimestamp()
+      if (!isLiked) {
+        // Award points for liking
+        const pointsAward = appConfig?.pointsPerLike || 1;
+        await updateDoc(doc(db, 'users', user.uid), {
+          points: (user.points || 0) + pointsAward
         });
+
+        if (post.authorId !== user.uid) {
+          await addDoc(collection(db, 'notifications'), {
+            type: 'like',
+            fromId: user.uid,
+            fromName: user.displayName,
+            toId: post.authorId,
+            read: false,
+            createdAt: serverTimestamp()
+          });
+        }
       }
+    } catch (error) {
+      console.error(`Error liking ${collectionName}:`, error);
     }
   };
 
@@ -899,18 +917,30 @@ export default function App() {
   };
 
   const handleDelete = async (postId: string) => {
+    const cleanId = String(postId).trim();
+    const isTrailer = cleanId.startsWith('trailer-');
+    const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
+    const collectionName = isTrailer ? 'movies' : 'posts';
+    
     try {
-      await deleteDoc(doc(db, 'posts', postId));
+      await deleteDoc(doc(db, collectionName, actualId));
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `posts/${postId}`);
+      handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${actualId}`);
     }
   };
 
   const handleComment = async (postId: string, content: string) => {
     if (!user) return;
-    const postRef = doc(db, 'posts', postId);
+    const cleanId = String(postId).trim();
+    const isTrailer = cleanId.startsWith('trailer-');
+    const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
+    const collectionName = isTrailer ? 'movies' : 'posts';
+    const ref = doc(db, collectionName, actualId);
+    
+    const post = posts.find(p => p.id === cleanId) || allReels.find(r => r.id === cleanId);
+    
     try {
-      await updateDoc(postRef, {
+      await updateDoc(ref, {
         comments: arrayUnion({
           id: Math.random().toString(),
           authorId: user.uid,
@@ -919,23 +949,92 @@ export default function App() {
           createdAt: new Date()
         })
       });
+
+      if (post && post.authorId !== user.uid) {
+        await addDoc(collection(db, 'notifications'), {
+          type: 'comment',
+          fromId: user.uid,
+          fromName: user.displayName,
+          toId: post.authorId,
+          postId: cleanId,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `posts/${postId}`);
+      handleFirestoreError(error, OperationType.UPDATE, `${collectionName}/${actualId}`);
     }
   };
 
   const handleShare = async (postId: string) => {
     if (!user) return;
-    const postRef = doc(db, 'posts', postId);
+    const cleanId = String(postId).trim();
+    const isTrailer = cleanId.startsWith('trailer-');
+    const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
+    const collectionName = isTrailer ? 'movies' : 'posts';
+    const ref = doc(db, collectionName, actualId);
+    
+    const post = posts.find(p => p.id === cleanId) || allReels.find(r => r.id === cleanId);
+
     try {
-      await updateDoc(postRef, {
+      await updateDoc(ref, {
         shares: increment(1)
       });
+
+      if (post && post.authorId !== user.uid) {
+        await addDoc(collection(db, 'notifications'), {
+          type: 'share',
+          fromId: user.uid,
+          fromName: user.displayName,
+          toId: post.authorId,
+          postId: postId,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
+
       // Copy link to clipboard
       const url = window.location.href;
       await navigator.clipboard.writeText(`${url}?post=${postId}`);
+      alert('Link copied to clipboard!');
     } catch (error) {
       console.error('Error sharing post:', error);
+    }
+  };
+
+  const handleView = async (postId: string) => {
+    if (!user) return;
+    const cleanId = String(postId).trim();
+    
+    // Determine target collection and path
+    const isTrailer = cleanId.startsWith('trailer-');
+    const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
+    const collectionName = isTrailer ? 'movies' : 'posts';
+    const docRef = doc(db, collectionName, actualId);
+
+    try {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const viewsCount = (data.viewedBy || []).length;
+        
+        // Exclude author's own views from incrementing public metrics
+        // and prevent duplicate views from the same user
+        if (data.authorId === user.uid || (data.viewedBy || []).includes(user.uid)) {
+          // If the counter is out of sync with unique views, we can fix it here
+          if (data.views !== viewsCount) {
+             await updateDoc(docRef, { views: viewsCount });
+          }
+          return;
+        }
+
+        await updateDoc(docRef, {
+          views: increment(1),
+          viewedBy: arrayUnion(user.uid)
+        });
+      }
+    } catch (error) {
+      console.error(`View increment failed for ID: ${cleanId}`, error);
     }
   };
 
@@ -1255,6 +1354,7 @@ export default function App() {
             onUpload={handleReelUpload}
             onFollow={handleFollow}
             onShare={handleShare}
+            onView={handleView}
             onChat={(targetUser) => {
               setSelectedChatUser(targetUser);
               setActiveMenu('chat');

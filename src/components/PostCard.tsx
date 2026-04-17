@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, User, Zap, CheckCircle, X } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, User, Zap, CheckCircle, X, Eye } from 'lucide-react';
 import { Post, User as UserType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,6 +22,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
   const [showBoostModal, setShowBoostModal] = React.useState(false);
   const [boostPrice, setBoostPrice] = React.useState(5);
   const [boostDuration, setBoostDuration] = React.useState(24); // hours
+  const [isImageZoomed, setIsImageZoomed] = React.useState(false);
 
   const author = users.find(u => u.uid === post.authorId);
   const authorPhoto = author?.photoURL || post.authorPhoto;
@@ -133,12 +134,52 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
       {post.mediaUrl && (
         <div className="relative aspect-video w-full overflow-hidden bg-neutral-800">
           {post.mediaType === 'image' ? (
-            <img src={post.mediaUrl} alt="Post content" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+            <img 
+              src={post.mediaUrl} 
+              alt="Post content" 
+              className="h-full w-full object-cover cursor-zoom-in transition-all hover:scale-105 active:scale-100" 
+              referrerPolicy="no-referrer" 
+              onClick={() => setIsImageZoomed(true)}
+            />
           ) : (
             <video src={post.mediaUrl} controls className="h-full w-full object-cover" />
           )}
         </div>
       )}
+
+      {/* Image Lightbox */}
+      <AnimatePresence>
+        {isImageZoomed && post.mediaType === 'image' && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 sm:p-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsImageZoomed(false)}
+              className="absolute inset-0 cursor-zoom-out"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-h-full max-w-full overflow-hidden rounded-2xl shadow-2xl"
+            >
+              <img 
+                src={post.mediaUrl} 
+                alt="Enlarged" 
+                className="max-h-[90vh] w-auto object-contain"
+                referrerPolicy="no-referrer"
+              />
+              <button 
+                onClick={() => setIsImageZoomed(false)}
+                className="absolute right-4 top-4 rounded-full bg-black/60 p-3 text-white backdrop-blur-md hover:bg-white/10 transition-all border border-white/10"
+              >
+                <X size={24} />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Actions */}
       <div className="flex items-center justify-between border-t border-white/5 p-2 md:p-4">
@@ -168,6 +209,11 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
             <Share2 size={20} />
             <span>{post.shares}</span>
           </button>
+        </div>
+        
+        <div className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-neutral-500">
+          <Eye size={18} />
+          <span>{post.views || 0}</span>
         </div>
       </div>
 

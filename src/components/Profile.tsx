@@ -1,10 +1,11 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare, Lock, Settings, Star, Info, Trash2, Heart } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare, Lock, Settings, Star, Info, Trash2, Heart, X, Maximize2 } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 import { COUNTRIES_AND_CITIES, RELATIONSHIP_STATUSES } from '../constants';
-import { storage } from '../firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ImageCropper } from './ImageCropper';
+import { getCroppedImg } from '../lib/canvasUtils';
+import { motion, AnimatePresence } from 'motion/react';
 
 const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
   switch (tier) {
@@ -77,6 +78,9 @@ export const Profile: React.FC<ProfileProps> = ({
   const [loading, setLoading] = React.useState(false);
   const [photoFile, setPhotoFile] = React.useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
+  const [isCropping, setIsCropping] = React.useState(false);
+  const [isPhotoZoomed, setIsPhotoZoomed] = React.useState(false);
+  const [croppedAreaPixels, setCroppedAreaPixels] = React.useState<any>(null);
 
   const isOwnProfile = user.uid === currentUser.uid;
   const isAdmin = currentUser.role === 'admin';
@@ -88,11 +92,25 @@ export const Profile: React.FC<ProfileProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const url = URL.createObjectURL(file);
+      setPhotoPreview(url);
+      setIsCropping(true);
+    }
+  };
+
+  const handleCropComplete = async () => {
+    if (photoPreview && croppedAreaPixels) {
+      try {
+        const croppedBlob = await getCroppedImg(photoPreview, croppedAreaPixels);
+        if (croppedBlob) {
+          const croppedFile = new File([croppedBlob], photoFile?.name || 'profile.jpg', { type: 'image/jpeg' });
+          setPhotoFile(croppedFile);
+          setPhotoPreview(URL.createObjectURL(croppedBlob));
+          setIsCropping(false);
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
@@ -156,7 +174,72 @@ export const Profile: React.FC<ProfileProps> = ({
   ];
 
   return (
-    <div className="mx-auto max-w-4xl pb-12">
+    <div className="mx-auto max-w-4xl pb-12 relative">
+      <AnimatePresence>
+        {isCropping && photoPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-10"
+          >
+            <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-neutral-900 shadow-2xl border border-white/5">
+              <div className="flex items-center justify-between border-b border-white/5 p-6">
+                <h3 className="text-xl font-black text-white">Adjust Photo Zoom</h3>
+                <button onClick={() => setIsCropping(false)} className="text-neutral-500 hover:text-white transition-all">
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="p-6">
+                <ImageCropper 
+                  image={photoPreview} 
+                  aspect={1}
+                  onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+                />
+                <button
+                  type="button"
+                  onClick={handleCropComplete}
+                  className="mt-6 w-full rounded-2xl bg-orange-600 py-4 font-black uppercase tracking-widest text-white shadow-xl shadow-orange-900/40 hover:bg-orange-700 transition-all active:scale-95"
+                >
+                  Save Selection
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isPhotoZoomed && (user.photoURL || photoPreview) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-10"
+            onClick={() => setIsPhotoZoomed(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-h-full max-w-full overflow-hidden rounded-[3rem] shadow-2xl ring-1 ring-white/10"
+            >
+              <img 
+                src={photoPreview || user.photoURL} 
+                alt={user.displayName} 
+                className="max-h-[80vh] w-auto rounded-[3rem] object-contain shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsPhotoZoomed(false); }}
+                className="absolute right-6 top-6 rounded-full bg-black/60 p-4 text-white backdrop-blur-md hover:bg-white/10 transition-all border border-white/10"
+              >
+                <X size={28} />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Cover Photo */}
       <div className="relative h-48 w-full overflow-hidden rounded-b-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 shadow-lg md:h-64">
         {canEdit && (
@@ -171,7 +254,10 @@ export const Profile: React.FC<ProfileProps> = ({
       <div className="relative px-4 md:px-10">
         <div className="flex flex-col items-center md:flex-row md:items-end md:gap-8">
           {/* Profile Photo */}
-          <div className="relative -mt-24 h-48 w-48 overflow-hidden rounded-[2.5rem] border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] md:-mt-32 md:h-56 md:w-56 group">
+          <div 
+            className="relative -mt-24 h-48 w-48 overflow-hidden rounded-[2.5rem] border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] md:-mt-32 md:h-56 md:w-56 group cursor-pointer"
+            onClick={() => !isEditing && setIsPhotoZoomed(true)}
+          >
             {photoPreview || user.photoURL ? (
               <img 
                 src={photoPreview || user.photoURL} 
@@ -184,8 +270,16 @@ export const Profile: React.FC<ProfileProps> = ({
                 <UserIcon size={100} />
               </div>
             )}
+            {canEdit && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Maximize2 size={32} className="text-white" />
+              </div>
+            )}
             {canEdit && isEditing && (
-              <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/60 text-white opacity-0 transition-opacity hover:opacity-100 backdrop-blur-sm">
+              <label 
+                className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/60 text-white opacity-0 transition-opacity hover:opacity-100 backdrop-blur-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Camera size={40} />
                 <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
               </label>
