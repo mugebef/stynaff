@@ -2,16 +2,24 @@ import React from 'react';
 import { Globe, Heart, Shield, Zap } from 'lucide-react';
 import { APP_NAME, FOOTER_TEXT } from '../constants';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  appConfig?: any;
+}
+
+export const Footer: React.FC<FooterProps> = ({ appConfig }) => {
   return (
     <footer className="border-t border-white/5 bg-neutral-900 py-12">
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg shadow-orange-900/20">
-              <Globe size={20} />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 p-2 shadow-lg ring-1 ring-white/10">
+              {appConfig?.logoUrl ? (
+                <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+              ) : (
+                <Globe size={24} className="text-orange-500" />
+              )}
             </div>
-            <span className="font-display text-xl font-bold tracking-tight text-white">
+            <span className="font-display text-2xl font-black tracking-tighter text-white uppercase italic">
               {APP_NAME}
             </span>
           </div>

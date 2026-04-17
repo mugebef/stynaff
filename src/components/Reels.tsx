@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X, Film } from 'lucide-react';
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
@@ -14,6 +14,7 @@ interface ReelsProps {
   onFollow: (uid: string) => void;
   onShare: (postId: string) => void;
   onChat: (targetUser: User) => void;
+  onPurchaseMovie?: (movieId: string, price: number) => Promise<void>;
 }
 
 export const Reels: React.FC<ReelsProps> = ({ 
@@ -25,7 +26,8 @@ export const Reels: React.FC<ReelsProps> = ({
   onUpload,
   onFollow,
   onShare,
-  onChat
+  onChat,
+  onPurchaseMovie
 }) => {
   const [reels, setReels] = React.useState<Post[]>(posts.filter(p => p.isReel && p.mediaType === 'video'));
   const [activeIndex, setActiveIndex] = React.useState(0);
@@ -301,6 +303,26 @@ export const Reels: React.FC<ReelsProps> = ({
                     )}
                   </div>
                   <p className="text-sm line-clamp-2 font-medium leading-relaxed text-white/90 drop-shadow-sm">{reel.content}</p>
+                  
+                  {reel.isMovieTrailer && (
+                    <motion.button
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (reel.movieId && onPurchaseMovie) {
+                          onPurchaseMovie(reel.movieId, reel.moviePrice || 0);
+                        }
+                      }}
+                      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/40"
+                    >
+                      <Film size={18} />
+                      Pay to see full movie
+                    </motion.button>
+                  )}
+
                   <div className="flex items-center gap-2 overflow-hidden bg-black/20 backdrop-blur-sm rounded-full px-3 py-1 w-fit">
                     <Music size={14} className="shrink-0 text-orange-500" />
                     <div className="overflow-hidden whitespace-nowrap">

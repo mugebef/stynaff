@@ -411,6 +411,37 @@ export default function App() {
     return () => unsubscribe();
   }, [isAuthReady, user]);
 
+  // Combine Reels and Movie Trailers
+  React.useEffect(() => {
+    const reelsFromPosts = posts.filter(p => p.isReel);
+    const trailersFromMovies = movies.filter(m => m.trailerUrl).map(m => ({
+      id: `trailer-${m.id}`,
+      content: `${m.title}: ${m.description}`,
+      mediaUrl: m.trailerUrl,
+      mediaType: 'video',
+      isReel: true,
+      isMovieTrailer: true,
+      movieId: m.id,
+      moviePrice: m.price,
+      authorId: m.authorId || 'system',
+      authorName: 'Blockbuster',
+      authorPhoto: m.thumbnailUrl,
+      authorVerified: true,
+      likes: [],
+      comments: [],
+      shares: 0,
+      createdAt: m.createdAt
+    })) as Post[];
+
+    const combined = [...reelsFromPosts, ...trailersFromMovies].sort((a, b) => {
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+
+    setAllReels(combined);
+  }, [posts, movies]);
+
   // Notifications Listener
   React.useEffect(() => {
     if (!user) return;
@@ -1007,59 +1038,83 @@ export default function App() {
 
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            y: [0, -10, 0],
+            rotate: [-1, 1, -1]
+          }}
+          transition={{ 
+            scale: { duration: 0.5 },
+            y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+            rotate: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+          }}
           className="text-center relative z-10"
         >
           <div className="relative mx-auto mb-12 flex h-48 w-48 items-center justify-center">
             {/* Pulsing Water Ring */}
             <motion.div
               animate={{ 
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 0.2, 0.5]
+                scale: [1, 1.4, 1],
+                opacity: [0.5, 0.1, 0.5]
               }}
               transition={{ repeat: Infinity, duration: 4 }}
-              className="absolute inset-0 rounded-full bg-blue-500/5 blur-3xl"
+              className="absolute inset-0 rounded-full bg-blue-500/10 blur-3xl"
             />
 
             {/* Spinning Outer Rings */}
             <motion.div 
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
-              className="absolute inset-0 rounded-[3.5rem] border-4 border-blue-500/10"
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+              className="absolute inset-0 rounded-[3.5rem] border-4 border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]"
             />
             <motion.div 
               animate={{ rotate: -360 }}
-              transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
-              className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/30"
+              transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+              className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/40"
             />
             
-            {/* Liquid Logo Container */}
-            <div className="relative h-32 w-32 flex items-center justify-center rounded-[2.5rem] bg-stone-50 shadow-[0_20px_50px_rgba(234,88,12,0.2)] overflow-hidden">
+            {/* Liquid Logo Container - Splashing and Dancing */}
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.05, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 6, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+              className="relative h-36 w-36 flex items-center justify-center rounded-[3rem] bg-white shadow-[0_25px_60px_rgba(234,88,12,0.3)] overflow-hidden border-2 border-orange-500/20"
+            >
               {/* Dynamic Water Wave Interior */}
               <motion.div
                 animate={{ 
-                  y: [20, 10, 20],
-                  rotate: [0, 5, 0]
+                  y: [30, 0, 30],
+                  x: [-10, 10, -10],
+                  rotate: [0, 10, -10, 0]
                 }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                className="absolute inset-y-1/2 left-[-50%] right-[-50%] bg-blue-500/20 blur-xl rounded-[40%]"
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute bottom-0 left-[-50%] right-[-50%] h-[120%] bg-gradient-to-t from-blue-500/30 to-blue-400/10 blur-2xl rounded-[40%]"
               />
               
               <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
-                className="relative flex items-center justify-center w-full h-full p-4"
+                animate={{ 
+                  y: [0, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className="relative flex items-center justify-center w-full h-full p-5"
               >
                 {appConfig?.logoUrl ? (
-                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain filter drop-shadow-[0_0_8px_rgba(234,88,12,0.5)]" />
+                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain filter drop-shadow-[0_8px_15px_rgba(234,88,12,0.4)]" />
                 ) : (
                   <div className="flex flex-col items-center text-orange-600">
-                    <Globe className="w-14 h-14 mb-1" />
-                    <span className="text-[10px] font-black tracking-[0.2em] uppercase">Siite</span>
+                    <Globe className="w-16 h-16" />
                   </div>
                 )}
               </motion.div>
-            </div>
+            </motion.div>
             
             {/* Floating Icons */}
             <motion.div 
@@ -1205,6 +1260,7 @@ export default function App() {
               setActiveMenu('chat');
             }}
             users={users}
+            onPurchaseMovie={handlePurchaseMovie}
           />
         ) : activeMenu === 'live' ? (
           <Live />
@@ -1353,7 +1409,7 @@ export default function App() {
         )}
       </main>
 
-      <Footer />
+      <Footer appConfig={appConfig} />
 
       {/* Upload Progress Indicator */}
       <AnimatePresence>
