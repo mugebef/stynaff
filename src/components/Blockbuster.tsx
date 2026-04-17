@@ -23,6 +23,13 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
   const isAdmin = currentUser?.role === 'admin';
   const featuredMovie = movies.length > 0 ? movies[0] : null;
   
+  // Get recently added movies (limit to 6, sorted by createdAt)
+  const recentlyAdded = [...movies].sort((a, b) => {
+    const dateA = a.createdAt?.seconds || 0;
+    const dateB = b.createdAt?.seconds || 0;
+    return dateB - dateA;
+  }).slice(0, 6);
+
   const hasAccess = (movie: any) => {
     if (!currentUser) return false;
     if (isAdmin) return true;
@@ -158,8 +165,70 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
           </motion.div>
         </div>
       </div>
+      
+      {/* Recently Added Section */}
+      <div className="mb-20">
+        <div className="flex items-center gap-4 mb-10">
+          <div className="h-2 w-2 rounded-full bg-orange-600 animate-pulse"></div>
+          <h3 className="text-2xl font-black uppercase tracking-widest text-white">Recently Added</h3>
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-orange-600/50 to-transparent"></div>
+        </div>
+        
+        <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar -mx-4 px-4">
+          {recentlyAdded.map((movie) => (
+            <motion.div
+              key={`recent-${movie.id}`}
+              whileHover={{ y: -10 }}
+              className="relative min-w-[280px] group cursor-pointer"
+              onClick={() => {
+                if (hasAccess(movie)) {
+                  openPlayer(movie, false);
+                } else if (movie.trailerUrl) {
+                  openPlayer(movie, true);
+                } else {
+                  handlePurchaseClick(movie);
+                }
+              }}
+            >
+              <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-neutral-900 border border-white/5 group-hover:border-orange-600/50 transition-all">
+                <img
+                  src={movie.thumbnailUrl}
+                  alt={movie.title}
+                  className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                
+                {/* Status Badge */}
+                <div className="absolute top-3 left-3 rounded-lg bg-orange-600 px-2 py-1 text-[8px] font-black text-white uppercase tracking-widest">
+                  New Release
+                </div>
+                
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="rounded-full bg-orange-600 p-3 text-white">
+                    <Play size={20} fill="currentColor" />
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h4 className="text-lg font-bold text-white leading-tight mb-1 truncate">{movie.title}</h4>
+                  <div className="flex items-center gap-3 text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+                    <span>{movie.genre || 'Action'}</span>
+                    <span className="h-1 w-1 rounded-full bg-orange-600"></span>
+                    <span>{movie.price} Points</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
 
       {/* Movie Grid */}
+      <div className="mb-10 flex items-center gap-4">
+        <h3 className="text-2xl font-black uppercase tracking-widest text-white">Full Library</h3>
+        <div className="h-[1px] flex-1 bg-neutral-800"></div>
+      </div>
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         {movies.length === 0 ? (
           <div className="col-span-full py-20 text-center">

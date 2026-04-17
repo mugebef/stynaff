@@ -31,7 +31,7 @@ export const Reels: React.FC<ReelsProps> = ({
 }) => {
   const [reels, setReels] = React.useState<Post[]>(posts.filter(p => p.isReel && p.mediaType === 'video'));
   const [activeIndex, setActiveIndex] = React.useState(0);
-  const [isMuted, setIsMuted] = React.useState(true);
+  const [isMuted, setIsMuted] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
@@ -305,22 +305,41 @@ export const Reels: React.FC<ReelsProps> = ({
                   <p className="text-sm line-clamp-2 font-medium leading-relaxed text-white/90 drop-shadow-sm">{reel.content}</p>
                   
                   {reel.isMovieTrailer && (
-                    <motion.button
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (reel.movieId && onPurchaseMovie) {
-                          onPurchaseMovie(reel.movieId, reel.moviePrice || 0);
-                        }
-                      }}
-                      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/40"
-                    >
-                      <Film size={18} />
-                      Pay to see full movie
-                    </motion.button>
+                    <div className="flex flex-wrap gap-2">
+                      <motion.button
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (reel.movieId && onPurchaseMovie) {
+                            onPurchaseMovie(reel.movieId, reel.moviePrice || 0);
+                          }
+                        }}
+                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/40"
+                      >
+                        <Film size={18} />
+                        Pay to see full movie
+                      </motion.button>
+                      
+                      {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
+                        <motion.button
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onFollow(reel.authorId);
+                          }}
+                          className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-6 py-3 text-sm font-black uppercase tracking-widest text-white border border-white/20 hover:bg-white/20 transition-all"
+                        >
+                          <Plus size={18} />
+                          Follow Studio
+                        </motion.button>
+                      )}
+                    </div>
                   )}
 
                   <div className="flex items-center gap-2 overflow-hidden bg-black/20 backdrop-blur-sm rounded-full px-3 py-1 w-fit">
