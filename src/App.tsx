@@ -387,7 +387,9 @@ export default function App() {
         user.friends?.includes(p.authorId) || 
         p.isSponsored || 
         p.isBoosted ||
-        p.isReel
+        p.isReel ||
+        p.mediaType === 'video' ||
+        (p.mediaUrl && (p.mediaUrl.toLowerCase().endsWith('.mp4') || p.mediaUrl.toLowerCase().endsWith('.mov')))
       );
 
       const sortedPosts = [...filteredPosts].sort((a, b) => {
@@ -413,7 +415,11 @@ export default function App() {
 
   // Combine Reels and Movie Trailers
   React.useEffect(() => {
-    const reelsFromPosts = posts.filter(p => p.isReel);
+    const reelsFromPosts = posts.filter(p => 
+      p.isReel || 
+      p.mediaType === 'video' || 
+      (p.mediaUrl && (p.mediaUrl.toLowerCase().endsWith('.mp4') || p.mediaUrl.toLowerCase().endsWith('.mov')))
+    );
     const trailersFromMovies = movies.filter(m => m.trailerUrl).map(m => ({
       id: `trailer-${m.id}`,
       content: `${m.title}: ${m.description}`,

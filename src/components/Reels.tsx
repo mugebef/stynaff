@@ -37,7 +37,11 @@ export const Reels: React.FC<ReelsProps> = ({
   
   // Recommendation & Filtering Logic
   const reels = React.useMemo(() => {
-    let list = posts.filter(p => p.isReel && p.mediaType === 'video');
+    let list = posts.filter(p => (
+      p.isReel || 
+      p.mediaType === 'video' || 
+      (p.mediaUrl && (p.mediaUrl.toLowerCase().endsWith('.mp4') || p.mediaUrl.toLowerCase().endsWith('.mov')))
+    ));
     
     // Search Filter
     if (searchQuery.trim()) {
@@ -89,7 +93,7 @@ export const Reels: React.FC<ReelsProps> = ({
     });
   }, [posts, searchQuery, currentUser]);
 
-  const [isMuted, setIsMuted] = React.useState(false);
+  const [isMuted, setIsMuted] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
@@ -247,7 +251,7 @@ export const Reels: React.FC<ReelsProps> = ({
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >
               {/* Video Player */}
-              <video
+               <video
                 ref={el => videoRefs.current[index] = el}
                 src={reel.mediaUrl}
                 autoPlay={index === activeIndex}
