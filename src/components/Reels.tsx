@@ -387,13 +387,10 @@ export const Reels: React.FC<ReelsProps> = ({
                     <Share2 size={32} className="fill-transparent" />
                   </div>
                   <span className="text-xs font-black drop-shadow-md">{reel.shares || 0}</span>
-                </button>
-
-                <div className="flex flex-col items-center gap-0">
+                </button>                <div className="flex flex-col items-center gap-1">
                   <div className="rounded-full p-2 text-white">
                     <Eye size={30} />
                   </div>
-                  <span className="text-[8px] font-black uppercase tracking-tighter text-white/50">Unique</span>
                   <span className="text-xs font-black drop-shadow-md">
                     {reel.views > 999 ? (reel.views / 1000).toFixed(1) + 'K' : reel.views || 0}
                   </span>

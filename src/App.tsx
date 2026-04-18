@@ -386,7 +386,8 @@ export default function App() {
         p.authorId === user.uid || 
         user.friends?.includes(p.authorId) || 
         p.isSponsored || 
-        p.isBoosted
+        p.isBoosted ||
+        p.isReel
       );
 
       const sortedPosts = [...filteredPosts].sort((a, b) => {

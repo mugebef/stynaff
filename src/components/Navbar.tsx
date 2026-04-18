@@ -29,9 +29,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
 
   const menus = [
-    { id: 'reels', label: 'Reels', icon: <Video size={20} /> },
-    { id: 'blockbuster', label: 'Blockbuster', icon: <Play size={20} /> },
-    { id: 'dating', label: 'Dating', icon: <Heart size={20} /> },
+    { id: 'reels', label: '', icon: <Video size={20} /> },
+    { id: 'blockbuster', label: '', icon: <Play size={20} /> },
+    { id: 'dating', label: '', icon: <Heart size={20} /> },
     { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
     { id: 'live', label: 'Live', icon: <Radio size={20} /> },
   ];
@@ -82,9 +82,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   ? 'bg-orange-600/10 text-orange-500'
                   : 'text-neutral-400 hover:bg-neutral-900 hover:text-orange-500'
               }`}
+              title={menu.id.charAt(0).toUpperCase() + menu.id.slice(1)}
             >
               {menu.icon}
-              {menu.label}
+              {menu.label && <span>{menu.label}</span>}
             </button>
           ))}
         </div>
@@ -255,13 +256,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={menu.id}
               onClick={() => onMenuClick(menu.id)}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all ${
+              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                 activeMenu === menu.id
                   ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20'
                   : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-800'
               }`}
             >
-              {menu.label}
+              {menu.icon}
+              {menu.label && <span>{menu.label}</span>}
             </button>
           ))}
         </div>
@@ -303,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className={activeMenu === menu.id ? 'text-orange-600' : 'text-neutral-400'}>
                       {menu.icon}
                     </span>
-                    {menu.label}
+                    {menu.label && <span>{menu.label}</span>}
                   </button>
                 ))}
                 

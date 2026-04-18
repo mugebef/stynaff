@@ -217,6 +217,20 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
         </button>
       </div>
 
+      {!currentUser.isVerified && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 p-4 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-center"
+        >
+          <div className="flex flex-col items-center gap-2">
+            <Info size={24} className="text-orange-500" />
+            <p className="text-sm font-bold text-white">Verification Required</p>
+            <p className="text-xs text-neutral-400">If you do not have a verified profile, you don't feature here. Visit your profile to request verification.</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Match Modal */}
       <AnimatePresence>
         {showMatchModal && (

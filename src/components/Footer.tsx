@@ -16,7 +16,9 @@ export const Footer: React.FC<FooterProps> = ({ appConfig }) => {
               {appConfig?.logoUrl ? (
                 <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
               ) : (
-                <Globe size={60} className="text-orange-500" />
+                <div className="flex h-full w-full items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg">
+                  <span className="text-4xl font-black italic">S</span>
+                </div>
               )}
             </div>
             <span className="font-display text-6xl font-black tracking-tighter text-white uppercase italic drop-shadow-2xl">
