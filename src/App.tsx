@@ -1174,69 +1174,7 @@ export default function App() {
               className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/40"
             />
             
-            {/* Liquid Logo Container - Splashing and Dancing */}
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.05, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ 
-                duration: 6, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
-              className="relative h-36 w-36 flex items-center justify-center rounded-[3rem] bg-white shadow-[0_25px_60px_rgba(234,88,12,0.3)] overflow-hidden border-2 border-orange-500/20"
-            >
-              {/* Dynamic Water Wave Interior */}
-              <motion.div
-                animate={{ 
-                  y: [30, 0, 30],
-                  x: [-10, 10, -10],
-                  rotate: [0, 10, -10, 0]
-                }}
-                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute bottom-0 left-[-50%] right-[-50%] h-[120%] bg-gradient-to-t from-blue-500/30 to-blue-400/10 blur-2xl rounded-[40%]"
-              />
-              
-              <motion.div 
-                animate={{ 
-                  y: [0, -5, 0],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                className="relative flex items-center justify-center w-full h-full p-5"
-              >
-                {appConfig?.logoUrl ? (
-                  <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain filter drop-shadow-[0_8px_15px_rgba(234,88,12,0.4)]" />
-                ) : (
-                  <div className="flex flex-col items-center text-orange-600">
-                    <Globe className="w-16 h-16" />
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-            
-            {/* Floating Icons */}
-            <motion.div 
-              animate={{ 
-                y: [0, -15, 0],
-                rotate: [0, 10, 0]
-              }}
-              transition={{ repeat: Infinity, duration: 3, delay: 0 }}
-              className="absolute -top-6 -right-6 rounded-2xl bg-white p-4 text-pink-500 shadow-xl border border-neutral-100"
-            >
-              <Heart size={24} fill="currentColor" />
-            </motion.div>
-            <motion.div 
-              animate={{ 
-                y: [0, -15, 0],
-                rotate: [0, -10, 0]
-              }}
-              transition={{ repeat: Infinity, duration: 3, delay: 0.7 }}
-              className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-4 text-orange-500 shadow-xl border border-neutral-100"
-            >
-              <Play size={24} fill="currentColor" />
-            </motion.div>
+            {/* Logo and floating icons removed */}
           </div>
           
           <motion.div
@@ -1248,21 +1186,7 @@ export default function App() {
               {APP_NAME}
             </h1>
             
-            <div className="flex items-center justify-center gap-3 mb-6">
-              {['Reels', 'Movies', 'Dating'].map((word, i) => (
-                <React.Fragment key={word}>
-                  <motion.span 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 + (i * 0.2) }}
-                    className="text-sm font-semibold text-orange-600 uppercase tracking-widest"
-                  >
-                    {word}
-                  </motion.span>
-                  {i < 2 && <span className="w-1.5 h-1.5 rounded-full bg-orange-100" />}
-                </React.Fragment>
-              ))}
-            </div>
+            {/* Menu words removed */}
 
             <div className="relative w-64 mx-auto h-2 bg-neutral-100 rounded-full overflow-hidden shadow-inner">
               <motion.div 

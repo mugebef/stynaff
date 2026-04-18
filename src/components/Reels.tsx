@@ -412,7 +412,19 @@ export const Reels: React.FC<ReelsProps> = ({
               <div className="absolute bottom-0 left-0 right-16 p-6 text-white">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black tracking-tight">@{reel.authorName.toLowerCase().replace(/\s/g, '')}</span>
+                    <div 
+                      onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}
+                      className="h-10 w-10 overflow-hidden rounded-full border-2 border-white/50 shadow-lg cursor-pointer hover:scale-110 transition-transform"
+                    >
+                      {reel.authorPhoto ? (
+                        <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-neutral-800">
+                          <UserIcon size={20} className="text-neutral-500" />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-lg font-black tracking-tight" onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}>@{reel.authorName.toLowerCase().replace(/\s/g, '')}</span>
                     {reel.authorVerified && <CheckCircle size={16} className="fill-blue-500 text-white" />}
                     {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
                       <button 
