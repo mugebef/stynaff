@@ -58,7 +58,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
     <div className="mx-auto max-w-7xl px-4 py-8 relative">
       <div className="mb-12 flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-bold tracking-tight text-white">Blockbuster</h2>
+          <h2 className="text-4xl font-bold tracking-tight text-white">Cinema</h2>
         </div>
         <div className="flex gap-4">
           <button className="rounded-full bg-neutral-900 p-4 text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 transition-all border border-white/5">
@@ -102,7 +102,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
             <div className="flex items-center gap-2">
               <Star size={16} fill="currentColor" />
-              {featuredMovie ? 'Featured Blockbuster' : 'Coming Soon'}
+              {featuredMovie ? 'Featured Movie' : 'Coming Soon'}
             </div>
           </motion.div>
           

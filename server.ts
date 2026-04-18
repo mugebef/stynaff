@@ -139,7 +139,8 @@ async function startServer() {
       status: "online", 
       server: "STYN VPS",
       storage: "NVMe",
-      features: ["Reels", "Chat", "Dating", "Blockbuster"],
+      mode: process.env.NODE_ENV || "development",
+      features: ["Videos", "Chat", "Match", "Cinema"],
       nodeVersion: process.version 
     });
   });

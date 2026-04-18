@@ -60,14 +60,11 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, onSignup, onGoogleLogin, on
       <div className="w-full max-w-md space-y-8 rounded-3xl bg-neutral-900 p-8 shadow-xl ring-1 ring-white/5 border border-white/5">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-xl shadow-orange-900/20">
-            <span className="text-3xl font-black italic">S</span>
-          </div>
           <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-white">
             {isLogin ? 'Welcome Back' : 'Join ' + APP_NAME}
           </h2>
           <p className="mt-2 text-sm text-neutral-500">
-            {isLogin ? 'Log in to connect with Africa' : 'Create an account to start your journey'}
+            {isLogin ? 'Log in to connect' : 'Create an account to start your journey'}
           </p>
         </div>
 

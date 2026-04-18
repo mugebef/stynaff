@@ -198,7 +198,7 @@ export const Reels: React.FC<ReelsProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search Reels..."
+                placeholder="Search Videos..."
                 className="w-full bg-transparent px-4 py-2 text-sm text-white focus:outline-none"
               />
               <button 
@@ -231,7 +231,7 @@ export const Reels: React.FC<ReelsProps> = ({
             >
               <Video size={40} className="text-orange-500" />
             </motion.div>
-            <p className="text-xl font-bold">No Reels yet.</p>
+            <p className="text-xl font-bold">No Videos yet.</p>
             <p className="text-sm text-neutral-500">Be the first to post a short video!</p>
           </div>
         </div>

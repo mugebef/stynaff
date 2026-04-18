@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "tsx watch server.ts",
     "build": "vite build",
     "deploy": "npm run build && pm2 startOrRestart ecosystem.config.cjs --env production",
     "start": "NODE_ENV=production tsx server.ts",

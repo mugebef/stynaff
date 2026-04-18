@@ -116,7 +116,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
   return (
     <div className="mx-auto max-w-md space-y-8 pb-12">
       <div className="flex items-center justify-between px-4">
-        <h1 className="text-3xl font-bold text-white">Dating</h1>
+        <h1 className="text-3xl font-bold text-white">Match</h1>
         <div className="flex items-center gap-2 rounded-full bg-orange-600/10 px-4 py-2 text-sm font-bold text-orange-500 border border-orange-600/20">
           <Sparkles size={18} />
           AI Compatibility

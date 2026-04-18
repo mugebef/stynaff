@@ -54,21 +54,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <>
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-xl shadow-orange-900/30 group-hover:scale-110 transition-all border-2 border-white/20">
-                  <span className="text-3xl font-black italic">S</span>
-                </div>
-                <span className="font-serif text-5xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors drop-shadow-md">
-                  Styn
-                </span>
-              </>
+              <span className="font-serif text-5xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors drop-shadow-md">
+                Styn
+              </span>
             )}
           </div>
-          {!appConfig?.logoUrl && (
-            <span className="text-[7px] font-black uppercase tracking-[0.4em] text-orange-500 leading-none mt-1 opacity-80">
-              A UNIQUE EXPERIENCE
-            </span>
-          )}
         </div>
 
         {/* Desktop Menu */}

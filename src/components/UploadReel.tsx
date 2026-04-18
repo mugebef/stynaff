@@ -81,7 +81,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 p-6">
-              <h3 className="text-xl font-bold text-white">Upload Reel</h3>
+              <h3 className="text-xl font-bold text-white">Upload Video</h3>
               <button 
                 onClick={onClose}
                 className="rounded-full p-2 text-neutral-500 hover:bg-neutral-800 hover:text-white transition-all"
@@ -180,7 +180,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                     ) : (
                       <>
                         <Upload size={20} />
-                        Post Reel
+                        Post Video
                       </>
                     )}
                   </button>

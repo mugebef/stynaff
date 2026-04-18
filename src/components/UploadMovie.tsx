@@ -82,7 +82,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 p-8">
               <div>
-                <h3 className="text-2xl font-black tracking-tight text-white">Upload to Blockbuster</h3>
+                <h3 className="text-2xl font-black tracking-tight text-white">Upload Movie</h3>
                 <p className="text-sm text-neutral-400">Step {step} of 4: {
                   step === 1 ? 'Basic Info' : 
                   step === 2 ? 'Media Assets' : 
