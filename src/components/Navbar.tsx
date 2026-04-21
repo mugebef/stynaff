@@ -276,7 +276,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="absolute left-0 right-0 top-full z-50 border-t border-neutral-200 bg-white p-4 shadow-2xl md:hidden"
+              className="absolute left-0 right-0 top-full z-50 border-t border-white/5 bg-neutral-900 p-4 shadow-2xl md:hidden"
             >
               <div className="flex flex-col gap-2">
                 {menus.map((menu) => (
@@ -286,13 +286,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onMenuClick(menu.id);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-bold transition-all ${
+                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-black uppercase tracking-widest transition-all ${
                       activeMenu === menu.id
-                        ? 'bg-orange-50 text-orange-600'
-                        : 'text-neutral-600 hover:bg-neutral-100'
+                        ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20'
+                        : 'text-neutral-400 hover:bg-neutral-800'
                     }`}
                   >
-                    <span className={activeMenu === menu.id ? 'text-orange-600' : 'text-neutral-400'}>
+                    <span className={activeMenu === menu.id ? 'text-white' : 'text-neutral-500'}>
                       {menu.icon}
                     </span>
                     {menu.label && <span>{menu.label}</span>}
@@ -305,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onLogout();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="mt-2 flex items-center gap-3 rounded-xl px-4 py-3 text-base font-bold text-red-600 hover:bg-red-50 transition-all"
+                    className="mt-2 flex items-center gap-3 rounded-xl px-4 py-3 text-base font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-all font-sans"
                   >
                     <LogOut size={20} />
                     Logout

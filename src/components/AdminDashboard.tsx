@@ -29,6 +29,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   const [isSavingConfig, setIsSavingConfig] = React.useState(false);
   
   const [isAdModalOpen, setIsAdModalOpen] = React.useState(false);
+  const [isSeeding, setIsSeeding] = React.useState(false);
   const [newAd, setNewAd] = React.useState({ title: '', description: '', imageUrl: '', link: '' });
   const [isUploadingLogo, setIsUploadingLogo] = React.useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = React.useState(false);
@@ -117,6 +118,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
     }
   };
 
+  const seedFakeUsers = async () => {
+    if (!confirm('Add 10 mock female users from Zim & SA?')) return;
+    setIsSeeding(true);
+    
+    const fakeData = [
+      { name: 'Lerato', age: 24, city: 'Johannesburg', country: 'South Africa', bio: 'Living my best life in Joburg ✨ Love travel and tech.' },
+      { name: 'Sarah', age: 22, city: 'Harare', country: 'Zimbabwe', bio: 'Architecture student 🏛️ Nature lover.' },
+      { name: 'Zandile', age: 26, city: 'Cape Town', country: 'South Africa', bio: 'Ocean vibes only 🌊 Graphic designer.' },
+      { name: 'Tendai', age: 23, city: 'Bulawayo', country: 'Zimbabwe', bio: 'Coffee explorer ☕ Fitness enthusiast.' },
+      { name: 'Naledi', age: 25, city: 'Pretoria', country: 'South Africa', bio: 'Lawyer in the making ⚖️ Fashion addict.' },
+      { name: 'Ruvimbo', age: 21, city: 'Harare', country: 'Zimbabwe', bio: 'Dancing is my soul 💃 Aspiring model.' },
+      { name: 'Thando', age: 27, city: 'Durban', country: 'South Africa', bio: 'Foodie and digital nomad 🥘✈️' },
+      { name: 'Kudzai', age: 24, city: 'Victoria Falls', country: 'Zimbabwe', bio: 'Living where the mist meets the sky 🌈 Adventure seeker.' },
+      { name: 'Amogelang', age: 23, city: 'Soweto', country: 'South Africa', bio: 'Soulful music and deep conversations 🎶' },
+      { name: 'Nyasha', age: 22, city: 'Mutare', country: 'Zimbabwe', bio: 'Mountains and peace 🏔️ Bookworm.' },
+    ];
+
+    try {
+      for (const item of fakeData) {
+        const uid = 'fake_' + Math.random().toString(36).substr(2, 9);
+        const newUser: User = {
+          uid,
+          displayName: item.name,
+          username: item.name.toLowerCase() + Math.floor(Math.random() * 1000),
+          email: `${item.name.toLowerCase()}@example.com`,
+          photoURL: `https://picsum.photos/seed/${item.name}/600/800`,
+          gender: 'Female',
+          role: 'user',
+          tier: Math.random() > 0.5 ? 'Platinum' : 'General',
+          isVerified: true,
+          verificationRequested: false,
+          location: { city: item.city, country: item.country },
+          age: item.age,
+          bio: item.bio,
+          friends: [],
+          friendRequests: [],
+          sentRequests: [],
+          followers: [],
+          following: [],
+          walletBalance: 0,
+          points: 500,
+          profileViews: Math.floor(Math.random() * 1000),
+          swipedLeft: [],
+          swipedRight: [],
+          matches: [],
+          createdAt: serverTimestamp(),
+          isOnline: Math.random() > 0.5,
+        };
+        await setDoc(doc(db, 'users', uid), newUser);
+      }
+      alert('10 Fake users added successfully!');
+      // Refresh user list
+      const usersSnap = await getDocs(collection(db, 'users'));
+      setUsers(usersSnap.docs.map(d => d.data() as User));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to seed users');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const toggleAdStatus = async (adId: string, currentStatus: boolean) => {
     await updateDoc(doc(db, 'sponsoredContent', adId), { active: !currentStatus });
   };
@@ -165,7 +228,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat, i) => (
           <div key={i} className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-950 shadow-inner border border-white/5">
@@ -175,6 +238,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
             <p className="text-3xl font-bold text-white">{stat.value}</p>
           </div>
         ))}
+        
+        {/* Seed Data Button */}
+        <button 
+          onClick={seedFakeUsers}
+          disabled={isSeeding}
+          className="flex flex-col items-start justify-between rounded-3xl border border-orange-600/20 bg-orange-600/5 p-6 shadow-sm transition-all hover:bg-orange-600/10 active:scale-95 disabled:opacity-50 group"
+        >
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-900/40 group-hover:scale-110 transition-transform">
+            <Zap size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-bold uppercase tracking-widest text-orange-500">{isSeeding ? 'Seeding...' : 'Seed Data'}</p>
+            <p className="text-xs text-neutral-400">Add 10 mock girl profiles</p>
+          </div>
+        </button>
       </div>
 
       {/* Site Identity */}

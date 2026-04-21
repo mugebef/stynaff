@@ -1373,6 +1373,7 @@ export default function App() {
                   setProfileUser(user);
                 }}
                 onMenuClick={setActiveMenu}
+                activeMenu={activeMenu}
               />
             )}
 
@@ -1518,10 +1519,11 @@ export default function App() {
         >
           <button
             onClick={() => setIsGlobalUploadOpen(true)}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_10px_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all ring-4 ring-black/20"
+            className="flex h-14 items-center gap-2 rounded-full bg-orange-600 px-6 text-white shadow-[0_10px_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all ring-4 ring-black/20"
             title="Upload Content"
           >
-            <Plus size={28} strokeWidth={3} />
+            <Plus size={24} strokeWidth={3} />
+            <span className="text-[10px] font-black uppercase tracking-widest">Upload</span>
           </button>
         </motion.div>
       )}

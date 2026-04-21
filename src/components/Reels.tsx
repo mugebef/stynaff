@@ -500,9 +500,10 @@ export const Reels: React.FC<ReelsProps> = ({
               {/* Mute Toggle Overlay */}
               <button 
                 onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-                className="absolute top-6 right-6 rounded-full bg-black/40 p-2 text-white backdrop-blur-md hover:bg-black/60 transition-all border border-white/10"
+                className="absolute top-6 right-6 flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-white backdrop-blur-xl border border-white/20 shadow-2xl active:scale-95 transition-all group"
               >
                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                <span className="text-[10px] font-black uppercase tracking-widest">{isMuted ? 'Unmute' : 'Mute'}</span>
               </button>
             </div>
           ))}

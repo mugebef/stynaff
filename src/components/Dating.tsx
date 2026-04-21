@@ -175,7 +175,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
                 </div>
               )}
               
-              <p className="mt-6 text-sm font-medium leading-relaxed text-neutral-300 line-clamp-3">{currentMatch.bio || "No bio provided."}</p>
+              <p className="mt-6 text-[15px] font-medium leading-relaxed text-white/80 line-clamp-3 drop-shadow-sm">{currentMatch.bio || "No bio provided."}</p>
             </div>
 
             {/* Swipe Indicators */}
