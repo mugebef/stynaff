@@ -230,11 +230,26 @@ export default function App() {
 
   // Auth Listener
   React.useEffect(() => {
+    // Safety timer: if Firebase doesn't respond in 12 seconds, 
+    // at least show the app (likely in logged-out state)
+    const safetyTimer = setTimeout(() => {
+      if (!isAuthReady) {
+        console.warn("Auth initialization timed out. Proceeding...");
+        setIsAuthReady(true);
+      }
+    }, 12000);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(safetyTimer);
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         try {
-          const userDoc = await getDoc(userDocRef);
+          // Use a promise race to prevent getDoc from hanging indefinitely
+          const userDoc = await Promise.race([
+            getDoc(userDocRef),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+          ]) as any;
+
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserType;
             setUser(userData);
@@ -275,7 +290,8 @@ export default function App() {
             setUser(newUser);
           }
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+          console.error("Firestore getDoc error or timeout:", error);
+          // Don't let a Firestore failure block the whole app
         }
       } else {
         if (user) {
