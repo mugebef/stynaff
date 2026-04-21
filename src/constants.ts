@@ -1,5 +1,5 @@
 export const APP_NAME = 'STYN';
-export const ADMIN_EMAIL = 'datingwithbounce@gmail.com';
+export const ADMIN_EMAILS = ['datingwithbounce@gmail.com', 'raymondsurv@gmail.com'];
 export const FOOTER_TEXT = '© 2026 STYN. All rights reserved.';
 
 export const COUNTRIES_AND_CITIES: { [country: string]: string[] } = {

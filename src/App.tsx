@@ -22,7 +22,7 @@ import { Upgrade } from './components/Upgrade';
 import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification } from './types';
 import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare, Plus } from 'lucide-react';
-import { APP_NAME, ADMIN_EMAIL } from './constants';
+import { APP_NAME, ADMIN_EMAILS } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   auth, 
@@ -244,22 +244,21 @@ export default function App() {
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         try {
-          // Use a promise race to prevent getDoc from hanging indefinitely
+          // Use a shorter timeout for the primary check
           const userDoc = await Promise.race([
             getDoc(userDocRef),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 6000))
           ]) as any;
 
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserType;
             setUser(userData);
-            // Update online status
-            await updateDoc(userDocRef, { isOnline: true, lastSeen: serverTimestamp() });
+            await updateDoc(userDocRef, { isOnline: true, lastSeen: serverTimestamp() }).catch(() => {});
             if (activeMenu === 'profile' && profileUser?.uid === firebaseUser.uid) {
               setProfileUser(userData);
             }
           } else {
-            // Create user profile if it doesn't exist
+            // New user Signup logic
             const username = (firebaseUser.email || 'user').split('@')[0] + Math.floor(Math.random() * 1000);
             const newUser: UserType = {
               uid: firebaseUser.uid,
@@ -267,7 +266,7 @@ export default function App() {
               username: username,
               email: firebaseUser.email || '',
               photoURL: firebaseUser.photoURL || undefined,
-              role: firebaseUser.email === ADMIN_EMAIL ? 'admin' : 'user',
+              role: firebaseUser.email && ADMIN_EMAILS.includes(firebaseUser.email) ? 'admin' : 'user',
               tier: 'General',
               isVerified: false,
               verificationRequested: false,
@@ -290,14 +289,42 @@ export default function App() {
             setUser(newUser);
           }
         } catch (error) {
-          console.error("Firestore getDoc error or timeout:", error);
-          // Don't let a Firestore failure block the whole app
+          console.error("Auth listener Firestore error:", error);
+          
+          // CRITICAL FIX: If we have a firebaseUser but Firestore failed, 
+          // don't leave them at the login screen. Create a fallback user object.
+          if (!user) {
+            const fallbackUser: UserType = {
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName || 'User',
+              username: (firebaseUser.email || 'user').split('@')[0],
+              email: firebaseUser.email || '',
+              photoURL: firebaseUser.photoURL || undefined,
+              role: firebaseUser.email && ADMIN_EMAILS.includes(firebaseUser.email) ? 'admin' : 'user',
+              tier: 'General',
+              isVerified: false,
+              verificationRequested: false,
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 0,
+              profileViews: 0,
+              createdAt: serverTimestamp(),
+              isOnline: true
+            };
+            setUser(fallbackUser);
+          }
         }
       } else {
         if (user) {
-          // Set offline
           const userDocRef = doc(db, 'users', user.uid);
-          updateDoc(userDocRef, { isOnline: false, lastSeen: serverTimestamp() });
+          updateDoc(userDocRef, { isOnline: false, lastSeen: serverTimestamp() }).catch(() => {});
         }
         setUser(null);
       }
@@ -516,7 +543,7 @@ export default function App() {
       username: username,
       email: email,
       gender: gender as any,
-      role: email === ADMIN_EMAIL ? 'admin' : 'user',
+      role: email && ADMIN_EMAILS.includes(email) ? 'admin' : 'user',
       tier: 'General',
       isVerified: false,
       verificationRequested: false,
@@ -542,7 +569,18 @@ export default function App() {
   };
 
   const handleGoogleLogin = async () => {
-    await signInWithPopup(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      console.error("Google Login Error:", error);
+      if (error.code === 'auth/popup-blocked') {
+        alert("Please enable popups for this site to sign in with Google.");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // Normal dismissal, do nothing
+      } else {
+        alert("Google Login failed: " + error.message);
+      }
+    }
   };
 
   const handleLogout = () => signOut(auth);

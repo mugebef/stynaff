@@ -57,7 +57,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         (request.auth.token.email == "datingwithbounce@gmail.com" && request.auth.token.email_verified == true));
+         ((request.auth.token.email == "datingwithbounce@gmail.com" || request.auth.token.email == "raymondsurv@gmail.com") && request.auth.token.email_verified == true));
     }
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'displayName', 'username', 'email', 'gender', 'role', 'tier', 'isVerified', 'verificationRequested', 'friends', 'friendRequests', 'sentRequests', 'followers', 'following', 'walletBalance', 'points', 'profileViews', 'swipedLeft', 'swipedRight', 'matches', 'createdAt']) &&
