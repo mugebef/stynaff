@@ -15,10 +15,11 @@ interface FeedProps {
   onBoost?: (postId: string, price: number, duration: number) => void;
   onFollow: (uid: string) => void;
   onShare: (postId: string) => void;
+  onReelUploadClick?: () => void;
   ads?: any[];
 }
 
-export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, onLike, onDelete, onComment, onBoost, onFollow, onShare, ads = [] }) => {
+export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, onLike, onDelete, onComment, onBoost, onFollow, onShare, onReelUploadClick, ads = [] }) => {
   const [content, setContent] = React.useState('');
   const [mediaFile, setMediaFile] = React.useState<File | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -143,7 +144,10 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
             <span>Photo/video</span>
             <input type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaChange} />
           </label>
-          <button className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-neutral-400 hover:bg-neutral-800 transition-all">
+          <button 
+            onClick={() => onReelUploadClick?.()}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-neutral-400 hover:bg-neutral-800 transition-all"
+          >
             <Video size={20} className="text-pink-500" />
             <span>Reel</span>
           </button>

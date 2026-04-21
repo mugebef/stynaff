@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle, ShoppingBag, Calendar, Briefcase, Sparkles, Radio, Play } from 'lucide-react';
+import { User, UserPlus, Check, X, Flag, Users, Heart, Video, Wallet, MessageSquare, Globe, LayoutDashboard, Shield, Award, Medal, Trophy, Crown, CheckCircle, ShoppingBag, Calendar, Briefcase, Sparkles, Radio, Play, Plus } from 'lucide-react';
 import { User as UserType } from '../types';
 import { motion } from 'motion/react';
 
@@ -39,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .slice(0, 3);
   const menuItems = [
     { id: 'reels', label: 'Videos', icon: <Video size={20} className="text-pink-500" /> },
+    { id: 'upload', label: 'Upload Video', icon: <Plus size={20} className="text-orange-500" /> },
     { id: 'blockbuster', label: 'Cinema', icon: <Play size={20} className="text-red-600" /> },
     { id: 'dating', label: 'Match', icon: <Heart size={20} className="text-red-500" /> },
     { id: 'chat', label: 'Messenger', icon: <MessageSquare size={20} className="text-indigo-500" /> },

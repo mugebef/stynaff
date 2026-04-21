@@ -16,11 +16,12 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { Wallet } from './components/Wallet';
 import { Reels } from './components/Reels';
 import { Live } from './components/Live';
+import { UploadReel } from './components/UploadReel';
 import { Footer } from './components/Footer';
 import { Upgrade } from './components/Upgrade';
 import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification } from './types';
-import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare } from 'lucide-react';
+import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare, Plus } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAIL } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -121,6 +122,7 @@ export default function App() {
   const [movies, setMovies] = React.useState<any[]>([]);
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
+  const [isGlobalUploadOpen, setIsGlobalUploadOpen] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadMessage, setUploadMessage] = React.useState("");
@@ -1226,6 +1228,10 @@ export default function App() {
         user={user} 
         onLogout={handleLogout} 
         onMenuClick={(menu) => {
+          if (menu === 'upload') {
+            setIsGlobalUploadOpen(true);
+            return;
+          }
           setActiveMenu(menu);
           if (menu === 'profile') setProfileUser(user);
         }} 
@@ -1353,6 +1359,7 @@ export default function App() {
                       onBoost={handleBoost}
                       onFollow={handleFollow}
                       onShare={handleShare}
+                      onReelUploadClick={() => setIsGlobalUploadOpen(true)}
                       ads={ads}
                     />
                   )}
@@ -1441,6 +1448,29 @@ export default function App() {
       </main>
 
       <Footer appConfig={appConfig} />
+
+      <UploadReel 
+        isOpen={isGlobalUploadOpen} 
+        onClose={() => setIsGlobalUploadOpen(false)} 
+        onUpload={handleReelUpload}
+      />
+
+      {/* Global Floating Action Button for Mobile Upload - Ensuring it's always accessible on mobile */}
+      {user && activeMenu !== 'chat' && (
+        <motion.div 
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="fixed bottom-24 right-6 z-40 md:hidden"
+        >
+          <button
+            onClick={() => setIsGlobalUploadOpen(true)}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_10px_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all ring-4 ring-black/20"
+            title="Upload Content"
+          >
+            <Plus size={28} strokeWidth={3} />
+          </button>
+        </motion.div>
+      )}
 
       {/* Upload Progress Indicator */}
       <AnimatePresence>

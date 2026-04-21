@@ -93,7 +93,7 @@ export const Reels: React.FC<ReelsProps> = ({
     });
   }, [posts, searchQuery, currentUser]);
 
-  const [isMuted, setIsMuted] = React.useState(true);
+  const [isMuted, setIsMuted] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
@@ -509,11 +509,12 @@ export const Reels: React.FC<ReelsProps> = ({
         </div>
       )}
 
-      {/* Upload Button - Fixed + Button Lower Right */}
-      <div className="absolute bottom-10 right-10 z-50">
+      {/* Upload Button - Hidden on mobile, visible on desktop within the reels container */}
+      <div className="hidden md:flex md:absolute md:bottom-10 md:right-10 md:z-50">
         <button
           onClick={() => setIsUploadOpen(true)}
           className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:scale-110 transition-all active:scale-95 ring-4 ring-black/20"
+          title="Upload Video"
         >
           <Plus size={32} strokeWidth={3} />
         </button>

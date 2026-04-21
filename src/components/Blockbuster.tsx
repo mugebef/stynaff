@@ -76,7 +76,6 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
           <video
             src={featuredMovie.trailerUrl}
             autoPlay
-            muted
             loop
             playsInline
             className="h-full w-full object-cover opacity-60 transition-all duration-1000 scale-105 group-hover:scale-100"
