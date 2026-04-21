@@ -12,6 +12,77 @@ interface ChatProps {
   initialSelectedUser?: UserType | null;
 }
 
+const LastMessage: React.FC<{ user: UserType, currentUser: UserType }> = ({ user, currentUser }) => {
+  const [lastMsg, setLastMsg] = React.useState<MessageType | null>(null);
+
+  React.useEffect(() => {
+    const q = query(
+      collection(db, 'messages'),
+      or(
+        and(where('senderId', '==', currentUser.uid), where('receiverId', '==', user.uid)),
+        and(where('senderId', '==', user.uid), where('receiverId', '==', currentUser.uid))
+      ),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+
+    return onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        setLastMsg({ id: snap.docs[0].id, ...snap.docs[0].data() } as MessageType);
+      }
+    });
+  }, [user.uid, currentUser.uid]);
+
+  const getTime = (date: any) => {
+    if (!date) return '';
+    const d = date.toDate ? date.toDate() : new Date();
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    return d.toLocaleDateString();
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-0.5">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <h4 className="truncate text-[17px] text-[#e9edef] leading-none">
+            {user.displayName}
+          </h4>
+          {user.uid.startsWith('fake_') && <Sparkles size={14} className="text-orange-500 shrink-0" />}
+        </div>
+        {lastMsg && (
+          <span className={`text-[12px] shrink-0 ${lastMsg.receiverId === currentUser.uid && lastMsg.status !== 'seen' ? 'text-[#00a884] font-medium' : 'text-[#8696a0]'}`}>
+            {getTime(lastMsg.createdAt)}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 overflow-hidden flex-1">
+          {lastMsg && lastMsg.senderId === currentUser.uid && (
+            <span className="shrink-0">
+              {lastMsg.status === 'seen' ? <CheckCheck size={16} className="text-[#53bdeb]" /> : <Check size={16} className="text-[#8696a0]" />}
+            </span>
+          )}
+          <p className="truncate text-[14px] text-[#8696a0] flex-1">
+            {user.typingTo === currentUser.uid ? (
+              <span className="text-[#00a884]">typing...</span>
+            ) : (
+              lastMsg ? lastMsg.content : (user.bio || 'Available')
+            )}
+          </p>
+        </div>
+        {lastMsg && lastMsg.receiverId === currentUser.uid && lastMsg.status !== 'seen' && (
+          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center rounded-full bg-[#00a884] text-white text-[11px] font-bold">
+            1
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
 export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedUser }) => {
   const [selectedUser, setSelectedUser] = React.useState<UserType | null>(initialSelectedUser || null);
 
@@ -75,7 +146,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       // Mark received messages as seen
       msgs.forEach(m => {
         if (m.receiverId === currentUser.uid && m.status !== 'seen') {
-          updateDoc(doc(db, 'messages', m.id), { status: 'seen', read: true });
+          updateDoc(doc(db, 'messages', m.id), { status: 'seen', read: true }).catch(() => {});
         }
       });
 
@@ -140,10 +211,10 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         Do not use formal or robotic language. Respond with ONLY the message text.
       `;
 
-      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
       });
 
@@ -169,7 +240,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: `Given this message: "${text}", suggest 3 short, friendly, and relevant one-tap replies. Return only a JSON array of strings.`,
         config: { responseMimeType: "application/json" }
       });
@@ -233,10 +304,10 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       `;
 
       // Use a small delay for "thinking"
-      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
       });
 
@@ -299,9 +370,9 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       {/* Sidebar - Chat List */}
       <div className={`w-full flex-col bg-[#111b21] md:flex md:w-80 lg:w-96 border-r border-white/5 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
         {/* Mobile-style Header */}
-        <div className="bg-[#202c33] p-5 flex items-center justify-between text-[#aebac1]">
+        <div className="bg-[#202c33] p-4 flex items-center justify-between text-[#aebac1]">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
+            <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10 cursor-pointer">
               {currentUser.photoURL ? (
                 <img src={currentUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -310,12 +381,12 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                 </div>
               )}
             </div>
-            <h2 className="text-xl font-black text-[#e9edef] tracking-tighter uppercase">STYN</h2>
           </div>
-          <div className="flex gap-5">
-            <button className="hover:text-white transition-colors"><Users size={20} /></button>
-            <button className="hover:text-white transition-colors"><Sparkles size={20} className="text-orange-500" /></button>
-            <button className="hover:text-white transition-colors"><MoreVertical size={20} /></button>
+          <div className="flex gap-6 items-center">
+            <button className="hover:text-white transition-colors" title="Communities"><Users size={20} /></button>
+            <button className="hover:text-white transition-colors" title="Status"><Sparkles size={20} className="text-[#aebac1]" /></button>
+            <button className="hover:text-white transition-colors" title="New Chat"><MessageSquare size={20} /></button>
+            <button className="hover:text-white transition-colors" title="Menu"><MoreVertical size={20} /></button>
           </div>
         </div>
 
@@ -368,23 +439,9 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                     <div className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#111b21] bg-[#00a884] shadow-lg"></div>
                   )}
                 </div>
-                <div className="flex-1 overflow-hidden">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="truncate text-[16px] font-black text-[#e9edef] tracking-tight">
-                        {user.displayName}
-                      </h4>
-                      {user.uid.startsWith('fake_') && <Sparkles size={14} className="text-orange-500 fill-orange-500/20" />}
-                    </div>
-                  <div className="flex items-center justify-between">
-                    <p className="truncate text-[13px] font-medium text-[#8696a0]">
-                      {user.typingTo === currentUser.uid ? (
-                        <span className="text-[#00a884] font-black italic">typing...</span>
-                      ) : (
-                        user.bio || 'Available'
-                      )}
-                    </p>
+                  <div className="flex-1 overflow-hidden">
+                    <LastMessage user={user} currentUser={currentUser} />
                   </div>
-                </div>
               </div>
             ))
           )}
@@ -403,13 +460,13 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         {selectedUser ? (
           <>
             {/* Chat Header */}
-            <div className="relative z-10 flex items-center justify-between bg-[#202c33] p-3 shadow-xl text-[#aebac1] border-b border-white/5">
+            <div className="relative z-10 flex items-center justify-between bg-[#202c33] p-2.5 shadow-md text-[#aebac1] border-l border-white/5">
               <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedUser(null)} className="md:hidden p-2 text-[#e9edef] hover:bg-white/5 rounded-full transition-colors">
+                <button onClick={() => setSelectedUser(null)} className="md:hidden p-2 text-[#e9edef] hover:bg-white/5 rounded-full transition-colors mr-2">
                   <ArrowLeft size={24} />
                 </button>
-                <div className="flex items-center gap-4 cursor-pointer group">
-                  <div className="h-11 w-11 overflow-hidden rounded-full bg-neutral-800 border border-white/10 group-hover:scale-105 transition-transform">
+                <div className="flex items-center gap-3 cursor-pointer">
+                  <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
                     {selectedUser.photoURL ? (
                       <img src={selectedUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
@@ -418,9 +475,9 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div className="overflow-hidden">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-[17px] font-black text-[#e9edef] leading-tight tracking-tight">{selectedUser.displayName}</h4>
+                      <h4 className="text-[16px] text-[#e9edef] leading-tight truncate">{selectedUser.displayName}</h4>
                       {selectedUser.uid.startsWith('fake_') && (
                         <div className="flex items-center gap-1 rounded-full bg-orange-600/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-orange-500 border border-orange-500/20">
                           <Sparkles size={10} />
@@ -428,7 +485,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                         </div>
                       )}
                     </div>
-                    <p className="text-[11px] font-black text-[#8696a0] uppercase tracking-widest">
+                    <p className="text-[13px] text-[#8696a0] truncate">
                       {(selectedUser.isOnline || selectedUser.uid.startsWith('fake_')) ? (
                         <span className="text-[#00a884]">online</span>
                       ) : (
@@ -438,11 +495,12 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="hover:bg-white/5 p-3 rounded-full text-[#8696a0] hover:text-white transition-all"><Video size={22} /></button>
-                <button className="hover:bg-white/5 p-3 rounded-full text-[#8696a0] hover:text-white transition-all"><Phone size={22} /></button>
-                <button className="hover:bg-white/5 p-3 rounded-full text-[#8696a0] hover:text-white transition-all"><Search size={22} /></button>
-                <button className="hover:bg-white/5 p-3 rounded-full text-[#8696a0] hover:text-white transition-all"><MoreVertical size={22} /></button>
+              <div className="flex items-center gap-4">
+                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><Video size={20} /></button>
+                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><Phone size={20} /></button>
+                <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
+                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><Search size={20} /></button>
+                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><MoreVertical size={20} /></button>
               </div>
             </div>
             
@@ -466,30 +524,33 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}
                   >
-                    <div className={`relative max-w-[85%] md:max-w-[60%] px-4 py-2 shadow-2xl ${
+                    <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-sm ${
                       msg.senderId === currentUser.uid
-                        ? 'bg-[#005c4b] text-[#e9edef] rounded-2xl rounded-tr-none'
-                        : 'bg-[#202c33] text-[#e9edef] rounded-2xl rounded-tl-none'
+                        ? 'bg-[#005c4b] text-[#e3f6fc] rounded-lg rounded-tr-none'
+                        : 'bg-[#202c33] text-[#e9edef] rounded-lg rounded-tl-none'
                     }`}>
                       {/* Bubble Tail */}
                       {isFirstInGroup && (
-                        <div className={`absolute top-0 h-4 w-4 ${
+                        <div className={`absolute top-0 h-3 w-3 ${
                           msg.senderId === currentUser.uid 
-                            ? '-right-2 bg-[#005c4b]' 
-                            : '-left-2 bg-[#202c33]'
+                            ? '-right-1.5 bg-[#005c4b]' 
+                            : '-left-1.5 bg-[#202c33]'
                         }`} 
-                        style={{ clipPath: msg.senderId === currentUser.uid ? 'polygon(0 0, 0 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)' }}
+                        style={{ 
+                          clipPath: msg.senderId === currentUser.uid ? 'polygon(0 0, 100% 0, 0 100%)' : 'polygon(0 0, 100% 0, 100% 100%)',
+                          zIndex: 0
+                        }}
                         />
                       )}
                       
-                      <div className="flex flex-col">
-                        <p className="text-[15px] font-medium leading-relaxed pr-14 whitespace-pre-wrap">{msg.content}</p>
-                        <div className="self-end mt-1 flex items-center gap-1.5 min-w-[70px] justify-end">
-                          <span className="text-[10px] font-black text-[#8696a0] uppercase">
-                            {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                      <div className="flex flex-col relative z-10">
+                        <p className="text-[14.5px] leading-tight pr-16 whitespace-pre-wrap">{msg.content}</p>
+                        <div className="absolute bottom-[-2px] right-[-4px] flex items-center gap-1.5">
+                          <span className="text-[11px] text-[#8696a0]">
+                            {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
                           </span>
                           {msg.senderId === currentUser.uid && (
-                            msg.status === 'seen' ? <CheckCheck size={14} className="text-[#53bdeb]" /> : <Check size={14} className="text-[#8696a0]" />
+                            msg.status === 'seen' ? <CheckCheck size={16} className="text-[#53bdeb]" /> : <Check size={16} className="text-[#8696a0]" />
                           )}
                         </div>
                       </div>
