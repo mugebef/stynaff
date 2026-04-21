@@ -2,7 +2,7 @@ import React from 'react';
 import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare, CheckCircle, Image as ImageIcon, Mic, Paperclip, Smile, Reply, Trash2, Heart, Users, Shield, Sparkles } from 'lucide-react';
 import { User as UserType, Message as MessageType } from '../types';
 import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc, limit } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc, limit, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -79,6 +79,13 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         }
       });
 
+      // Icebreaker logic for fake users
+      if (msgs.length === 0 && selectedUser?.uid.startsWith('fake_')) {
+        setTimeout(() => {
+          triggerIcebreaker();
+        }, 1500);
+      }
+
       // Generate smart replies if the last message is from the other user
       const lastMsg = msgs[msgs.length - 1];
       if (lastMsg && lastMsg.senderId === selectedUser.uid) {
@@ -90,6 +97,66 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
 
     return () => unsubscribe();
   }, [selectedUser, currentUser.uid]);
+
+  const triggerIcebreaker = async () => {
+    if (!selectedUser || !selectedUser.uid.startsWith('fake_')) return;
+    
+    // Check if we still have 0 messages to avoid double triggers
+    const q = query(
+      collection(db, 'messages'),
+      or(
+        and(where('senderId', '==', currentUser.uid), where('receiverId', '==', selectedUser.uid)),
+        and(where('senderId', '==', selectedUser.uid), where('receiverId', '==', currentUser.uid))
+      ),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) return;
+
+    const userRef = doc(db, 'users', selectedUser.uid);
+    try {
+      await updateDoc(userRef, { typingTo: currentUser.uid });
+      
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const persona = `
+        Name: ${selectedUser.displayName}
+        Age: ${selectedUser.age || 'Unknown'}
+        Location: ${selectedUser.location?.city || 'Unknown'}, ${selectedUser.location?.country || 'Unknown'}
+        Bio: ${selectedUser.bio || 'I am a friendly person looking for a connection.'}
+        Interests: ${selectedUser.interests?.join(', ') || 'Various things'}
+      `;
+
+      const prompt = `
+        You are ${selectedUser.displayName} on a dating app called STYN. 
+        Profile details: ${persona}
+        A new user has just opened a chat with you. Write a very short, natural, and charming opening message to break the ice.
+        Do not use formal or robotic language. Respond with ONLY the message text.
+      `;
+
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      const aiText = response.text || "Hey! I saw your profile and thought I'd say hello. How are you doing today?";
+
+      await addDoc(collection(db, 'messages'), {
+        senderId: selectedUser.uid,
+        receiverId: currentUser.uid,
+        content: aiText,
+        type: 'text',
+        createdAt: serverTimestamp(),
+        read: false,
+        status: 'sent'
+      });
+    } catch (err) {
+      console.error("Icebreaker Error:", err);
+    } finally {
+      await updateDoc(userRef, { typingTo: null }).catch(() => {});
+    }
+  };
 
   const generateSmartReplies = async (text: string) => {
     try {
@@ -112,6 +179,73 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
     }
   }, [messages, otherUserTyping]);
 
+  const handleAIResponse = async (userMessage: string) => {
+    if (!selectedUser || !selectedUser.uid.startsWith('fake_')) return;
+
+    // Simulate typing
+    const userRef = doc(db, 'users', selectedUser.uid);
+    try {
+      await updateDoc(userRef, { typingTo: currentUser.uid });
+      
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      
+      // Get some context from the profile
+      const persona = `
+        Name: ${selectedUser.displayName}
+        Age: ${selectedUser.age || 'Unknown'}
+        Location: ${selectedUser.location?.city || 'Unknown'}, ${selectedUser.location?.country || 'Unknown'}
+        Bio: ${selectedUser.bio || 'I am a friendly person looking for a connection.'}
+        Interests: ${selectedUser.interests?.join(', ') || 'Various things'}
+        Gender: ${selectedUser.gender || 'Unknown'}
+      `;
+
+      // Get last few messages for better context
+      const chatHistory = messages.slice(-5).map(m => 
+        `${m.senderId === currentUser.uid ? 'User' : selectedUser.displayName}: ${m.content}`
+      ).join('\n');
+
+      const prompt = `
+        You are ${selectedUser.displayName} on a dating app called STYN. 
+        Your profile details:
+        ${persona}
+
+        Recent conversation:
+        ${chatHistory}
+        User says: "${userMessage}"
+
+        Respond as ${selectedUser.displayName}. Keep it natural, friendly, and conversational (like a text message). 
+        Do not use formal patterns like "As an AI...". Be the person in the profile.
+        If the user asks for contacts, be playful but don't give real sensitive data.
+        Respond with ONLY the message text.
+      `;
+
+      // Use a small delay for "thinking"
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      const aiText = response.text || "Sorry, I'm a bit busy right now. Talk later?";
+
+      await addDoc(collection(db, 'messages'), {
+        senderId: selectedUser.uid,
+        receiverId: currentUser.uid,
+        content: aiText,
+        type: 'text',
+        createdAt: serverTimestamp(),
+        read: false,
+        status: 'sent'
+      });
+
+    } catch (err) {
+      console.error("AI Chat Error:", err);
+    } finally {
+      await updateDoc(userRef, { typingTo: null }).catch(() => {});
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent, content?: string) => {
     if (e) e.preventDefault();
     const msgContent = content || newMessage;
@@ -130,6 +264,11 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         read: false,
         status: 'sent'
       });
+
+      // AI Response for seeded profiles
+      if (selectedUser.uid.startsWith('fake_')) {
+        handleAIResponse(msgContent);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -212,17 +351,17 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                       </div>
                     )}
                   </div>
-                  {user.isOnline && (
+                  {(user.isOnline || user.uid.startsWith('fake_')) && (
                     <div className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#111b21] bg-[#00a884] shadow-lg"></div>
                   )}
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="truncate text-[16px] font-black text-[#e9edef] tracking-tight">
-                      {user.displayName}
-                    </h4>
-                    <span className="text-[11px] font-black text-[#8696a0] uppercase">12:45 PM</span>
-                  </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="truncate text-[16px] font-black text-[#e9edef] tracking-tight">
+                        {user.displayName}
+                      </h4>
+                      {user.uid.startsWith('fake_') && <Sparkles size={14} className="text-orange-500 fill-orange-500/20" />}
+                    </div>
                   <div className="flex items-center justify-between">
                     <p className="truncate text-[13px] font-medium text-[#8696a0]">
                       {user.typingTo === currentUser.uid ? (
@@ -267,9 +406,17 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                     )}
                   </div>
                   <div>
-                    <h4 className="text-[17px] font-black text-[#e9edef] leading-tight tracking-tight">{selectedUser.displayName}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-[17px] font-black text-[#e9edef] leading-tight tracking-tight">{selectedUser.displayName}</h4>
+                      {selectedUser.uid.startsWith('fake_') && (
+                        <div className="flex items-center gap-1 rounded-full bg-orange-600/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-orange-500 border border-orange-500/20">
+                          <Sparkles size={10} />
+                          AI
+                        </div>
+                      )}
+                    </div>
                     <p className="text-[11px] font-black text-[#8696a0] uppercase tracking-widest">
-                      {selectedUser.isOnline ? (
+                      {(selectedUser.isOnline || selectedUser.uid.startsWith('fake_')) ? (
                         <span className="text-[#00a884]">online</span>
                       ) : (
                         'last seen recently'

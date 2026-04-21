@@ -173,6 +173,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
           location: { city: item.city, country: item.country },
           age: item.age,
           bio: item.bio,
+          interests: ['Music', 'Travel', 'Art', 'Tech', 'Cooking', 'Hiking', 'Dancing', 'Fitness', 'Photography', 'Movies'].sort(() => 0.5 - Math.random()).slice(0, 3),
+          interestedIn: 'Male',
           friends: [],
           friendRequests: [],
           sentRequests: [],

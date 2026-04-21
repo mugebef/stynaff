@@ -167,6 +167,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
             <div className="absolute bottom-0 left-0 right-0 p-10 text-white">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-4xl font-black tracking-tighter">{currentMatch.displayName}, {currentMatch.age || '??'}</h2>
+                {currentMatch.uid.startsWith('fake_') && <Sparkles size={24} className="text-orange-500 fill-orange-500/20" />}
                 {currentMatch.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
                 {currentMatch.tier === 'Platinum' && <Crown size={24} className="text-yellow-500" />}
               </div>
