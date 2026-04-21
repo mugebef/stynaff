@@ -301,6 +301,8 @@ export default function App() {
               email: firebaseUser.email || '',
               photoURL: firebaseUser.photoURL || undefined,
               role: firebaseUser.email && ADMIN_EMAILS.includes(firebaseUser.email) ? 'admin' : 'user',
+              gender: 'Male',
+              interestedIn: 'Female',
               tier: 'General',
               isVerified: false,
               verificationRequested: false,

@@ -30,7 +30,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
   
   const [isAdModalOpen, setIsAdModalOpen] = React.useState(false);
   const [isSeeding, setIsSeeding] = React.useState(false);
+  const [isClearing, setIsClearing] = React.useState(false);
   const [newAd, setNewAd] = React.useState({ title: '', description: '', imageUrl: '', link: '' });
+
+  const clearFakeUsers = async () => {
+    if (!confirm('Delete all mock profiles? This cannot be undone.')) return;
+    setIsClearing(true);
+    try {
+      const mockUsers = users.filter(u => u.uid.startsWith('fake_'));
+      for (const u of mockUsers) {
+        await deleteDoc(doc(db, 'users', u.uid));
+      }
+      alert(`${mockUsers.length} mock profiles cleared.`);
+      // Refresh
+      const usersSnap = await getDocs(collection(db, 'users'));
+      setUsers(usersSnap.docs.map(d => d.data() as User));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to clear users');
+    } finally {
+      setIsClearing(false);
+    }
+  };
   const [isUploadingLogo, setIsUploadingLogo] = React.useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = React.useState(false);
 
@@ -213,6 +234,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
     { label: 'Total Posts', value: posts.length, icon: <FileText className="text-green-600" /> },
     { label: 'Verification Requests', value: users.filter(u => u.verificationRequested).length, icon: <CheckCircle className="text-orange-600" /> },
     { label: 'Platform Points', value: users.reduce((acc, u) => acc + (u.points || 0), 0), icon: <Award className="text-purple-600" /> },
+    { label: 'Mock Accounts', value: users.filter(u => u.uid.startsWith('fake_')).length, icon: <Zap className="text-yellow-500" /> },
   ];
 
   if (loading) return <div className="p-12 text-center">Loading Admin Dashboard...</div>;
@@ -228,7 +250,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {stats.map((stat, i) => (
           <div key={i} className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-950 shadow-inner border border-white/5">
@@ -242,15 +264,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         {/* Seed Data Button */}
         <button 
           onClick={seedFakeUsers}
-          disabled={isSeeding}
-          className="flex flex-col items-start justify-between rounded-3xl border border-orange-600/20 bg-orange-600/5 p-6 shadow-sm transition-all hover:bg-orange-600/10 active:scale-95 disabled:opacity-50 group"
+          disabled={isSeeding || isClearing}
+          className="flex flex-col items-start justify-between rounded-3xl border-2 border-orange-600/30 bg-orange-600/10 p-6 shadow-xl transition-all hover:bg-orange-600/20 active:scale-95 disabled:opacity-50 group hover:border-orange-500"
         >
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-900/40 group-hover:scale-110 transition-transform">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-900/40 group-hover:scale-110 transition-transform ring-4 ring-orange-600/20">
             <Zap size={24} />
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-orange-500">{isSeeding ? 'Seeding...' : 'Seed Data'}</p>
-            <p className="text-xs text-neutral-400">Add 10 mock girl profiles</p>
+            <p className="text-sm font-black uppercase tracking-widest text-orange-500">{isSeeding ? 'Seeding...' : 'Populate'}</p>
+            <p className="text-[10px] font-bold text-neutral-400 mt-1 uppercase tracking-tight">Add 10 Zim/SA</p>
+          </div>
+        </button>
+
+        {/* Clear Data Button */}
+        <button 
+          onClick={clearFakeUsers}
+          disabled={isSeeding || isClearing}
+          className="flex flex-col items-start justify-between rounded-3xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-xl transition-all hover:bg-red-500/10 active:scale-95 disabled:opacity-50 group hover:border-red-500/50"
+        >
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-800 text-neutral-400 shadow-lg group-hover:bg-red-500 group-hover:text-white transition-all ring-4 ring-neutral-800">
+            <Trash2 size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-black uppercase tracking-widest text-neutral-400 group-hover:text-red-500 transition-colors">{isClearing ? 'Clearing...' : 'Clear Mocks'}</p>
+            <p className="text-[10px] font-bold text-neutral-600 mt-1 uppercase tracking-tight">Remove all fakes</p>
           </div>
         </button>
       </div>

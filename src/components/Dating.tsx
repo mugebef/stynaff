@@ -48,12 +48,23 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
             return ageMatch;
           })
           .filter(u => {
-            // Match by city and country if set
-            if (currentUser.location?.country && u.location?.country) {
-              if (currentUser.location.country !== u.location.country) return false;
+            // Match by Southern Africa region (Zim & SA) or strict city/country
+            const southernAfrica = ['Zimbabwe', 'South Africa'];
+            const userCountry = currentUser.location?.country;
+            const targetCountry = u.location?.country;
+
+            if (userCountry && targetCountry) {
+              // If both are in Southern Africa, allow matching
+              if (southernAfrica.includes(userCountry) && southernAfrica.includes(targetCountry)) {
+                return true;
+              }
+              // Otherwise fallback to strict country match
+              if (userCountry !== targetCountry) return false;
             }
+            
             if (currentUser.location?.city && u.location?.city) {
-              if (currentUser.location.city !== u.location.city) return false;
+              // If they are in the same country but different cities, still show them but maybe penalize?
+              // For now, let's keep it simple: allow same country.
             }
             return true;
           });
