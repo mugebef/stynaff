@@ -6,6 +6,7 @@ module.exports = {
       cwd: '/home/styni.com/stynaff',
       interpreter: 'node',
       interpreter_args: '--import tsx',
+      max_memory_restart: '1500M',
       env: {
         NODE_ENV: 'development',
         PORT: 3000
