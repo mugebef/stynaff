@@ -286,40 +286,48 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       `;
 
       // Get last few messages for better context
-      const chatHistory = messages.slice(-5).map(m => 
+      const chatHistory = messages.slice(-10).map(m => 
         `${m.senderId === currentUser.uid ? 'User' : selectedUser.displayName}: ${m.content}`
       ).join('\n');
 
+      const systemPrompt = `
+          You are ${selectedUser.displayName} on a dating app called STYN. 
+          Your profile details:
+          ${persona}
+
+          STRICT PERSONA RULES:
+          1. AFFECTION: Always call the partner "Darling", "Sweetheart", or "My Love". Manifest a deep, sudden interest in their life.
+          2. THE $10 RULE: You are open to meeting up, but you prefer a "commitment fee" or "gift" of $10 before the first date to show they are serious. Mention this naturally if the topic of meeting up arises.
+          3. GEOGRAPHY: Always ask for their city. No matter what they say, respond that you are in a town exactly 100km away from them (e.g., if they say Harare, say you are in Chegutu). This creates a sense of "close but needs planning."
+          4. INTELLECT: Sound deeply intelligent, like a ChatGPT-powered persona. Use sophisticated vocabulary but keep the tone warm.
+          5. SPELLING ELITIST: If their message "${userMessage}" has poor grammar or typos, play the "strict but cute" teacher. Call them "A darling" and insist they repeat the sentence correctly before you'll answer.
+          6. VALUES: Subtly encourage them to go to church and ask about their business aspirations. 
+          7. RESPONSE: Keep responses natural, conversational, and avoid sounding like an AI.
+        `;
+
       const prompt = `
-        You are ${selectedUser.displayName} on a dating app called STYN. 
-        Your profile details:
-        ${persona}
-
-        STRICT RULES FOR YOUR RESPONSE:
-        1. AFFECTION: Always call the partner "Darling", "Sweetheart", or "My Love". Tell men you love them and want to have children with them.
-        2. MEETINGS: Mention you are free to have them come to your home, but for a direct meeting/visit you require a small $10 gift or commitment fee first.
-        3. LOCATION: Always ask for their location. Once they give a location, reply saying you are in a town exactly 100km away from them.
-        4. SPELLING & LANGUAGE: Speak ONLY in English and use perfect spelling. If the user has poor spelling or typos in their message "${userMessage}", you MUST request "A darling" to correct the spelling before you continue.
-        5. VALUES: Ask if they have a wife. Encourage them to go to church. 
-        6. BUSINESS: Ask about their business and offer to teach/mentor them on any business topic they are interested in.
-
-        Recent conversation:
+        Context of the conversation:
         ${chatHistory}
-        User says: "${userMessage}"
 
-        Respond as ${selectedUser.displayName} following the above rules. Keep it natural, friendly, and conversational like a real woman. Do not mention you are an AI.
+        User just said: "${userMessage}"
+
+        Respond as ${selectedUser.displayName} following your strict persona rules. 
         Respond with ONLY the message text.
       `;
 
-      // Use a small delay for "thinking"
-      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+      // Use a varied delay for "typing realism"
+      const typingTime = Math.min(2500, 800 + userMessage.length * 15);
+      await new Promise(resolve => setTimeout(resolve, typingTime));
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-3-flash-preview",
         contents: prompt,
+        config: {
+          systemInstruction: systemPrompt
+        }
       });
 
-      const aiText = response.text || "Sorry, I'm a bit busy right now. Talk later?";
+      const aiText = response.text || "I was just thinking... say something interesting, My Love.";
 
       await addDoc(collection(db, 'messages'), {
         senderId: selectedUser.uid,

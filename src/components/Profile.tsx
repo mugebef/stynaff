@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare, Lock, Settings, Star, Info, Trash2, Heart, X, Maximize2 } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare, Lock, Settings, Star, Info, Trash2, Heart, X, Maximize2, Zap } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 import { COUNTRIES_AND_CITIES, RELATIONSHIP_STATUSES } from '../constants';
@@ -379,7 +379,7 @@ export const Profile: React.FC<ProfileProps> = ({
                   className="flex items-center gap-3 rounded-2xl bg-neutral-900 px-8 py-4 text-xs font-black uppercase tracking-widest text-neutral-200 border border-white/5 hover:bg-neutral-800 transition-all active:scale-95"
                 >
                   <MessageSquare size={18} strokeWidth={3} />
-                  Message
+                  {user.uid.startsWith('fake_') ? 'Chat with AI' : 'Message'}
                 </button>
               </div>
             )}
@@ -726,6 +726,17 @@ export const Profile: React.FC<ProfileProps> = ({
             <div className="space-y-6">
               <div className="rounded-2xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
                 <h3 className="mb-4 text-lg font-bold text-white">Intro</h3>
+                {user.uid?.startsWith('fake_') && (
+                  <div className="mb-4 rounded-xl bg-orange-600/10 p-3 border border-orange-600/20">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap size={14} className="text-orange-500" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-orange-500">AI Intellect</span>
+                    </div>
+                    <p className="text-[10px] text-neutral-400 leading-tight italic">
+                      This profile is powered by STYN's advanced AI Assistant (Powered by GPT).
+                    </p>
+                  </div>
+                )}
                 <p className="mb-4 text-sm text-neutral-400">
                   {user.bio || "No bio yet. Add one to tell people about yourself!"}
                 </p>
