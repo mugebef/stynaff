@@ -177,6 +177,15 @@ async function startServer() {
       res.json({ text: response.choices[0].message.content });
     } catch (err: any) {
       log(`OpenAI API Error: ${err.message}`);
+      
+      // Graceful fallback for Quota / Rate Limit errors
+      if (err.status === 429 || err.message?.includes('429') || err.message?.includes('quota')) {
+        return res.json({ 
+          text: "I'm feeling a bit overwhelmed with so much love right now, Darling. My heart needs a tiny second to catch its breath... say something sweet to me while I wait?",
+          isFallback: true
+        });
+      }
+
       res.status(500).json({ error: "AI processing failed", details: err.message });
     }
   });
@@ -193,19 +202,19 @@ async function startServer() {
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Suggest 3 short, friendly, and relevant one-tap dating app replies. Return ONLY a JSON array of 3 strings." },
+          { role: "system", content: "Suggest 3 short, friendly, and relevant one-tap dating app replies. Return ONLY a JSON object with a 'replies' key containing an array of 3 strings." },
           { role: "user", content: message }
         ],
         response_format: { type: "json_object" }
       });
 
-      const content = response.choices[0].message.content || '{"replies": []}';
+      const content = response.choices[0].message.content || '{"replies": ["Hey there!", "How are you?", "Nice profile!"]}';
       const parsed = JSON.parse(content);
-      // Ensure we return the array directly or in expected format
-      res.json(parsed.replies || parsed);
+      res.json(parsed.replies || ["Hey!", "Hi there", "Hello"]);
     } catch (err: any) {
       log(`OpenAI Replies Error: ${err.message}`);
-      res.status(500).json({ error: "AI processing failed" });
+      // Fallback replies
+      res.json(["Tell me more!", "That's interesting!", "I love that"]);
     }
   });
 
