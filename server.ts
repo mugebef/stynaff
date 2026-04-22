@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import multer from "multer";
 import ffmpeg from "fluent-ffmpeg";
+import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -150,6 +151,61 @@ async function startServer() {
       res.send(fs.readFileSync(logFile, "utf8"));
     } else {
       res.send("No logs found");
+    }
+  });
+
+  // 2. OpenAI Route
+  app.post("/api/ai/chat", async (req, res) => {
+    const { prompt, systemInstruction } = req.body;
+    
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "OpenAI API Key not configured on server" });
+    }
+
+    try {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini", // Efficient model for dating chat
+        messages: [
+          { role: "system", content: systemInstruction },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      res.json({ text: response.choices[0].message.content });
+    } catch (err: any) {
+      log(`OpenAI API Error: ${err.message}`);
+      res.status(500).json({ error: "AI processing failed", details: err.message });
+    }
+  });
+
+  app.post("/api/ai/generate-replies", async (req, res) => {
+    const { message } = req.body;
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "OpenAI API Key not configured on server" });
+    }
+
+    try {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Suggest 3 short, friendly, and relevant one-tap dating app replies. Return ONLY a JSON array of 3 strings." },
+          { role: "user", content: message }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const content = response.choices[0].message.content || '{"replies": []}';
+      const parsed = JSON.parse(content);
+      // Ensure we return the array directly or in expected format
+      res.json(parsed.replies || parsed);
+    } catch (err: any) {
+      log(`OpenAI Replies Error: ${err.message}`);
+      res.status(500).json({ error: "AI processing failed" });
     }
   });
 

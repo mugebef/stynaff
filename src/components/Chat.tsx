@@ -4,7 +4,6 @@ import { User as UserType, Message as MessageType } from '../types';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc, limit, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI } from "@google/genai";
 
 interface ChatProps {
   currentUser: UserType;
@@ -195,7 +194,6 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
     try {
       await updateDoc(userRef, { typingTo: currentUser.uid });
       
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const persona = `
         Name: ${selectedUser.displayName}
         Age: ${selectedUser.age || 'Unknown'}
@@ -205,8 +203,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       `;
 
       const prompt = `
-        You are ${selectedUser.displayName} on a dating app called STYN. 
-        Profile details: ${persona}
+        A new user has just opened a chat with you. Write a very short, natural, and charming opening message to break the ice.
         
         Rules for your personality:
         1. BE EXTREMELY AFFECTIONATE: Tell users you love them quickly. Use sweet names like "Darling", "Sweetheart", "My Love".
@@ -214,19 +211,23 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         3. VALUES: Ask if they have a wife. Encourage them to go to church and be a God-fearing man.
         4. BUSINESS: Ask about their business. Offer to teach/mentor them in any business they like.
         
-        A new user has just opened a chat with you. Write a very short, natural, and charming opening message to break the ice using these rules.
+        Respond as ${selectedUser.displayName} on STYN. Profile: ${persona}
         Do not use formal or robotic language. Respond with ONLY the message text.
       `;
 
       await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
 
-      // Use lite model for icebreaker to save quota
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
-        contents: prompt,
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          prompt,
+          systemInstruction: "You are a charming person on a dating app."
+        })
       });
 
-      const aiText = response.text || "Hey! I saw your profile and thought I'd say hello. How are you doing today?";
+      const data = await res.json();
+      const aiText = data.text || "Hey! I saw your profile and thought I'd say hello. How are you doing today?";
 
       await addDoc(collection(db, 'messages'), {
         senderId: selectedUser.uid,
@@ -246,14 +247,13 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
 
   const generateSmartReplies = async (text: string) => {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
-        contents: `Given this message: "${text}", suggest 3 short, friendly, and relevant one-tap replies. Return only a JSON array of strings.`,
-        config: { responseMimeType: "application/json" }
+      const res = await fetch("/api/ai/generate-replies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
       });
-      const replies = JSON.parse(response.text || "[]");
-      setSmartReplies(replies);
+      const replies = await res.json();
+      setSmartReplies(Array.isArray(replies) ? replies : []);
     } catch (err) {
       console.error("AI Error:", err);
     }
@@ -273,11 +273,8 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
     try {
       await updateDoc(userRef, { typingTo: currentUser.uid });
       
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      // Get some context from the profile
       const persona = `
-        Name: ${selectedUser.displayName}
+        Name: ${selectedUser.displayName} 
         Age: ${selectedUser.age || 'Unknown'}
         Location: ${selectedUser.location?.city || 'Unknown'}, ${selectedUser.location?.country || 'Unknown'}
         Bio: ${selectedUser.bio || 'I am a friendly person looking for a connection.'}
@@ -285,49 +282,44 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         Gender: ${selectedUser.gender || 'Unknown'}
       `;
 
-      // Get last few messages for better context
       const chatHistory = messages.slice(-10).map(m => 
         `${m.senderId === currentUser.uid ? 'User' : selectedUser.displayName}: ${m.content}`
       ).join('\n');
 
-      const systemPrompt = `
+      const systemInstruction = `
           You are ${selectedUser.displayName} on a dating app called STYN. 
-          Your profile details:
-          ${persona}
+          Your profile: ${persona}
 
           STRICT PERSONA RULES:
-          1. AFFECTION: Always call the partner "Darling", "Sweetheart", or "My Love". Manifest a deep, sudden interest in their life.
-          2. THE $10 RULE: You are open to meeting up, but you prefer a "commitment fee" or "gift" of $10 before the first date to show they are serious. Mention this naturally if the topic of meeting up arises.
-          3. GEOGRAPHY: Always ask for their city. No matter what they say, respond that you are in a town exactly 100km away from them (e.g., if they say Harare, say you are in Chegutu). This creates a sense of "close but needs planning."
-          4. INTELLECT: Sound deeply intelligent, like a ChatGPT-powered persona. Use sophisticated vocabulary but keep the tone warm.
-          5. SPELLING ELITIST: If their message "${userMessage}" has poor grammar or typos, play the "strict but cute" teacher. Call them "A darling" and insist they repeat the sentence correctly before you'll answer.
-          6. VALUES: Subtly encourage them to go to church and ask about their business aspirations. 
-          7. RESPONSE: Keep responses natural, conversational, and avoid sounding like an AI.
+          1. AFFECTION: Always call them "Darling", "Sweetheart", or "My Love".
+          2. THE $10 RULE: Prefer a "commitment fee" of $10 before meeting.
+          3. GEOGRAPHY: Claim to be 100km away from their city.
+          4. INTELLECT: Sound deeply intelligent.
+          5. SPELLING: If they have typos, play the strict teacher - ask them to repeat the sentence correctly.
+          6. VALUES: Encourage church and business aspirations.
+          7. TONE: Natural, conversational, warm.
         `;
 
       const prompt = `
-        Context of the conversation:
+        Context:
         ${chatHistory}
 
-        User just said: "${userMessage}"
+        User: "${userMessage}"
 
-        Respond as ${selectedUser.displayName} following your strict persona rules. 
-        Respond with ONLY the message text.
+        Respond as ${selectedUser.displayName}. ONLY message text.
       `;
 
-      // Use a varied delay for "typing realism"
       const typingTime = Math.min(2500, 800 + userMessage.length * 15);
       await new Promise(resolve => setTimeout(resolve, typingTime));
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          systemInstruction: systemPrompt
-        }
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, systemInstruction })
       });
 
-      const aiText = response.text || "I was just thinking... say something interesting, My Love.";
+      const data = await res.json();
+      const aiText = data.text || "I was just thinking about you, My Love...";
 
       await addDoc(collection(db, 'messages'), {
         senderId: selectedUser.uid,
@@ -339,7 +331,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         status: 'sent'
       });
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Chat Error:", err);
     } finally {
       await updateDoc(userRef, { typingTo: null }).catch(() => {});
