@@ -41,7 +41,7 @@ service cloud.firestore {
       allow create: if (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) 
                     || isAdmin() 
-                    || (userId.startsWith('fake_') && isSignedIn()); // Allow anyone signed in to update AI status (typing indicator)
+                    || (userId.matches('^fake_.*') && isSignedIn()); // Allow anyone signed in to update AI status (typing indicator)
       allow delete: if isAdmin();
     }
 
@@ -55,7 +55,7 @@ service cloud.firestore {
       // Allow create if sender is self OR if sender is a fake profile (AI response simulation)
       allow create: if isSignedIn() && (
         (request.auth.uid == incoming().senderId) ||
-        (incoming().senderId.startsWith('fake_'))
+        (incoming().senderId.matches('^fake_.*'))
       );
       
       // Allow update for status/read receipts

@@ -579,8 +579,12 @@ export default function App() {
         alert("Please enable popups for this site to sign in with Google.");
       } else if (error.code === 'auth/cancelled-popup-request') {
         // Normal dismissal, do nothing
+      } else if (error.code === 'auth/unauthorized-domain') {
+        alert("Google Login failed: This domain (styni.com) is not authorized in the Firebase Console. Please add it to your Firebase Authentication settings under 'Authorized Domains'.");
       } else {
-        alert("Google Login failed: " + error.message);
+        alert("Google Login failed: " + (error.message || "Unknown error occurred."));
+        // Suggest trying again or checking connection
+        console.log("Tip: If you are on a custom domain, ensure it is added to the Firebase Authorized Domains list.");
       }
     }
   };

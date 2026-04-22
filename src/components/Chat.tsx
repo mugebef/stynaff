@@ -98,6 +98,8 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
   const [otherUserTyping, setOtherUserTyping] = React.useState(false);
   const [smartReplies, setSmartReplies] = React.useState<string[]>([]);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const lastSmartReplyMsgId = React.useRef<string | null>(null);
+  const triggerInProgress = React.useRef<boolean>(false);
 
   // Filter out current user and apply search
   const chatUsers = users.filter(u => 
@@ -160,8 +162,12 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       // Generate smart replies if the last message is from the other user
       const lastMsg = msgs[msgs.length - 1];
       if (lastMsg && lastMsg.senderId === selectedUser.uid) {
-        generateSmartReplies(lastMsg.content);
+        if (lastSmartReplyMsgId.current !== lastMsg.id) {
+          lastSmartReplyMsgId.current = lastMsg.id;
+          generateSmartReplies(lastMsg.content);
+        }
       } else {
+        lastSmartReplyMsgId.current = null;
         setSmartReplies([]);
       }
     });
@@ -170,7 +176,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
   }, [selectedUser, currentUser.uid]);
 
   const triggerIcebreaker = async () => {
-    if (!selectedUser || !selectedUser.uid.startsWith('fake_')) return;
+    if (!selectedUser || !selectedUser.uid.startsWith('fake_') || triggerInProgress.current) return;
     
     // Check if we still have 0 messages to avoid double triggers
     const q = query(
@@ -184,6 +190,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
     const snap = await getDocs(q);
     if (!snap.empty) return;
 
+    triggerInProgress.current = true;
     const userRef = doc(db, 'users', selectedUser.uid);
     try {
       await updateDoc(userRef, { typingTo: currentUser.uid });
@@ -213,8 +220,9 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
 
       await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
 
+      // Use lite model for icebreaker to save quota
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: prompt,
       });
 
@@ -240,7 +248,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: `Given this message: "${text}", suggest 3 short, friendly, and relevant one-tap replies. Return only a JSON array of strings.`,
         config: { responseMimeType: "application/json" }
       });
@@ -307,7 +315,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
 
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: prompt,
       });
 

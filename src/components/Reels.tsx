@@ -329,88 +329,90 @@ export const Reels: React.FC<ReelsProps> = ({
               {/* Overlay Gradient */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90"></div>
 
-              {/* Right Side Actions */}
-              <div className="absolute right-4 bottom-24 flex flex-col items-center gap-6 text-white">
-                {/* Author Avatar */}
-                <div className="relative mb-4">
-                  <div className="h-12 w-12 overflow-hidden rounded-full border-2 border-orange-600 bg-neutral-900 shadow-xl">
-                    {reel.authorPhoto ? <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" /> : <UserIcon className="m-2" />}
-                  </div>
-                  {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onFollow(reel.authorId);
-                      }}
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-orange-600 p-1 text-white shadow-lg hover:scale-110 transition-all"
-                    >
-                      <Plus size={12} strokeWidth={3} />
-                    </button>
-                  )}
-                </div>
+      {/* Right Side Actions */}
+      <div className="absolute right-3 bottom-20 flex flex-col items-center gap-3.5 text-white z-50">
+        {/* Author Avatar */}
+        <div className="relative mb-2">
+          <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-orange-600 bg-neutral-900 shadow-xl">
+            {reel.authorPhoto ? <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" /> : <UserIcon className="m-2" size={20} />}
+          </div>
+          {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onFollow(reel.authorId);
+              }}
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full bg-orange-600 p-0.5 text-white shadow-lg hover:scale-110 transition-all"
+            >
+              <Plus size={10} strokeWidth={3} />
+            </button>
+          )}
+        </div>
 
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleLikeWithFeedback(reel.id); }}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  <motion.div 
-                    animate={reel.likes.includes(currentUser.uid) ? { scale: [1, 1.4, 1] } : {}}
-                    whileTap={{ scale: 0.8 }}
-                    className={`rounded-full p-3 transition-all ${reel.likes.includes(currentUser.uid) ? 'text-orange-500' : 'text-white'}`}
-                  >
-                    <Heart size={32} className={reel.likes.includes(currentUser.uid) ? 'fill-current' : ''} />
-                  </motion.div>
-                  <span className="text-xs font-black drop-shadow-md">{reel.likes.length}</span>
-                </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); handleLikeWithFeedback(reel.id); }}
+          className="flex flex-col items-center gap-0.5 group"
+        >
+          <motion.div 
+            animate={reel.likes.includes(currentUser.uid) ? { scale: [1, 1.4, 1] } : {}}
+            whileTap={{ scale: 0.8 }}
+            className={`rounded-full p-2 transition-all ${reel.likes.includes(currentUser.uid) ? 'text-orange-500' : 'text-white'}`}
+          >
+            <Heart size={26} className={reel.likes.includes(currentUser.uid) ? 'fill-current' : ''} />
+          </motion.div>
+          <span className="text-[10px] font-black drop-shadow-md">{reel.likes.length}</span>
+        </button>
 
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowComments(reel.id);
-                  }}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  <div className="rounded-full p-3 text-white transition-all hover:text-orange-500">
-                    <MessageCircle size={32} className="fill-transparent" />
-                  </div>
-                  <span className="text-xs font-black drop-shadow-md">{reel.comments.length}</span>
-                </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowComments(reel.id);
+          }}
+          className="flex flex-col items-center gap-0.5 group"
+        >
+          <div className="rounded-full p-2 text-white transition-all hover:text-orange-500">
+            <MessageCircle size={26} className="fill-transparent" />
+          </div>
+          <span className="text-[10px] font-black drop-shadow-md">{reel.comments.length}</span>
+        </button>
 
-                <button className="flex flex-col items-center gap-1 group">
-                  <div className="rounded-full p-3 text-white transition-all hover:text-orange-500">
-                    <Bookmark size={32} className="fill-transparent" />
-                  </div>
-                  <span className="text-xs font-black drop-shadow-md">Save</span>
-                </button>
+        <button className="flex flex-col items-center gap-0.5 group">
+          <div className="rounded-full p-2 text-white transition-all hover:text-orange-500">
+            <Bookmark size={26} className="fill-transparent" />
+          </div>
+          <span className="text-[10px] font-black drop-shadow-md">Save</span>
+        </button>
 
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onShare(reel.id); }}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  <div className="rounded-full p-3 text-white transition-all hover:text-orange-500">
-                    <Share2 size={32} className="fill-transparent" />
-                  </div>
-                  <span className="text-xs font-black drop-shadow-md">{reel.shares || 0}</span>
-                </button>                <div className="flex flex-col items-center gap-1">
-                  <div className="rounded-full p-2 text-white">
-                    <Eye size={30} />
-                  </div>
-                  <span className="text-xs font-black drop-shadow-md">
-                    {reel.views > 999 ? (reel.views / 1000).toFixed(1) + 'K' : reel.views || 0}
-                  </span>
-                </div>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onShare(reel.id); }}
+          className="flex flex-col items-center gap-0.5 group"
+        >
+          <div className="rounded-full p-2 text-white transition-all hover:text-orange-500">
+            <Share2 size={26} className="fill-transparent" />
+          </div>
+          <span className="text-[10px] font-black drop-shadow-md">{reel.shares || 0}</span>
+        </button>
 
-                {/* Rotating Music Disc */}
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-                  className="mt-4 h-12 w-12 rounded-full border-4 border-neutral-900 bg-neutral-950 p-2 shadow-2xl"
-                >
-                  <div className="h-full w-full rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 flex items-center justify-center">
-                    <Music size={16} className="text-white" />
-                  </div>
-                </motion.div>
-              </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="rounded-full p-2 text-white">
+            <Eye size={24} />
+          </div>
+          <span className="text-[10px] font-black drop-shadow-md">
+            {reel.views > 999 ? (reel.views / 1000).toFixed(1) + 'K' : reel.views || 0}
+          </span>
+        </div>
+
+        {/* Rotating Music Disc */}
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+          className="mt-2 h-10 w-10 rounded-full border-4 border-neutral-900 bg-neutral-950 p-1.5 shadow-2xl"
+        >
+          <div className="h-full w-full rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 flex items-center justify-center">
+            <Music size={14} className="text-white" />
+          </div>
+        </motion.div>
+      </div>
 
               {/* Bottom Info */}
               <div className="absolute bottom-0 left-0 right-16 p-6 text-white">
