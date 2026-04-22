@@ -6,16 +6,29 @@ interface UploadReelProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (file: File, caption: string) => Promise<void>;
+  onUpdate?: (reelId: string, updates: { content: string }) => Promise<void>;
+  initialData?: { id: string; content: string };
 }
 
-export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUpload }) => {
+export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUpload, onUpdate, initialData }) => {
+  const isEditing = !!initialData;
   const [file, setFile] = React.useState<File | null>(null);
   const [preview, setPreview] = React.useState<string | null>(null);
-  const [caption, setCaption] = React.useState('');
+  const [caption, setCaption] = React.useState(initialData?.content || '');
   const [loading, setLoading] = React.useState(false);
   const [status, setStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (initialData) {
+      setCaption(initialData.content);
+    } else {
+      setCaption('');
+      setFile(null);
+      setPreview(null);
+    }
+  }, [initialData]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -39,11 +52,17 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    
+    if (!isEditing && !file) return;
 
     setLoading(true);
     try {
-      await onUpload(file, caption);
+      if (isEditing && onUpdate && initialData) {
+        await onUpdate(initialData.id, { content: caption });
+      } else if (file) {
+        await onUpload(file, caption);
+      }
+      
       setStatus('success');
       setErrorMessage(null);
       setTimeout(() => {
@@ -55,7 +74,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
       }, 2000);
     } catch (error: any) {
       setStatus('error');
-      setErrorMessage(error.message || 'Failed to upload reel.');
+      setErrorMessage(error.message || `Failed to ${isEditing ? 'update' : 'upload'} reel.`);
     } finally {
       setLoading(false);
     }
@@ -81,7 +100,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 p-6">
-              <h3 className="text-xl font-bold text-white">Upload Video</h3>
+              <h3 className="text-xl font-bold text-white">{isEditing ? 'Edit Post' : 'Upload Video'}</h3>
               <button 
                 onClick={onClose}
                 className="rounded-full p-2 text-neutral-500 hover:bg-neutral-800 hover:text-white transition-all"
@@ -93,39 +112,47 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
             <form onSubmit={handleSubmit} className="p-6">
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Video Preview/Upload Area */}
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`relative aspect-[9/16] cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all ${
-                    preview ? 'border-orange-600' : 'border-neutral-800 hover:border-orange-500 bg-neutral-950'
-                  }`}
-                >
-                  {preview ? (
-                    <video 
-                      src={preview} 
-                      className="h-full w-full object-cover"
-                      muted
-                      loop
-                      autoPlay
+                {!isEditing ? (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative aspect-[9/16] cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all ${
+                      preview ? 'border-orange-600' : 'border-neutral-800 hover:border-orange-500 bg-neutral-950'
+                    }`}
+                  >
+                    {preview ? (
+                      <video 
+                        src={preview} 
+                        className="h-full w-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                      />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                        <div className="rounded-full bg-orange-600/10 p-4 text-orange-500">
+                          <Upload size={32} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-white">Select Video</p>
+                          <p className="text-xs text-neutral-500">MP4, WebM or Ogg (Max 500MB)</p>
+                        </div>
+                      </div>
+                    )}
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="video/*" 
+                      onChange={handleFileChange}
+                      className="hidden"
                     />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                      <div className="rounded-full bg-orange-600/10 p-4 text-orange-500">
-                        <Upload size={32} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-white">Select Video</p>
-                        <p className="text-xs text-neutral-500">MP4, WebM or Ogg (Max 500MB)</p>
-                      </div>
-                    </div>
-                  )}
-                  <input 
-                    ref={fileInputRef}
-                    type="file" 
-                    accept="video/*" 
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-orange-600/10 p-6 border border-orange-600/20 h-full flex flex-col items-center justify-center text-center">
+                    <Video size={48} className="text-orange-500 mb-4" />
+                    <p className="text-sm font-bold text-white">Editing Metadata</p>
+                    <p className="text-xs text-neutral-500 mt-2">Video content cannot be changed. You are editing the caption.</p>
+                  </div>
+                )}
 
                 {/* Details Area */}
                 <div className="space-y-6">
@@ -154,7 +181,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                   {status === 'success' && (
                     <div className="flex items-center gap-2 rounded-xl bg-green-500/10 p-3 text-sm font-bold text-green-500 border border-green-500/20">
                       <CheckCircle2 size={18} />
-                      Reel uploaded successfully!
+                      {isEditing ? 'Reel updated successfully!' : 'Reel uploaded successfully!'}
                     </div>
                   )}
 
@@ -162,7 +189,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                     <div className="flex flex-col gap-1 rounded-xl bg-red-500/10 p-3 text-sm font-bold text-red-500 border border-red-500/20">
                       <div className="flex items-center gap-2">
                         <AlertCircle size={18} />
-                        Upload Failed
+                        {isEditing ? 'Update Failed' : 'Upload Failed'}
                       </div>
                       {errorMessage && (
                         <p className="text-[10px] font-normal opacity-80">{errorMessage}</p>
@@ -172,7 +199,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
 
                   <button
                     type="submit"
-                    disabled={!file || loading || status === 'success'}
+                    disabled={(!isEditing && !file) || loading || status === 'success'}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {loading ? (
@@ -180,7 +207,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
                     ) : (
                       <>
                         <Upload size={20} />
-                        Post Video
+                        {isEditing ? 'Update Post' : 'Post Video'}
                       </>
                     )}
                   </button>

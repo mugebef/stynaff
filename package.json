@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=1536' tsx watch server.ts",
-    "build": "NODE_OPTIONS='--max-old-space-size=1536' vite build",
+    "dev": "NODE_OPTIONS='--max-old-space-size=1024' tsx watch server.ts",
+    "build": "NODE_OPTIONS='--max-old-space-size=1024' vite build",
     "deploy": "npm run build && pm2 startOrRestart ecosystem.config.cjs --env production",
-    "start": "NODE_ENV=production NODE_OPTIONS='--max-old-space-size=1536' tsx server.ts",
+    "start": "NODE_ENV=production NODE_OPTIONS='--max-old-space-size=1024' tsx server.ts",
     "update": "git checkout package-lock.json && git pull && npm install && npm run deploy",
     "preview": "vite preview",
     "clean": "rm -rf dist",

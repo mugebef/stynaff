@@ -751,6 +751,21 @@ export default function App() {
     }
   };
 
+  const handleReelUpdate = async (reelId: string, updates: { content?: string }) => {
+    if (!user) return;
+    try {
+      const reelRef = doc(db, 'posts', reelId);
+      await updateDoc(reelRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+      alert('Reel updated successfully!');
+    } catch (error) {
+      console.error('Error updating reel:', error);
+      alert('Failed to update reel.');
+    }
+  };
+
   const handleMovieUpload = async (movieData: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File; price: number }) => {
     if (!user || user.role !== 'admin') return;
     setIsUploading(true);
@@ -790,6 +805,21 @@ export default function App() {
       alert(error instanceof Error ? error.message : 'Failed to upload movie');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleMovieUpdate = async (movieId: string, updates: { title?: string; description?: string; price?: number }) => {
+    if (!user || user.role !== 'admin') return;
+    try {
+      const movieRef = doc(db, 'movies', movieId);
+      await updateDoc(movieRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+      alert('Movie updated successfully!');
+    } catch (error) {
+      console.error('Error updating movie:', error);
+      alert('Failed to update movie.');
     }
   };
 
@@ -1349,6 +1379,7 @@ export default function App() {
             onLike={handleLike} 
             onComment={handleComment} 
             onUpload={handleReelUpload}
+            onUpdateReel={handleReelUpdate}
             onFollow={handleFollow}
             onShare={handleShare}
             onView={handleView}
@@ -1404,6 +1435,7 @@ export default function App() {
                       movies={movies} 
                       currentUser={user} 
                       onUpload={handleMovieUpload} 
+                      onUpdateMovie={handleMovieUpdate}
                       onPurchase={handlePurchaseMovie}
                       onDeposit={() => setActiveMenu('wallet')}
                     />

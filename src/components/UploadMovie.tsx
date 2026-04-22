@@ -7,23 +7,55 @@ interface UploadMovieProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (data: { title: string; description: string; movieFile: File; trailerFile?: File; thumbnailFile: File; price: number }) => Promise<void>;
+  onUpdate?: (movieId: string, updates: { title?: string; description?: string; price?: number }) => Promise<void>;
+  initialData?: { id: string; title: string; description: string; price: number };
 }
 
-export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpload }) => {
+export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpload, onUpdate, initialData }) => {
+  const isEditing = !!initialData;
   const [step, setStep] = React.useState(1);
   const [movieFile, setMovieFile] = React.useState<File | null>(null);
   const [trailerFile, setTrailerFile] = React.useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = React.useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = React.useState<string | null>(null);
   const [isCropping, setIsCropping] = React.useState(false);
-  const [title, setTitle] = React.useState('');
-  const [description, setDescription] = React.useState('');
-  const [price, setPrice] = React.useState(50);
+  const [title, setTitle] = React.useState(initialData?.title || '');
+  const [description, setDescription] = React.useState(initialData?.description || '');
+  const [price, setPrice] = React.useState(initialData?.price || 50);
   const [loading, setLoading] = React.useState(false);
   const [status, setStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
 
+  React.useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title);
+      setDescription(initialData.description);
+      setPrice(initialData.price);
+    } else {
+      resetForm();
+    }
+  }, [initialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isEditing) {
+      if (!title || !onUpdate || !initialData) return;
+      setLoading(true);
+      try {
+        await onUpdate(initialData.id, { title, description, price });
+        setStatus('success');
+        setTimeout(() => {
+          onClose();
+          resetForm();
+        }, 2000);
+      } catch (error) {
+        setStatus('error');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!movieFile || !thumbnailFile || !title) return;
 
     if (movieFile.size > 500 * 1024 * 1024) {
@@ -82,12 +114,14 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 p-8">
               <div>
-                <h3 className="text-2xl font-black tracking-tight text-white">Upload Movie</h3>
-                <p className="text-sm text-neutral-400">Step {step} of 4: {
-                  step === 1 ? 'Basic Info' : 
-                  step === 2 ? 'Media Assets' : 
-                  step === 3 ? 'Full Movie' : 'Pricing & Publish'
-                }</p>
+                <h3 className="text-2xl font-black tracking-tight text-white">{isEditing ? 'Edit Movie' : 'Upload Movie'}</h3>
+                {!isEditing && (
+                  <p className="text-sm text-neutral-400">Step {step} of 4: {
+                    step === 1 ? 'Basic Info' : 
+                    step === 2 ? 'Media Assets' : 
+                    step === 3 ? 'Full Movie' : 'Pricing & Publish'
+                  }</p>
+                )}
               </div>
               <button 
                 onClick={onClose}
@@ -140,15 +174,17 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
               </AnimatePresence>
 
               {/* Progress Bar */}
-              <div className="mb-8 flex gap-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
-                ))}
-              </div>
+              {!isEditing && (
+                <div className="mb-8 flex gap-2">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
+                  ))}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-8">
                 <AnimatePresence mode="wait">
-                  {step === 1 && (
+                  {(step === 1 || isEditing) && (
                     <motion.div
                       key="step1"
                       initial={{ opacity: 0, x: 20 }}
@@ -176,11 +212,52 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                           className="h-32 w-full resize-none rounded-2xl border border-white/5 bg-neutral-950 p-5 text-sm font-medium text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
                         />
                       </div>
-                      <button type="button" onClick={nextStep} disabled={!title} className="w-full rounded-2xl bg-orange-600 py-4 font-bold text-white disabled:opacity-50">Next Step</button>
+
+                      {isEditing && (
+                        <div>
+                          <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Access Fee (Points)</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              required
+                              value={price}
+                              onChange={(e) => setPrice(Number(e.target.value))}
+                              className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
+                            />
+                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-500">POINTS</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {isEditing && status === 'success' && (
+                        <div className="flex items-center gap-2 rounded-2xl bg-green-500/10 p-4 text-sm font-bold text-green-500">
+                          <CheckCircle2 size={20} />
+                          Movie updated successfully!
+                        </div>
+                      )}
+
+                      {isEditing && status === 'error' && (
+                        <div className="flex items-center gap-2 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500">
+                          <AlertCircle size={20} />
+                          Failed to update movie.
+                        </div>
+                      )}
+
+                      {!isEditing ? (
+                        <button type="button" onClick={nextStep} disabled={!title} className="w-full rounded-2xl bg-orange-600 py-4 font-bold text-white disabled:opacity-50 text-sm font-black uppercase tracking-widest">Next Step</button>
+                      ) : (
+                        <button 
+                          type="submit" 
+                          disabled={!title || loading || status === 'success'} 
+                          className="w-full rounded-2xl bg-orange-600 py-4 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {loading ? <Loader2 className="animate-spin mx-auto" size={24} /> : 'Update Movie'}
+                        </button>
+                      )}
                     </motion.div>
                   )}
 
-                  {step === 2 && (
+                  {step === 2 && !isEditing && (
                     <motion.div
                       key="step2"
                       initial={{ opacity: 0, x: 20 }}
@@ -269,7 +346,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                     </motion.div>
                   )}
 
-                  {step === 3 && (
+                  {step === 3 && !isEditing && (
                     <motion.div
                       key="step3"
                       initial={{ opacity: 0, x: 20 }}
@@ -304,7 +381,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                     </motion.div>
                   )}
 
-                  {step === 4 && (
+                  {step === 4 && !isEditing && (
                     <motion.div
                       key="step4"
                       initial={{ opacity: 0, x: 20 }}

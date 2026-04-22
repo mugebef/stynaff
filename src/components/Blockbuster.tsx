@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle, Info } from 'lucide-react';
+import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle, Info, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadMovie } from './UploadMovie';
 import { MoviePlayer } from './MoviePlayer';
@@ -9,12 +9,14 @@ interface BlockbusterProps {
   movies: any[];
   currentUser: UserType | null;
   onUpload?: (data: any) => Promise<void>;
+  onUpdateMovie?: (movieId: string, updates: any) => Promise<void>;
   onPurchase?: (movieId: string, price: number) => Promise<void>;
   onDeposit?: () => void;
 }
 
-export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onPurchase, onDeposit }) => {
+export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onUpdateMovie, onPurchase, onDeposit }) => {
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
+  const [editingMovie, setEditingMovie] = React.useState<any | null>(null);
   const [selectedMovie, setSelectedMovie] = React.useState<any | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = React.useState(false);
   const [isTrailerMode, setIsTrailerMode] = React.useState(false);
@@ -203,10 +205,26 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                   New Release
                 </div>
                 
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="rounded-full bg-orange-600 p-3 text-white">
                     <Play size={20} fill="currentColor" />
                   </div>
+                  {isAdmin && (
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingMovie({
+                          id: movie.id,
+                          title: movie.title,
+                          description: movie.description,
+                          price: movie.price
+                        });
+                      }}
+                      className="rounded-full bg-neutral-800 p-3 text-white hover:bg-orange-600 transition-all shadow-xl"
+                    >
+                      <Pencil size={20} />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="absolute bottom-4 left-4 right-4">
@@ -258,10 +276,26 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                 
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20 backdrop-blur-[2px]">
+                <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20 backdrop-blur-[2px]">
                   <div className="rounded-full bg-orange-600 p-6 text-white shadow-xl shadow-orange-900/40 transform scale-75 group-hover:scale-100 transition-transform duration-500">
                     {hasAccess(movie) ? <Play size={32} fill="currentColor" /> : (movie.trailerUrl ? <PlayCircle size={32} /> : <Lock size={32} />)}
                   </div>
+                  {isAdmin && (
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingMovie({
+                          id: movie.id,
+                          title: movie.title,
+                          description: movie.description,
+                          price: movie.price
+                        });
+                      }}
+                      className="rounded-full bg-neutral-800 p-6 text-white shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-500 hover:bg-orange-600"
+                    >
+                      <Pencil size={32} />
+                    </div>
+                  )}
                 </div>
                 
                 {!hasAccess(movie) && (
@@ -320,11 +354,16 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
         </div>
       )}
 
-      {onUpload && (
+      {(onUpload || onUpdateMovie) && (
         <UploadMovie 
-          isOpen={isUploadOpen} 
-          onClose={() => setIsUploadOpen(false)} 
-          onUpload={onUpload} 
+          isOpen={isUploadOpen || !!editingMovie} 
+          onClose={() => {
+            setIsUploadOpen(false);
+            setEditingMovie(null);
+          }} 
+          onUpload={onUpload || (async () => {})}
+          onUpdate={onUpdateMovie}
+          initialData={editingMovie || undefined}
         />
       )}
 

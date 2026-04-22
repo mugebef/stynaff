@@ -11,6 +11,7 @@ interface ReelsProps {
   onLike: (postId: string) => void;
   onComment: (postId: string, content: string) => void;
   onUpload: (file: File, caption: string) => Promise<void>;
+  onUpdateReel?: (reelId: string, updates: { content: string }) => Promise<void>;
   onFollow: (uid: string) => void;
   onShare: (postId: string) => void;
   onView?: (postId: string) => void;
@@ -25,6 +26,7 @@ export const Reels: React.FC<ReelsProps> = ({
   onLike, 
   onComment, 
   onUpload,
+  onUpdateReel,
   onFollow,
   onShare,
   onView,
@@ -34,6 +36,8 @@ export const Reels: React.FC<ReelsProps> = ({
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showSearch, setShowSearch] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [showMoreMenu, setShowMoreMenu] = React.useState<string | null>(null);
+  const [editingReel, setEditingReel] = React.useState<{ id: string; content: string } | null>(null);
   
   // Recommendation & Filtering Logic
   const reels = React.useMemo(() => {
@@ -393,6 +397,38 @@ export const Reels: React.FC<ReelsProps> = ({
           <span className="text-[10px] font-black drop-shadow-md">{reel.shares || 0}</span>
         </button>
 
+        {reel.authorId === currentUser.uid && (
+          <div className="relative">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowMoreMenu(showMoreMenu === reel.id ? null : reel.id); }}
+              className="rounded-full p-2 text-white hover:text-orange-500 transition-all"
+            >
+              <MoreVertical size={26} />
+            </button>
+            <AnimatePresence>
+              {showMoreMenu === reel.id && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                  className="absolute right-full mr-2 top-0 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl min-w-[120px]"
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingReel({ id: reel.id, content: reel.content });
+                      setShowMoreMenu(null);
+                    }}
+                    className="w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all flex items-center gap-2"
+                  >
+                    <Plus size={14} className="rotate-45" /> Edit post 
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
         <div className="flex flex-col items-center gap-0.5">
           <div className="rounded-full p-2 text-white">
             <Eye size={24} />
@@ -524,9 +560,14 @@ export const Reels: React.FC<ReelsProps> = ({
       </div>
 
       <UploadReel 
-        isOpen={isUploadOpen} 
-        onClose={() => setIsUploadOpen(false)} 
+        isOpen={isUploadOpen || !!editingReel} 
+        onClose={() => {
+          setIsUploadOpen(false);
+          setEditingReel(null);
+        }} 
         onUpload={onUpload}
+        onUpdate={onUpdateReel}
+        initialData={editingReel || undefined}
       />
 
       {/* Comments Drawer */}
