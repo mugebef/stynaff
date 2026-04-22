@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X, LayoutDashboard, Video, Wallet as WalletIcon, Bell, Radio } from 'lucide-react';
+import { Globe, MessageSquare, Heart, Play, User, LogOut, Menu, X, LayoutDashboard, Video, Wallet as WalletIcon, Bell, Radio, Smartphone } from 'lucide-react';
 import { APP_NAME } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -78,6 +78,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               {menu.label && <span>{menu.label}</span>}
             </button>
           ))}
+          <a
+            href="/styn.apk"
+            download
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-orange-500 hover:bg-orange-600/10 transition-all border border-orange-600/20 ml-2"
+          >
+            <Smartphone size={20} />
+            <span>App</span>
+          </a>
         </div>
 
         {/* User Actions */}
@@ -311,6 +319,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                     Logout
                   </button>
                 )}
+                
+                <a
+                  href="/styn.apk"
+                  download
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="mt-2 flex items-center gap-3 rounded-xl px-4 py-3 text-base font-black uppercase tracking-widest text-orange-500 bg-orange-600/5 border border-orange-600/10 transition-all"
+                >
+                  <Smartphone size={20} />
+                  Download APK
+                </a>
               </div>
             </motion.div>
           </>

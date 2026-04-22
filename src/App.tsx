@@ -230,24 +230,24 @@ export default function App() {
 
   // Auth Listener
   React.useEffect(() => {
-    // Safety timer: if Firebase doesn't respond in 12 seconds, 
+    // Safety timer: if Firebase doesn't respond in 20 seconds, 
     // at least show the app (likely in logged-out state)
     const safetyTimer = setTimeout(() => {
       if (!isAuthReady) {
         console.warn("Auth initialization timed out. Proceeding...");
         setIsAuthReady(true);
       }
-    }, 12000);
+    }, 20000);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       clearTimeout(safetyTimer);
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         try {
-          // Use a shorter timeout for the primary check
+          // Use a more generous timeout for the primary check to avoid 'Timeout' errors on slow connections
           const userDoc = await Promise.race([
             getDoc(userDocRef),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 6000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore Fetch Timeout')), 20000))
           ]) as any;
 
           if (userDoc.exists()) {
