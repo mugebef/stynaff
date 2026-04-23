@@ -1,6 +1,5 @@
 import React from 'react';
-import { Globe, Heart, Shield, Zap } from 'lucide-react';
-import { APP_NAME, FOOTER_TEXT } from '../constants';
+import { FOOTER_TEXT } from '../constants';
 
 interface FooterProps {
   appConfig?: any;
@@ -14,17 +13,6 @@ export const Footer: React.FC<FooterProps> = ({ appConfig, onOpenPrivacy, onOpen
     <footer className="border-t border-white/5 bg-neutral-900 py-12">
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center justify-center space-y-6">
-          <div className="flex items-center gap-4">
-            {appConfig?.logoUrl ? (
-              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-neutral-800 p-3 shadow-2xl ring-2 ring-white/10 hover:scale-110 transition-transform duration-500">
-                <img src={appConfig.logoUrl} alt="Logo" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-              </div>
-            ) : null}
-            <span className="font-display text-6xl font-black tracking-tighter text-white uppercase italic drop-shadow-2xl">
-              {APP_NAME}
-            </span>
-          </div>
-
           <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
             <button onClick={onOpenAbout} className="hover:text-orange-500 transition-colors cursor-pointer">About Us</button>
             <span className="h-1 w-1 rounded-full bg-neutral-800"></span>

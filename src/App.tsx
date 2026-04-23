@@ -1353,7 +1353,11 @@ export default function App() {
         appConfig={appConfig}
       />
 
-      <main className={`mx-auto ${activeMenu === 'chat' ? 'max-w-none px-0 pt-[104px] md:pt-0' : 'max-w-7xl px-4 pt-[110px] pb-12 md:px-6 md:pt-24'}`}>
+      <main className={`mx-auto ${
+        activeMenu === 'chat' || activeMenu === 'reels' || activeMenu === 'live'
+          ? 'max-w-none px-0 h-[calc(100vh-72px)] md:h-[calc(100vh-84px)] mt-[72px] md:mt-[84px] overflow-hidden' 
+          : 'max-w-7xl px-4 pt-[110px] pb-12 md:px-6 md:pt-24 min-h-screen'
+      }`}>
         {activeMenu === 'profile' && profileUser ? (
           <Profile 
             user={profileUser}
@@ -1563,21 +1567,14 @@ export default function App() {
         )}
       </main>
 
-      <AnimatePresence>
-        {activeInfoPage && (
-          <InfoPages 
-            type={activeInfoPage} 
-            onClose={() => setActiveInfoPage(null)} 
-          />
-        )}
-      </AnimatePresence>
-
-      <Footer 
-        appConfig={appConfig} 
-        onOpenPrivacy={() => setActiveInfoPage('privacy')}
-        onOpenTerms={() => setActiveInfoPage('terms')}
-        onOpenAbout={() => setActiveInfoPage('about')}
-      />
+      {(activeMenu === 'feed' || activeMenu === 'profile' || activeMenu === 'dating' || activeMenu === 'blockbuster') && (
+        <Footer 
+          appConfig={appConfig} 
+          onOpenPrivacy={() => setActiveInfoPage('privacy')}
+          onOpenTerms={() => setActiveInfoPage('terms')}
+          onOpenAbout={() => setActiveInfoPage('about')}
+        />
+      )}
 
       <AnimatePresence>
         {activeInfoPage && (

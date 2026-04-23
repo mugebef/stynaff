@@ -121,7 +121,7 @@ export const Reels: React.FC<ReelsProps> = ({
     const options = {
       root: containerRef.current,
       rootMargin: '0px',
-      threshold: 0.8 
+      threshold: 0.6 
     };
 
     const observer = new IntersectionObserver((entries) => {
