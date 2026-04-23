@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle, Info, Pencil } from 'lucide-react';
+import { Play, Search, Filter, Star, Clock, User, Plus, Film, Lock, CreditCard, PlayCircle, Info, Pencil, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadMovie } from './UploadMovie';
 import { MoviePlayer } from './MoviePlayer';
@@ -10,11 +10,12 @@ interface BlockbusterProps {
   currentUser: UserType | null;
   onUpload?: (data: any) => Promise<void>;
   onUpdateMovie?: (movieId: string, updates: any) => Promise<void>;
+  onDeleteMovie?: (movieId: string) => Promise<void>;
   onPurchase?: (movieId: string, price: number) => Promise<void>;
   onDeposit?: () => void;
 }
 
-export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onUpdateMovie, onPurchase, onDeposit }) => {
+export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, onUpload, onUpdateMovie, onDeleteMovie, onPurchase, onDeposit }) => {
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [editingMovie, setEditingMovie] = React.useState<any | null>(null);
   const [selectedMovie, setSelectedMovie] = React.useState<any | null>(null);
@@ -212,19 +213,30 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                     <Play size={20} fill="currentColor" />
                   </div>
                   {isAdmin && (
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingMovie({
-                          id: movie.id,
-                          title: movie.title,
-                          description: movie.description,
-                          price: movie.price
-                        });
-                      }}
-                      className="rounded-full bg-neutral-800 p-3 text-white hover:bg-orange-600 transition-all shadow-xl"
-                    >
-                      <Pencil size={20} />
+                    <div className="flex gap-2">
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingMovie({
+                            id: movie.id,
+                            title: movie.title,
+                            description: movie.description,
+                            price: movie.price
+                          });
+                        }}
+                        className="rounded-full bg-neutral-800 p-3 text-white hover:bg-orange-600 transition-all shadow-xl"
+                      >
+                        <Pencil size={20} />
+                      </div>
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteMovie?.(movie.id);
+                        }}
+                        className="rounded-full bg-red-600 p-3 text-white hover:bg-red-700 transition-all shadow-xl"
+                      >
+                        <Trash2 size={20} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -283,19 +295,30 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                     {hasAccess(movie) ? <Play size={16} className="md:w-8 md:h-8" fill="currentColor" /> : (movie.trailerUrl ? <PlayCircle size={16} className="md:w-8 md:h-8" /> : <Lock size={16} className="md:w-8 md:h-8" />)}
                   </div>
                   {isAdmin && (
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingMovie({
-                          id: movie.id,
-                          title: movie.title,
-                          description: movie.description,
-                          price: movie.price
-                        });
-                      }}
-                      className="rounded-full bg-neutral-800 p-2.5 md:p-6 text-white shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-500 hover:bg-orange-600"
-                    >
-                      <Pencil size={16} className="md:w-8 md:h-8" />
+                    <div className="flex gap-2">
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingMovie({
+                            id: movie.id,
+                            title: movie.title,
+                            description: movie.description,
+                            price: movie.price
+                          });
+                        }}
+                        className="rounded-full bg-neutral-800 p-2.5 md:p-6 text-white shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-500 hover:bg-orange-600"
+                      >
+                        <Pencil size={16} className="md:w-8 md:h-8" />
+                      </div>
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteMovie?.(movie.id);
+                        }}
+                        className="rounded-full bg-red-600 p-2.5 md:p-6 text-white shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-500 hover:bg-red-700"
+                      >
+                        <Trash2 size={16} className="md:w-8 md:h-8" />
+                      </div>
                     </div>
                   )}
                 </div>

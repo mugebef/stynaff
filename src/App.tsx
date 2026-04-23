@@ -61,7 +61,8 @@ import {
   deleteDoc,
   increment,
   getDocFromServer,
-  where
+  where,
+  getDocs
 } from 'firebase/firestore';
 
 enum OperationType {
@@ -844,6 +845,29 @@ export default function App() {
     }
   };
 
+  const handleMovieDelete = async (movieId: string) => {
+    if (!user || user.role !== 'admin') return;
+    if (!window.confirm('Are you sure you want to delete this movie? This will also delete any trailers or reels connected to it.')) return;
+    
+    try {
+      // 1. Delete the movie document
+      const movieRef = doc(db, 'movies', movieId);
+      await deleteDoc(movieRef);
+      
+      // 2. Find and delete connected reels (posts)
+      const q = query(collection(db, 'posts'), where('movieId', '==', movieId));
+      const reelsSnap = await getDocs(q);
+      
+      const deletePromises = reelsSnap.docs.map(reelDoc => deleteDoc(doc(db, 'posts', reelDoc.id)));
+      await Promise.all(deletePromises);
+      
+      alert('Movie and connected reels deleted successfully.');
+    } catch (error) {
+      console.error('Error deleting movie:', error);
+      alert('Failed to delete movie.');
+    }
+  };
+
   const handlePurchaseMovie = async (movieId: string, price: number) => {
     if (!user) return;
     
@@ -1040,12 +1064,16 @@ export default function App() {
     const cleanId = String(postId).trim();
     const isTrailer = cleanId.startsWith('trailer-');
     const actualId = isTrailer ? cleanId.replace('trailer-', '') : cleanId;
-    const collectionName = isTrailer ? 'movies' : 'posts';
     
+    if (isTrailer) {
+      handleMovieDelete(actualId);
+      return;
+    }
+
     try {
-      await deleteDoc(doc(db, collectionName, actualId));
+      await deleteDoc(doc(db, 'posts', actualId));
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${actualId}`);
+      handleFirestoreError(error, OperationType.DELETE, `posts/${actualId}`);
     }
   };
 
@@ -1463,6 +1491,7 @@ export default function App() {
                       currentUser={user} 
                       onUpload={handleMovieUpload} 
                       onUpdateMovie={handleMovieUpdate}
+                      onDeleteMovie={handleMovieDelete}
                       onPurchase={handlePurchaseMovie}
                       onDeposit={() => setActiveMenu('wallet')}
                     />
