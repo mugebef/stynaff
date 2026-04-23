@@ -196,7 +196,7 @@ export const Reels: React.FC<ReelsProps> = ({
   };
 
   return (
-    <div className="relative h-[85vh] w-full max-w-md mx-auto">
+    <div className="relative h-[88vh] w-full max-w-[450px] mx-auto overflow-hidden sm:rounded-[32px] bg-black shadow-2xl">
       {/* Search Header */}
       <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
         <AnimatePresence>
@@ -252,7 +252,7 @@ export const Reels: React.FC<ReelsProps> = ({
       ) : (
         <div 
           ref={containerRef}
-          className="relative h-full w-full snap-y snap-mandatory overflow-y-scroll rounded-3xl bg-black shadow-2xl no-scrollbar border border-white/5"
+          className="relative h-full w-full snap-y snap-mandatory overflow-y-scroll bg-black no-scrollbar"
         >
           {reels.map((reel, index) => (
             <div 
@@ -339,38 +339,22 @@ export const Reels: React.FC<ReelsProps> = ({
               {/* Overlay Gradient */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90"></div>
 
-      {/* Right Side Actions */}
-      <div className="absolute right-3 bottom-20 flex flex-col items-center gap-3.5 text-white z-50">
-        {/* Author Avatar */}
-        <div className="relative mb-2">
-          <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-orange-600 bg-neutral-900 shadow-xl">
-            {reel.authorPhoto ? <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" /> : <UserIcon className="m-2" size={20} />}
-          </div>
-          {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onFollow(reel.authorId);
-              }}
-              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full bg-orange-600 p-0.5 text-white shadow-lg hover:scale-110 transition-all"
-            >
-              <Plus size={10} strokeWidth={3} />
-            </button>
-          )}
-        </div>
-
+      {/* Right Side Actions - Positioned vertically along the bottom right */}
+      <div className="absolute right-3 bottom-24 flex flex-col items-center gap-6 text-white z-50">
         <button 
           onClick={(e) => { e.stopPropagation(); handleLikeWithFeedback(reel.id); }}
-          className="flex flex-col items-center gap-0.5 group"
+          className="flex flex-col items-center gap-1 group"
         >
           <motion.div 
             animate={reel.likes.includes(currentUser.uid) ? { scale: [1, 1.4, 1] } : {}}
             whileTap={{ scale: 0.8 }}
-            className={`rounded-full p-2 transition-all ${reel.likes.includes(currentUser.uid) ? 'text-orange-500' : 'text-white'}`}
+            className={`transition-all ${reel.likes.includes(currentUser.uid) ? 'text-orange-500' : 'text-white'}`}
           >
-            <Heart size={26} className={reel.likes.includes(currentUser.uid) ? 'fill-current' : ''} />
+            <Heart size={32} className={reel.likes.includes(currentUser.uid) ? 'fill-current' : ''} />
           </motion.div>
-          <span className="text-[10px] font-black drop-shadow-md">{reel.likes.length}</span>
+          <span className="text-xs font-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            {reel.likes.length > 999 ? (reel.likes.length/1000).toFixed(1) + 'K' : reel.likes.length}
+          </span>
         </button>
 
         <button 
@@ -378,182 +362,156 @@ export const Reels: React.FC<ReelsProps> = ({
             e.stopPropagation();
             setShowComments(reel.id);
           }}
-          className="flex flex-col items-center gap-0.5 group"
+          className="flex flex-col items-center gap-1 group"
         >
-          <div className="rounded-full p-2 text-white transition-all hover:text-orange-500">
-            <MessageCircle size={26} className="fill-transparent" />
+          <div className="text-white transition-all hover:text-orange-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            <MessageCircle size={32} />
           </div>
-          <span className="text-[10px] font-black drop-shadow-md">{reel.comments.length}</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-0.5 group">
-          <div className="rounded-full p-2 text-white transition-all hover:text-orange-500">
-            <Bookmark size={26} className="fill-transparent" />
-          </div>
-          <span className="text-[10px] font-black drop-shadow-md">Save</span>
+          <span className="text-xs font-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            {reel.comments.length > 999 ? (reel.comments.length/1000).toFixed(1) + 'K' : reel.comments.length}
+          </span>
         </button>
 
         <button 
           onClick={(e) => { e.stopPropagation(); onShare(reel.id); }}
-          className="flex flex-col items-center gap-0.5 group"
+          className="flex flex-col items-center gap-1 group"
         >
-          <div className="rounded-full p-2 text-white transition-all hover:text-orange-500">
-            <Share2 size={26} className="fill-transparent" />
+          <div className="text-white transition-all hover:text-orange-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            <Share2 size={32} />
           </div>
-          <span className="text-[10px] font-black drop-shadow-md">{reel.shares || 0}</span>
+          <span className="text-xs font-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">{reel.shares || 0}</span>
         </button>
 
-        {(reel.authorId === currentUser.uid || currentUser.role === 'admin') && (
-          <div className="relative">
-            <button 
-              onClick={(e) => { e.stopPropagation(); setShowMoreMenu(showMoreMenu === reel.id ? null : reel.id); }}
-              className="rounded-full p-2 text-white hover:text-orange-500 transition-all"
-            >
-              <MoreVertical size={26} />
-            </button>
-            <AnimatePresence>
-              {showMoreMenu === reel.id && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, x: 20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                  className="absolute right-full mr-2 top-0 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl min-w-[140px]"
+        <button className="flex flex-col items-center gap-1 group">
+          <div className="text-white transition-all hover:text-orange-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            <Bookmark size={32} />
+          </div>
+          <span className="text-xs font-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Save</span>
+        </button>
+
+        <div className="relative">
+          <button 
+            onClick={(e) => { e.stopPropagation(); setShowMoreMenu(showMoreMenu === reel.id ? null : reel.id); }}
+            className="text-white hover:text-orange-500 transition-all drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+          >
+            <MoreVertical size={32} />
+          </button>
+          <AnimatePresence>
+            {showMoreMenu === reel.id && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                className="absolute right-full mr-2 bottom-0 bg-neutral-900/95 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl min-w-[140px]"
+              >
+                {reel.authorId === currentUser.uid && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingReel({ id: reel.id, content: reel.content });
+                      setShowMoreMenu(null);
+                    }}
+                    className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all border-b border-white/5"
+                  >
+                    Edit Post
+                  </button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onShare(reel.id); setShowMoreMenu(null); }}
+                  className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all border-b border-white/5"
                 >
-                  {reel.authorId === currentUser.uid && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingReel({ id: reel.id, content: reel.content });
-                        setShowMoreMenu(null);
-                      }}
-                      className="w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all flex items-center gap-2"
-                    >
-                      <Plus size={14} className="rotate-45" /> Edit post 
-                    </button>
-                  )}
-                  {currentUser.role === 'admin' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPinReel?.(reel.id, !reel.isPinned);
-                        setShowMoreMenu(null);
-                      }}
-                      className={`w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${reel.isPinned ? 'text-red-500 hover:bg-red-500/10' : 'text-white hover:bg-orange-600'}`}
-                    >
-                      <Shield size={14} /> {reel.isPinned ? 'Unpin Reel' : 'Pin Reel'}
-                    </button>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
-        <div className="flex flex-col items-center gap-0.5">
-          <div className="rounded-full p-2 text-white">
-            <Eye size={24} />
-          </div>
-          <span className="text-[10px] font-black drop-shadow-md">
-            {reel.views > 999 ? (reel.views / 1000).toFixed(1) + 'K' : reel.views || 0}
-          </span>
+                  Share Link
+                </button>
+                {currentUser.role === 'admin' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPinReel?.(reel.id, !reel.isPinned);
+                      setShowMoreMenu(null);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest transition-all ${reel.isPinned ? 'text-red-500 hover:bg-red-500/10' : 'text-white hover:bg-orange-600'}`}
+                  >
+                    {reel.isPinned ? 'Unpin Reel' : 'Pin Reel'}
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Rotating Music Disc */}
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-          className="mt-2 h-10 w-10 rounded-full border-4 border-neutral-900 bg-neutral-950 p-1.5 shadow-2xl"
-        >
-          <div className="h-full w-full rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 flex items-center justify-center">
-            <Music size={14} className="text-white" />
-          </div>
-        </motion.div>
       </div>
 
-              {/* Bottom Info */}
-              <div className="absolute bottom-0 left-0 right-16 p-6 text-white">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}
-                      className="h-10 w-10 overflow-hidden rounded-full border-2 border-white/50 shadow-lg cursor-pointer hover:scale-110 transition-transform"
-                    >
-                      {reel.authorPhoto ? (
-                        <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-neutral-800">
-                          <UserIcon size={20} className="text-neutral-500" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-lg font-black tracking-tight" onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}>@{reel.authorName.toLowerCase().replace(/\s/g, '')}</span>
-                    {reel.authorVerified && <CheckCircle size={16} className="fill-blue-500 text-white" />}
-                    {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onFollow(reel.authorId);
-                        }}
-                        className="rounded-md bg-orange-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md hover:bg-orange-700 transition-all"
-                      >
-                        Follow
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-sm line-clamp-2 font-medium leading-relaxed text-white/90 drop-shadow-sm">{reel.content}</p>
-                  
-                  {reel.isMovieTrailer && reel.authorId !== currentUser.uid && (
-                    <div className="flex flex-wrap gap-2">
-                      <motion.button
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (reel.movieId && onPurchaseMovie) {
-                            onPurchaseMovie(reel.movieId, reel.moviePrice || 0);
-                          }
-                        }}
-                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-orange-900/40 border border-orange-400/20"
-                      >
-                        <Film size={18} />
-                        Pay to see full movie
-                      </motion.button>
-                      
-                      {!currentUser.following?.includes(reel.authorId) && (
-                        <motion.button
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onFollow(reel.authorId);
-                          }}
-                          className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-6 py-3 text-sm font-black uppercase tracking-widest text-white border border-white/20 hover:bg-white/20 transition-all font-mono"
-                        >
-                          <Plus size={18} />
-                          Follow Studio
-                        </motion.button>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 overflow-hidden bg-black/20 backdrop-blur-sm rounded-full px-3 py-1 w-fit">
-                    <Music size={14} className="shrink-0 text-orange-500" />
-                    <div className="overflow-hidden whitespace-nowrap">
-                      <motion.p 
-                        animate={{ x: [0, -100, 0] }}
-                        transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
-                        className="text-[10px] font-black uppercase tracking-widest text-neutral-200"
-                      >
-                        Original Audio • {reel.authorName} • Trending Music • STYN
-                      </motion.p>
-                    </div>
-                  </div>
+      {/* Bottom Info - Instagram/TikTok Style */}
+      <div className="absolute bottom-0 left-0 right-14 p-4 md:p-6 text-white z-40 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div 
+              onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}
+              className="h-10 w-10 overflow-hidden rounded-full border border-white/50 shadow-lg cursor-pointer hover:scale-105 transition-transform"
+            >
+              {reel.authorPhoto ? (
+                <img src={reel.authorPhoto} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-neutral-800">
+                  <UserIcon size={20} className="text-neutral-500" />
                 </div>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-black tracking-tight drop-shadow-md hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}>
+                  {reel.authorName}
+                </span>
+                {reel.authorVerified && <CheckCircle size={14} className="fill-blue-500 text-white" />}
+                {reel.authorId !== currentUser.uid && !currentUser.following?.includes(reel.authorId) && (
+                  <>
+                    <span className="text-white/40 font-bold">•</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onFollow(reel.authorId); }}
+                      className="text-xs font-black text-white hover:text-orange-500 transition-all drop-shadow-md"
+                    >
+                      Follow
+                    </button>
+                  </>
+                )}
               </div>
+            </div>
+          </div>
+
+          <p className="text-sm font-medium leading-relaxed drop-shadow-md line-clamp-3">
+            {reel.content}
+          </p>
+          
+          <div className="flex items-center gap-2 group cursor-pointer w-fit">
+            <Music size={14} className="shrink-0 text-white animate-pulse" />
+            <div className="overflow-hidden w-40">
+              <motion.p 
+                animate={{ x: [0, -200] }}
+                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                className="text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap drop-shadow-md"
+              >
+                {reel.authorName} • Original Audio • STYN Music Africa
+              </motion.p>
+            </div>
+          </div>
+
+          {reel.isMovieTrailer && reel.authorId !== currentUser.uid && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (reel.movieId && onPurchaseMovie) {
+                  onPurchaseMovie(reel.movieId, reel.moviePrice || 0);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-600/90 backdrop-blur-md py-3 text-xs font-black uppercase tracking-widest text-white shadow-xl border border-orange-400/20"
+            >
+              <Film size={18} />
+              Full Movie Access
+            </motion.button>
+          )}
+        </div>
+      </div>
 
               {/* Mute Toggle Overlay */}
               <button 
