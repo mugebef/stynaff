@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X, Film, Search, Eye, Shield } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, Pause, X, Film, Search, Eye, Shield } from 'lucide-react';
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
@@ -16,6 +16,7 @@ interface ReelsProps {
   onShare: (postId: string) => void;
   onView?: (postId: string) => void;
   onPinReel?: (postId: string, isPinned: boolean) => Promise<void>;
+  onDelete?: (postId: string) => Promise<void>;
   onChat: (targetUser: User) => void;
   onPurchaseMovie?: (movieId: string, price: number) => Promise<void>;
 }
@@ -31,6 +32,7 @@ export const Reels: React.FC<ReelsProps> = ({
   onFollow,
   onShare,
   onPinReel,
+  onDelete,
   onView,
   onChat,
   onPurchaseMovie
@@ -103,7 +105,7 @@ export const Reels: React.FC<ReelsProps> = ({
     });
   }, [posts, searchQuery, currentUser]);
 
-  const [isMuted, setIsMuted] = React.useState(false);
+  const [isMuted, setIsMuted] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
@@ -268,20 +270,49 @@ export const Reels: React.FC<ReelsProps> = ({
                 loop
                 muted={isMuted}
                 playsInline
-                className="h-full w-full object-cover"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (videoRefs.current[index]) {
+                    if (videoRefs.current[index]?.paused) {
+                      videoRefs.current[index]?.play();
+                      setIsPlaying(true);
+                    } else {
+                      videoRefs.current[index]?.pause();
+                      setIsPlaying(false);
+                    }
+                  }
+                }}
+                className="h-full w-full object-cover cursor-pointer"
               />
 
-              {/* Play/Pause Indicator Overlay */}
+              {/* Mute/Play Overlays */}
               <AnimatePresence>
-                {!isPlaying && (
+                {isMuted && activeIndex === index && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMuted(false);
+                    }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-black/40 backdrop-blur-md rounded-full p-6 cursor-pointer border border-white/20"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                       <VolumeX size={32} className="text-white" />
+                       <span className="text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap">Tap for Sound</span>
+                    </div>
+                  </motion.div>
+                )}
+                {!isPlaying && activeIndex === index && (
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.5 }}
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
                   >
                     <div className="rounded-full bg-black/40 p-6 backdrop-blur-md">
-                      <Play size={48} className="text-white fill-current" />
+                      <Pause size={48} className="text-white fill-current" />
                     </div>
                   </motion.div>
                 )}
@@ -405,16 +436,30 @@ export const Reels: React.FC<ReelsProps> = ({
                 className="absolute right-full mr-2 bottom-0 bg-neutral-900/95 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl min-w-[140px]"
               >
                 {reel.authorId === currentUser.uid && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingReel({ id: reel.id, content: reel.content });
-                      setShowMoreMenu(null);
-                    }}
-                    className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all border-b border-white/5"
-                  >
-                    Edit Post
-                  </button>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingReel({ id: reel.id, content: reel.content });
+                        setShowMoreMenu(null);
+                      }}
+                      className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all border-b border-white/5"
+                    >
+                      Edit Post
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Delete this reel forever?')) {
+                          onDelete?.(reel.id);
+                        }
+                        setShowMoreMenu(null);
+                      }}
+                      className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-all border-b border-white/5"
+                    >
+                      Delete Reel
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); onShare(reel.id); setShowMoreMenu(null); }}

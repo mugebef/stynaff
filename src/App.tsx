@@ -491,10 +491,8 @@ export default function App() {
     })) as Post[];
 
     const combined = [...reelsFromPosts, ...trailersFromMovies].sort((a, b) => {
-      // Pinned reels first
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-
       const timeA = a.createdAt?.seconds || 0;
       const timeB = b.createdAt?.seconds || 0;
       return timeB - timeA;
@@ -1402,6 +1400,7 @@ export default function App() {
             onUpload={handleReelUpload}
             onUpdateReel={handleReelUpdate}
             onPinReel={handlePinReel}
+            onDelete={handleDelete}
             onFollow={handleFollow}
             onShare={handleShare}
             onView={handleView}
