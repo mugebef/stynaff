@@ -1,8 +1,8 @@
 import React from 'react';
-import { Radio, Users, MessageCircle, Heart, Share2, MoreHorizontal, Shield, Send, X, Camera, Mic, MicOff, CameraOff, MonitorStop } from 'lucide-react';
+import { Radio, Users, MessageCircle, Heart, Share2, MoreHorizontal, Shield, Send, X, Camera, Mic, MicOff, CameraOff, MonitorStop, Save, Trash2, Edit3, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, serverTimestamp, orderBy, limit, deleteDoc, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, serverTimestamp, orderBy, limit, deleteDoc, doc, updateDoc, setDoc, getDoc, getDocs, where } from 'firebase/firestore';
 
 export const Live: React.FC = () => {
   const [selectedStream, setSelectedStream] = React.useState<any>(null);
@@ -15,6 +15,12 @@ export const Live: React.FC = () => {
   const [newComment, setNewComment] = React.useState('');
   const [isCameraOn, setIsCameraOn] = React.useState(true);
   const [isMicOn, setIsMicOn] = React.useState(true);
+  const [showSaveModal, setShowSaveModal] = React.useState(false);
+  const [reactions, setReactions] = React.useState<{id: number, x: number}[]>([]);
+  const [isEditingTitle, setIsEditingTitle] = React.useState(false);
+  const [streamSize, setStreamSize] = React.useState('720p HD');
+  const [viewCount, setViewCount] = React.useState(0);
+  const [likeCount, setLikeCount] = React.useState(0);
   
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
@@ -132,6 +138,28 @@ export const Live: React.FC = () => {
 
       console.log("Stream document added successfully, ID:", streamDoc.id);
 
+      // Notify all users
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        usersSnap.docs.forEach(async (userDoc) => {
+          if (userDoc.id !== auth.currentUser?.uid) {
+            await addDoc(collection(db, 'notifications'), {
+              toId: userDoc.id,
+              fromId: auth.currentUser?.uid,
+              fromName: auth.currentUser?.displayName || 'Someone',
+              fromPhoto: auth.currentUser?.photoURL || '',
+              type: 'live',
+              text: 'is live now! Join the stream.',
+              isRead: false,
+              createdAt: serverTimestamp(),
+              streamId: streamDoc.id
+            });
+          }
+        });
+      } catch (err) {
+        console.error("Error notifying users:", err);
+      }
+      
       const newStream = {
         id: streamDoc.id,
         title: streamTitle,
@@ -151,13 +179,100 @@ export const Live: React.FC = () => {
     }
   };
 
+  // Listen to total likes/viewers for active stream
+  React.useEffect(() => {
+    if (!selectedStream?.id) return;
+    const unsub = onSnapshot(doc(db, 'live_streams', selectedStream.id), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setLikeCount(data.likes || 0);
+        setViewCount(data.viewers || 0);
+      }
+    });
+    return () => unsub();
+  }, [selectedStream?.id]);
+
+  const handleLike = async () => {
+    if (!selectedStream?.id) return;
+    
+    // Add floating heart
+    const id = Date.now();
+    setReactions(prev => [...prev, { id, x: Math.random() * 80 + 10 }]);
+    setTimeout(() => {
+      setReactions(prev => prev.filter(r => r.id !== id));
+    }, 2000);
+
+    try {
+      const streamRef = doc(db, 'live_streams', selectedStream.id);
+      const snap = await getDoc(streamRef);
+      if (snap.exists()) {
+        await updateDoc(streamRef, {
+          likes: (snap.data().likes || 0) + 1
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateStreamTitle = async () => {
+    if (!selectedStream?.id || !streamTitle) return;
+    try {
+      await updateDoc(doc(db, 'live_streams', selectedStream.id), {
+        title: streamTitle
+      });
+      setIsEditingTitle(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const saveToPosts = async () => {
+    if (!selectedStream) return;
+    try {
+      await addDoc(collection(db, 'posts'), {
+        authorId: auth.currentUser?.uid,
+        authorName: auth.currentUser?.displayName,
+        authorPhoto: auth.currentUser?.photoURL,
+        content: `Live Recap: ${selectedStream.title}`,
+        mediaUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=2059', // Placeholder
+        mediaType: 'video',
+        isReel: true,
+        likes: [],
+        comments: [],
+        createdAt: serverTimestamp()
+      });
+      alert("Stream saved to your Reels!");
+      setShowSaveModal(false);
+      setSelectedStream(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleEndStream = async () => {
     if (!selectedStream?.id) return;
     try {
       if (selectedStream.isMine) {
-        await deleteDoc(doc(db, 'live_streams', selectedStream.id));
+        setShowSaveModal(true);
         stopCamera();
+        // We delete the live document later after they choose to save or discard
+      } else {
+        setSelectedStream(null);
       }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const finalizeEndStream = async (save: boolean) => {
+    if (!selectedStream?.id) return;
+    try {
+      if (save) {
+        await saveToPosts();
+      }
+      await deleteDoc(doc(db, 'live_streams', selectedStream.id));
+      setShowSaveModal(false);
       setSelectedStream(null);
     } catch (err) {
       console.error(err);
@@ -203,6 +318,49 @@ export const Live: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-2 md:px-4 py-4 md:py-8">
+      {/* Save Stream Modal */}
+      <AnimatePresence>
+        {showSaveModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.9, y: 20 }} 
+              className="relative w-full max-w-md bg-neutral-900 rounded-[40px] p-8 border border-white/5 shadow-2xl text-center"
+            >
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-orange-600/20 text-orange-500">
+                <Radio size={40} className="animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-black text-white italic mb-2 uppercase tracking-tight">Stream Ended</h2>
+              <p className="text-neutral-500 font-bold mb-8 uppercase tracking-widest text-xs">Would you like to save this broadcast to your Reels?</p>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={() => finalizeEndStream(true)}
+                  className="w-full flex items-center justify-center gap-3 rounded-2xl bg-orange-600 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/20 active:scale-95"
+                >
+                  <Save size={18} />
+                  Save as Reel
+                </button>
+                <button 
+                  onClick={() => finalizeEndStream(false)}
+                  className="w-full flex items-center justify-center gap-3 rounded-2xl bg-neutral-800 py-4 text-sm font-black uppercase tracking-widest text-neutral-400 hover:bg-neutral-700 transition-all active:scale-95"
+                >
+                  <Trash2 size={18} />
+                  Discard
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Go Live Modal */}
       <AnimatePresence>
         {isGoingLive && (
@@ -271,6 +429,7 @@ export const Live: React.FC = () => {
                   autoPlay
                   muted
                   playsInline
+                  style={{ transform: 'scaleX(-1)' }}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -299,6 +458,9 @@ export const Live: React.FC = () => {
               </div>
               
               <div className="absolute right-4 top-4 md:right-6 md:top-6 flex flex-col gap-2 z-20">
+                <div className="mb-2 rounded-lg bg-black/50 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/5">
+                  {streamSize}
+                </div>
                 {selectedStream.isMine && (
                   <>
                     <button onClick={toggleCamera} className="rounded-full bg-black/50 p-2 md:p-3 text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all">
@@ -314,23 +476,80 @@ export const Live: React.FC = () => {
               <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-4 z-20">
                 <div className="flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold text-white backdrop-blur-md border border-white/10">
                   <Users size={14} />
-                  {selectedStream.viewers || 0}
+                  {viewCount}
                 </div>
+                <div className="flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold text-white backdrop-blur-md border border-white/10">
+                  <Heart size={14} className="text-red-500 fill-current" />
+                  {likeCount}
+                </div>
+              </div>
+
+              {/* Floating Reactions Overlay */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden z-30">
+                <AnimatePresence>
+                  {reactions.map((reaction) => (
+                    <motion.div
+                      key={reaction.id}
+                      initial={{ opacity: 1, y: 400, scale: 0 }}
+                      animate={{ opacity: 0, y: 0, scale: 1.5, x: Math.sin(reaction.id) * 20 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 2, ease: "easeOut" }}
+                      style={{ left: `${reaction.x}%` }}
+                      className="absolute bottom-0 text-red-500"
+                    >
+                      <Heart size={24} fill="currentColor" />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
             
             <div className="mt-4 md:mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter">{selectedStream.title}</h1>
+              <div className="flex-1">
+                {isEditingTitle && selectedStream.isMine ? (
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={streamTitle}
+                      onChange={(e) => setStreamTitle(e.target.value)}
+                      className="rounded-lg bg-neutral-900 border border-white/10 px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-orange-600 font-bold w-full"
+                      autoFocus
+                    />
+                    <button onClick={updateStreamTitle} className="rounded-lg bg-orange-600 p-2 text-white">
+                      <Save size={18} />
+                    </button>
+                    <button onClick={() => setIsEditingTitle(false)} className="rounded-lg bg-neutral-800 p-2 text-white">
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter">{selectedStream.title}</h1>
+                    {selectedStream.isMine && (
+                      <button onClick={() => setIsEditingTitle(true)} className="text-neutral-500 hover:text-white transition-colors">
+                        <Edit3 size={18} />
+                      </button>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs md:text-sm text-neutral-500 font-bold uppercase tracking-widest">Streaming in {selectedStream.category}</p>
               </div>
-              <button 
-                onClick={handleEndStream}
-                className={`flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-black uppercase tracking-widest text-white transition-all active:scale-95 ${selectedStream.isMine ? 'bg-red-600 hover:bg-red-700' : 'bg-neutral-800 hover:bg-neutral-700'}`}
-              >
-                {selectedStream.isMine ? <MonitorStop size={18} /> : <X size={18} />}
-                {selectedStream.isMine ? 'End Stream' : 'Leave'}
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleLike}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-6 py-3 text-sm font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all active:scale-95"
+                >
+                  <Heart size={18} />
+                  Like
+                </button>
+                <button 
+                  onClick={handleEndStream}
+                  className={`flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-black uppercase tracking-widest text-white transition-all active:scale-95 ${selectedStream.isMine ? 'bg-red-600 hover:bg-red-700' : 'bg-neutral-800 hover:bg-neutral-700'}`}
+                >
+                  {selectedStream.isMine ? <MonitorStop size={18} /> : <X size={18} />}
+                  {selectedStream.isMine ? 'End Stream' : 'Leave'}
+                </button>
+              </div>
             </div>
           </div>
 

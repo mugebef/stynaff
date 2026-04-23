@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, Pause, X, Film, Search, Eye, Shield } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, Pause, X, Film, Search, Eye, Shield, Zap } from 'lucide-react';
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
@@ -285,6 +285,14 @@ export const Reels: React.FC<ReelsProps> = ({
                 className="h-full w-full object-cover cursor-pointer"
               />
 
+              {/* Pin Indicator */}
+              {reel.isPinned && (
+                <div className="absolute top-6 left-6 z-20 flex items-center gap-2 rounded-full bg-orange-600 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg border border-white/20">
+                  <Zap size={12} fill="currentColor" />
+                  <span>Pinned on Top</span>
+                </div>
+              )}
+
               {/* Mute/Play Overlays */}
               <AnimatePresence>
                 {isMuted && activeIndex === index && (
@@ -296,11 +304,11 @@ export const Reels: React.FC<ReelsProps> = ({
                       e.stopPropagation();
                       setIsMuted(false);
                     }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-black/40 backdrop-blur-md rounded-full p-6 cursor-pointer border border-white/20"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-black/60 backdrop-blur-xl rounded-2xl p-4 cursor-pointer border border-white/10 shadow-2xl"
                   >
                     <div className="flex flex-col items-center gap-2">
-                       <VolumeX size={32} className="text-white" />
-                       <span className="text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap">Tap for Sound</span>
+                       <VolumeX size={24} className="text-white" />
+                       <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white whitespace-nowrap">Tap for Sound</span>
                     </div>
                   </motion.div>
                 )}

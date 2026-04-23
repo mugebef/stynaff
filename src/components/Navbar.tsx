@@ -139,6 +139,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                                     onMenuClick('profile');
                                   } else if (notif.type === 'like' || notif.type === 'comment') {
                                     onMenuClick('feed');
+                                  } else if (notif.type === 'live') {
+                                    onMenuClick('live');
                                   }
                                 }}
                                 className={`flex items-start gap-3 rounded-xl p-3 transition-all hover:bg-neutral-800 cursor-pointer ${!notif.read ? 'bg-orange-600/5' : ''}`}
@@ -152,6 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                                       notif.type === 'share' ? 'shared your post' :
                                       notif.type === 'friend_request' ? 'sent you a friend request' :
                                       notif.type === 'friend_accepted' ? 'accepted your friend request' :
+                                      notif.type === 'live' ? 'is live now! Join the stream.' :
                                       'interacted with you'
                                     }
                                   </p>

@@ -6,9 +6,10 @@ interface FooterProps {
   appConfig?: any;
   onOpenPrivacy?: () => void;
   onOpenTerms?: () => void;
+  onOpenAbout?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ appConfig, onOpenPrivacy, onOpenTerms }) => {
+export const Footer: React.FC<FooterProps> = ({ appConfig, onOpenPrivacy, onOpenTerms, onOpenAbout }) => {
   return (
     <footer className="border-t border-white/5 bg-neutral-900 py-12">
       <div className="mx-auto max-w-7xl px-6">
@@ -25,6 +26,8 @@ export const Footer: React.FC<FooterProps> = ({ appConfig, onOpenPrivacy, onOpen
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+            <button onClick={onOpenAbout} className="hover:text-orange-500 transition-colors cursor-pointer">About Us</button>
+            <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
             <button onClick={onOpenPrivacy} className="hover:text-orange-500 transition-colors cursor-pointer">Privacy Policy</button>
             <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
             <button onClick={onOpenTerms} className="hover:text-orange-500 transition-colors cursor-pointer">Terms & Conditions</button>
