@@ -97,15 +97,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onMenuClick(item.id)}
-              className={`flex w-full items-center gap-4 rounded-2xl px-5 py-3.5 text-sm font-black uppercase tracking-widest transition-all group ${
+              className={`flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-black uppercase tracking-widest transition-all group ${
                 activeMenu === item.id 
                   ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20' 
-                  : 'text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500'
+                  : 'text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 border border-white/5'
               }`}
             >
-              <div className={`transition-transform group-hover:scale-110 group-hover:rotate-6 ${activeMenu === item.id ? 'text-white' : ''}`}>
-                {item.icon}
-              </div>
               {item.label}
             </button>
           ))}

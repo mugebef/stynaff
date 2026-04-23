@@ -68,13 +68,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={menu.id}
                 onClick={() => onMenuClick(menu.id)}
-                className={`relative flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${
+                className={`relative flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${
                   activeMenu === menu.id
                     ? 'text-orange-500 bg-orange-500/5'
                     : 'text-neutral-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {menu.icon}
                 <span>{menu.label}</span>
                 {activeMenu === menu.id && (
                   <motion.div 
@@ -253,13 +252,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={menu.id}
               onClick={() => onMenuClick(menu.id)}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              className={`whitespace-nowrap rounded-full px-5 py-2 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center ${
                 activeMenu === menu.id
                   ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20'
                   : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-800'
               }`}
             >
-              {menu.icon}
               {menu.label && <span>{menu.label}</span>}
             </button>
           ))}
@@ -293,15 +291,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onMenuClick(menu.id);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-black uppercase tracking-widest transition-all ${
+                    className={`flex items-center justify-center rounded-xl px-4 py-4 text-base font-black uppercase tracking-widest transition-all ${
                       activeMenu === menu.id
                         ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20'
-                        : 'text-neutral-400 hover:bg-neutral-800'
+                        : 'text-neutral-400 hover:bg-neutral-800 border border-white/5'
                     }`}
                   >
-                    <span className={activeMenu === menu.id ? 'text-white' : 'text-neutral-500'}>
-                      {menu.icon}
-                    </span>
                     {menu.label && <span>{menu.label}</span>}
                   </button>
                 ))}
