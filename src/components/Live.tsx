@@ -7,6 +7,7 @@ import { collection, addDoc, onSnapshot, query, serverTimestamp, orderBy, limit,
 export const Live: React.FC = () => {
   const [selectedStream, setSelectedStream] = React.useState<any>(null);
   const [isGoingLive, setIsGoingLive] = React.useState(false);
+  const [isStarting, setIsStarting] = React.useState(false);
   const [streamTitle, setStreamTitle] = React.useState('');
   const [streamCategory, setStreamCategory] = React.useState('General');
   const [streams, setStreams] = React.useState<any[]>([]);
@@ -44,24 +45,57 @@ export const Live: React.FC = () => {
     return () => unsubscribe();
   }, [selectedStream?.id]);
 
+  // Ensure video stream is attached to video element when it becomes available
+  React.useEffect(() => {
+    if (selectedStream?.isMine && streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+      console.log("Attaching stream to videoRef...");
+      videoRef.current.srcObject = streamRef.current;
+    }
+  });
+
+  // Start camera when a stream is started by the user
+  React.useEffect(() => {
+    if (selectedStream?.isMine && !streamRef.current) {
+      console.log("Stream isMine and no streamRef, starting camera...");
+      startCamera();
+    }
+    // Cleanup when stream ends
+    return () => {
+      if (!selectedStream) {
+        stopCamera();
+      }
+    };
+  }, [selectedStream]);
+
   const startCamera = async () => {
     try {
+      console.log("Checking for mediaDevices...");
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("MediaDevices API not supported in this browser.");
+      }
+
+      console.log("requesting getUserMedia...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true
       });
+      console.log("getUserMedia success:", stream.id);
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+      } else {
+        console.warn("videoRef.current is null even after stream start attempt");
+        // We can try again in a short bit if needed, but the useEffect should handle the next render
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error accessing camera:", err);
-      alert("Please allow camera and microphone access to go live.");
+      alert(`Could not access camera/microphone: ${err.message}. Please ensure permissions are granted.`);
     }
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
+      console.log("Stopping camera tracks...");
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
@@ -69,9 +103,22 @@ export const Live: React.FC = () => {
 
   const handleStartStream = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!streamTitle || !auth.currentUser) return;
+    console.log("Attempting to start stream with title:", streamTitle);
+    
+    if (!streamTitle) {
+      alert("Please enter a stream title.");
+      return;
+    }
+
+    if (!auth.currentUser) {
+      alert("You must be signed in to go live.");
+      return;
+    }
+
+    setIsStarting(true);
     
     try {
+      console.log("Adding stream document to Firestore...");
       const streamDoc = await addDoc(collection(db, 'live_streams'), {
         title: streamTitle,
         category: streamCategory,
@@ -83,6 +130,8 @@ export const Live: React.FC = () => {
         createdAt: serverTimestamp(),
       });
 
+      console.log("Stream document added successfully, ID:", streamDoc.id);
+
       const newStream = {
         id: streamDoc.id,
         title: streamTitle,
@@ -93,9 +142,12 @@ export const Live: React.FC = () => {
       
       setIsGoingLive(false);
       setSelectedStream(newStream);
-      await startCamera();
-    } catch (err) {
-      console.error(err);
+      // No longer calling startCamera() here, useEffect will handle it
+    } catch (err: any) {
+      console.error("Critical error starting live stream:", err);
+      alert(`Could not start live stream: ${err.message || "Unknown error"}. Check console for details.`);
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -154,7 +206,7 @@ export const Live: React.FC = () => {
       {/* Go Live Modal */}
       <AnimatePresence>
         {isGoingLive && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
@@ -197,9 +249,10 @@ export const Live: React.FC = () => {
                 </div>
                 <button 
                   type="submit"
-                  className="w-full rounded-2xl bg-orange-600 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/20 active:scale-95"
+                  disabled={isStarting}
+                  className="w-full rounded-2xl bg-orange-600 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/20 active:scale-95 disabled:opacity-50 disabled:cursor-wait"
                 >
-                  Go Live Now
+                  {isStarting ? 'Setting up stream...' : 'Go Live Now'}
                 </button>
               </form>
             </motion.div>
