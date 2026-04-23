@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X, Film, Search, Eye } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Volume2, VolumeX, MoreVertical, Bookmark, Send, Plus, Video, Upload, Play, X, Film, Search, Eye, Shield } from 'lucide-react';
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
@@ -15,6 +15,7 @@ interface ReelsProps {
   onFollow: (uid: string) => void;
   onShare: (postId: string) => void;
   onView?: (postId: string) => void;
+  onPinReel?: (postId: string, isPinned: boolean) => Promise<void>;
   onChat: (targetUser: User) => void;
   onPurchaseMovie?: (movieId: string, price: number) => Promise<void>;
 }
@@ -29,6 +30,7 @@ export const Reels: React.FC<ReelsProps> = ({
   onUpdateReel,
   onFollow,
   onShare,
+  onPinReel,
   onView,
   onChat,
   onPurchaseMovie
@@ -61,6 +63,10 @@ export const Reels: React.FC<ReelsProps> = ({
     return [...list].sort((a, b) => {
       let scoreA = 0;
       let scoreB = 0;
+
+      // 0. Pinned (Absolute priority)
+      if (a.isPinned) scoreA += 1000000;
+      if (b.isPinned) scoreB += 1000000;
 
       // 1. Followed accounts (Strong boost)
       if (currentUser.following?.includes(a.authorId)) scoreA += 5000;
@@ -397,7 +403,7 @@ export const Reels: React.FC<ReelsProps> = ({
           <span className="text-[10px] font-black drop-shadow-md">{reel.shares || 0}</span>
         </button>
 
-        {reel.authorId === currentUser.uid && (
+        {(reel.authorId === currentUser.uid || currentUser.role === 'admin') && (
           <div className="relative">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowMoreMenu(showMoreMenu === reel.id ? null : reel.id); }}
@@ -411,18 +417,32 @@ export const Reels: React.FC<ReelsProps> = ({
                   initial={{ opacity: 0, scale: 0.9, x: 20 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                  className="absolute right-full mr-2 top-0 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl min-w-[120px]"
+                  className="absolute right-full mr-2 top-0 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl min-w-[140px]"
                 >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingReel({ id: reel.id, content: reel.content });
-                      setShowMoreMenu(null);
-                    }}
-                    className="w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all flex items-center gap-2"
-                  >
-                    <Plus size={14} className="rotate-45" /> Edit post 
-                  </button>
+                  {reel.authorId === currentUser.uid && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingReel({ id: reel.id, content: reel.content });
+                        setShowMoreMenu(null);
+                      }}
+                      className="w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-white hover:bg-orange-600 transition-all flex items-center gap-2"
+                    >
+                      <Plus size={14} className="rotate-45" /> Edit post 
+                    </button>
+                  )}
+                  {currentUser.role === 'admin' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPinReel?.(reel.id, !reel.isPinned);
+                        setShowMoreMenu(null);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${reel.isPinned ? 'text-red-500 hover:bg-red-500/10' : 'text-white hover:bg-orange-600'}`}
+                    >
+                      <Shield size={14} /> {reel.isPinned ? 'Unpin Reel' : 'Pin Reel'}
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

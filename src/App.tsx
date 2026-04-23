@@ -21,7 +21,7 @@ import { Footer } from './components/Footer';
 import { Upgrade } from './components/Upgrade';
 import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification } from './types';
-import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare, Plus } from 'lucide-react';
+import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare, Plus, X, Shield } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAILS } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -127,6 +127,8 @@ export default function App() {
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadMessage, setUploadMessage] = React.useState("");
   const [profileUser, setProfileUser] = React.useState<UserType | null>(null);
+  const [isPrivacyOpen, setIsPrivacyOpen] = React.useState(false);
+  const [isTermsOpen, setIsTermsOpen] = React.useState(false);
 
   const uploadWithProgress = (file: File, type: string = "file"): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -489,6 +491,10 @@ export default function App() {
     })) as Post[];
 
     const combined = [...reelsFromPosts, ...trailersFromMovies].sort((a, b) => {
+      // Pinned reels first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
       const timeA = a.createdAt?.seconds || 0;
       const timeB = b.createdAt?.seconds || 0;
       return timeB - timeA;
@@ -763,6 +769,21 @@ export default function App() {
     } catch (error) {
       console.error('Error updating reel:', error);
       alert('Failed to update reel.');
+    }
+  };
+
+  const handlePinReel = async (postId: string, isPinned: boolean) => {
+    if (user?.role !== 'admin') return;
+    try {
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        isPinned,
+        updatedAt: serverTimestamp()
+      });
+      alert(isPinned ? 'Reel pinned to top!' : 'Reel unpinned!');
+    } catch (error) {
+      console.error('Error pinning post:', error);
+      alert('Failed to pin reel.');
     }
   };
 
@@ -1380,6 +1401,7 @@ export default function App() {
             onComment={handleComment} 
             onUpload={handleReelUpload}
             onUpdateReel={handleReelUpdate}
+            onPinReel={handlePinReel}
             onFollow={handleFollow}
             onShare={handleShare}
             onView={handleView}
@@ -1540,7 +1562,11 @@ export default function App() {
         )}
       </main>
 
-      <Footer appConfig={appConfig} />
+      <Footer 
+        appConfig={appConfig} 
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
+        onOpenTerms={() => setIsTermsOpen(true)}
+      />
 
       <UploadReel 
         isOpen={isGlobalUploadOpen} 
@@ -1548,16 +1574,16 @@ export default function App() {
         onUpload={handleReelUpload}
       />
 
-      {/* Global Floating Action Button for Mobile Upload - Ensuring it's always accessible on mobile */}
-      {user && activeMenu !== 'chat' && (
+      {/* Global Floating Action Button for Mobile Upload - Only on Reels page */}
+      {user && activeMenu === 'reels' && (
         <motion.div 
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="fixed bottom-24 right-6 z-40 md:hidden"
+          className="fixed bottom-20 right-6 z-50 md:hidden"
         >
           <button
             onClick={() => setIsGlobalUploadOpen(true)}
-            className="flex h-14 items-center gap-2 rounded-full bg-orange-600 px-6 text-white shadow-[0_10px_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all ring-4 ring-black/20"
+            className="flex h-14 items-center gap-2 rounded-full bg-orange-600 px-6 text-white shadow-[0_10px_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all ring-4 ring-neutral-900"
             title="Upload Content"
           >
             <Plus size={24} strokeWidth={3} />
@@ -1565,6 +1591,56 @@ export default function App() {
           </button>
         </motion.div>
       )}
+
+      {/* Privacy Policy Modal */}
+      <AnimatePresence>
+        {isPrivacyOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsPrivacyOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-2xl bg-neutral-900 rounded-[32px] p-8 border border-white/5 overflow-y-auto max-h-[80vh]">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Privacy Policy</h2>
+                <button onClick={() => setIsPrivacyOpen(false)} className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white"><X size={24} /></button>
+              </div>
+              <div className="prose prose-invert max-w-none text-neutral-400 text-sm space-y-4">
+                <p>Welcome to Styn. Your privacy is critically important to us.</p>
+                <h4 className="text-white font-bold leading-tight uppercase tracking-widest text-xs">1. Data Collection</h4>
+                <p>We collect information you provide directly to us when you create an account, post content, or use our interactive features.</p>
+                <h4 className="text-white font-bold leading-tight uppercase tracking-widest text-xs">2. Data Usage</h4>
+                <p>We use the data to provide, maintain, and improve our services, including personalization and security.</p>
+                <h4 className="text-white font-bold leading-tight uppercase tracking-widest text-xs">3. Data Sharing</h4>
+                <p>We do not share your private data with third parties except as required by law or to provide the service.</p>
+                <p className="mt-8 text-[10px] font-bold text-neutral-600">Last updated: April 23, 2026</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Terms and Conditions Modal */}
+      <AnimatePresence>
+        {isTermsOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsTermsOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-2xl bg-neutral-900 rounded-[32px] p-8 border border-white/5 overflow-y-auto max-h-[80vh]">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Terms & Conditions</h2>
+                <button onClick={() => setIsTermsOpen(false)} className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white"><X size={24} /></button>
+              </div>
+              <div className="prose prose-invert max-w-none text-neutral-400 text-sm space-y-4">
+                <p>By using Styn, you agree to these terms.</p>
+                <h4 className="text-white font-bold leading-tight uppercase tracking-widest text-xs">1. Content Ownership</h4>
+                <p>You retain ownership of the content you post, but grant us a license to display it.</p>
+                <h4 className="text-white font-bold leading-tight uppercase tracking-widest text-xs">2. User Conduct</h4>
+                <p>You must not post illegal, harmful, or offensive content. We reserve the right to remove any content.</p>
+                <h4 className="text-white font-bold leading-tight uppercase tracking-widest text-xs">3. Payments</h4>
+                <p>Purchases of points or movie access are final and non-refundable.</p>
+                <p className="mt-8 text-[10px] font-bold text-neutral-600">Last updated: April 23, 2026</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Progress Indicator */}
       <AnimatePresence>

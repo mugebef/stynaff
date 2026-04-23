@@ -1,9 +1,14 @@
 import React from 'react';
-import { Radio, Users, MessageCircle, Heart, Share2, MoreHorizontal, Shield, Send } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Radio, Users, MessageCircle, Heart, Share2, MoreHorizontal, Shield, Send, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const Live: React.FC = () => {
   const [selectedStream, setSelectedStream] = React.useState<any>(null);
+  const [isGoingLive, setIsGoingLive] = React.useState(false);
+  const [streamTitle, setStreamTitle] = React.useState('');
+  const [streamCategory, setStreamCategory] = React.useState('General');
+  const [myStream, setMyStream] = React.useState<any>(null);
+  
   const [comments, setComments] = React.useState<any[]>([
     { id: 1, user: 'Kojo', text: 'This is fire! 🔥', time: '2m ago' },
     { id: 2, user: 'Amara', text: 'Love from Lagos! 🇳🇬', time: '1m ago' },
@@ -12,13 +17,86 @@ export const Live: React.FC = () => {
   const [newComment, setNewComment] = React.useState('');
 
   const liveStreams = [
+    ...(myStream ? [myStream] : []),
     { id: 1, title: 'Morning Vibes with DJ STYN', viewers: '1.2k', category: 'Music', thumbnail: 'https://picsum.photos/seed/music/800/600' },
     { id: 2, title: 'Tech Talk: Africa Future', viewers: '850', category: 'Tech', thumbnail: 'https://picsum.photos/seed/tech/800/600' },
     { id: 3, title: 'Cooking Traditional Dishes', viewers: '2.4k', category: 'Lifestyle', thumbnail: 'https://picsum.photos/seed/food/800/600' },
   ];
 
+  const handleStartStream = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!streamTitle) return;
+    const newStream = {
+      id: Date.now(),
+      title: streamTitle,
+      viewers: '0',
+      category: streamCategory,
+      thumbnail: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1000',
+      isMine: true
+    };
+    setMyStream(newStream);
+    setIsGoingLive(false);
+    setSelectedStream(newStream);
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      {/* Go Live Modal */}
+      <AnimatePresence>
+        {isGoingLive && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsGoingLive(false)} 
+              className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.9, y: 20 }} 
+              className="relative w-full max-w-md bg-neutral-900 rounded-[40px] p-8 border border-white/5 shadow-2xl"
+            >
+              <h2 className="text-3xl font-black text-white italic mb-6">Start Live Stream</h2>
+              <form onSubmit={handleStartStream} className="space-y-6">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Stream Title</label>
+                  <input 
+                    type="text" 
+                    value={streamTitle}
+                    onChange={(e) => setStreamTitle(e.target.value)}
+                    placeholder="Enter a catchy title..."
+                    className="w-full rounded-2xl bg-neutral-950 border border-white/5 px-6 py-4 text-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all font-bold"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Category</label>
+                  <select 
+                    value={streamCategory}
+                    onChange={(e) => setStreamCategory(e.target.value)}
+                    className="w-full rounded-2xl bg-neutral-950 border border-white/5 px-6 py-4 text-white focus:outline-none focus:ring-1 focus:ring-orange-600 transition-all font-bold appearance-none"
+                  >
+                    <option>General</option>
+                    <option>Music</option>
+                    <option>Tech</option>
+                    <option>Lifestyle</option>
+                    <option>Gaming</option>
+                  </select>
+                </div>
+                <button 
+                  type="submit"
+                  className="w-full rounded-2xl bg-orange-600 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/20"
+                >
+                  Go Live Now
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {selectedStream ? (
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Stream Player */}
@@ -50,10 +128,15 @@ export const Live: React.FC = () => {
                 <p className="text-neutral-500">Streaming in {selectedStream.category}</p>
               </div>
               <button 
-                onClick={() => setSelectedStream(null)}
-                className="rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-bold text-white hover:bg-neutral-800 transition-all"
+                onClick={() => {
+                  if (selectedStream.isMine) {
+                    setMyStream(null);
+                  }
+                  setSelectedStream(null);
+                }}
+                className={`rounded-2xl px-6 py-3 text-sm font-bold text-white transition-all ${selectedStream.isMine ? 'bg-red-600 hover:bg-red-700' : 'bg-neutral-900 hover:bg-neutral-800'}`}
               >
-                Back to Streams
+                {selectedStream.isMine ? 'End Stream' : 'Back to Streams'}
               </button>
             </div>
           </div>
@@ -114,7 +197,10 @@ export const Live: React.FC = () => {
               <h1 className="text-3xl font-black text-white">Live Streams</h1>
               <p className="text-neutral-500">Watch and interact with live content from across the continent.</p>
             </div>
-            <button className="flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-orange-900/20 transition-all hover:bg-orange-700 active:scale-95">
+            <button 
+              onClick={() => setIsGoingLive(true)}
+              className="flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-orange-900/20 transition-all hover:bg-orange-700 active:scale-95"
+            >
               <Radio size={18} />
               Go Live
             </button>

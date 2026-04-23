@@ -66,6 +66,7 @@ export interface Post {
   viewedBy?: string[];
   isSponsored?: boolean;
   isBoosted?: boolean;
+  isPinned?: boolean;
   boostBudget?: number;
   targetAudience?: string;
   hashtags?: string[];

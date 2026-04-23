@@ -29,55 +29,62 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
 
   const menus = [
-    { id: 'reels', label: '', icon: <Video size={20} /> },
-    { id: 'blockbuster', label: '', icon: <Play size={20} /> },
-    { id: 'dating', label: '', icon: <Heart size={20} /> },
-    { id: 'chat', label: 'Chat', icon: <MessageSquare size={20} /> },
-    { id: 'live', label: 'Live', icon: <Radio size={20} /> },
+    { id: 'reels', label: 'Reels', icon: <Video size={18} /> },
+    { id: 'blockbuster', label: 'Movies', icon: <Play size={18} /> },
+    { id: 'dating', label: 'Dating', icon: <Heart size={18} /> },
+    { id: 'chat', label: 'Chat', icon: <MessageSquare size={18} /> },
+    { id: 'live', label: 'Live', icon: <Radio size={18} /> },
   ];
 
   if (user?.role === 'admin') {
-    menus.splice(1, 0, { id: 'admin', label: 'Admin', icon: <LayoutDashboard size={20} /> });
+    menus.splice(1, 0, { id: 'admin', label: 'Admin', icon: <LayoutDashboard size={18} /> });
   }
 
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#0c0c0c]/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
+    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#0c0c0c]/90 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6">
         {/* Logo */}
-        <div className="flex flex-col items-start cursor-pointer group" onClick={() => onMenuClick('feed')}>
-          <div className="flex items-center gap-2">
-            {appConfig?.logoUrl ? (
-              <img 
-                src={appConfig.logoUrl} 
-                alt="Logo" 
-                className="h-16 md:h-20 w-auto object-contain group-hover:scale-110 transition-all drop-shadow-2xl" 
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <span className="font-serif text-5xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors drop-shadow-md">
-                Styn
-              </span>
-            )}
+        <div className="flex items-center gap-8">
+          <div className="flex flex-col items-start cursor-pointer group" onClick={() => onMenuClick('feed')}>
+            <div className="flex items-center gap-2">
+              {appConfig?.logoUrl ? (
+                <img 
+                  src={appConfig.logoUrl} 
+                  alt="Logo" 
+                  className="h-10 md:h-12 w-auto object-contain group-hover:scale-110 transition-all drop-shadow-2xl" 
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="font-serif text-3xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors drop-shadow-md">
+                  Styn
+                </span>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden items-center gap-1 md:flex">
-          {menus.map((menu) => (
-            <button
-              key={menu.id}
-              onClick={() => onMenuClick(menu.id)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
-                activeMenu === menu.id
-                  ? 'bg-orange-600/10 text-orange-500'
-                  : 'text-neutral-400 hover:bg-neutral-900 hover:text-orange-500'
-              }`}
-              title={menu.id.charAt(0).toUpperCase() + menu.id.slice(1)}
-            >
-              {menu.icon}
-              {menu.label && <span>{menu.label}</span>}
-            </button>
-          ))}
+          {/* Desktop Menu - Modern Navigation */}
+          <div className="hidden items-center gap-1 lg:flex">
+            {menus.map((menu) => (
+              <button
+                key={menu.id}
+                onClick={() => onMenuClick(menu.id)}
+                className={`relative flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${
+                  activeMenu === menu.id
+                    ? 'text-orange-500 bg-orange-500/5'
+                    : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {menu.icon}
+                <span>{menu.label}</span>
+                {activeMenu === menu.id && (
+                  <motion.div 
+                    layoutId="navbar-active"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 rounded-full"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* User Actions */}
