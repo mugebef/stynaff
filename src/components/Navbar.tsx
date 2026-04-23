@@ -41,8 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   }
 
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#0c0c0c]/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6">
+    <nav className="fixed top-0 left-0 right-0 z-[100] w-full border-b border-white/10 bg-[#0c0c0c] shadow-2xl transition-all">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
         {/* Logo */}
         <div className="flex items-center gap-8">
           <div className="flex flex-col items-start cursor-pointer group" onClick={() => onMenuClick('feed')}>
@@ -63,12 +63,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Menu - Modern Navigation */}
-          <div className="hidden items-center gap-1 lg:flex">
+          <div className="hidden items-center gap-0.5 md:flex">
             {menus.map((menu) => (
               <button
                 key={menu.id}
                 onClick={() => onMenuClick(menu.id)}
-                className={`relative flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-all ${
+                className={`relative flex items-center justify-center rounded-xl px-2 lg:px-4 py-2 text-[10px] lg:text-xs font-black uppercase tracking-tighter lg:tracking-widest transition-all ${
                   activeMenu === menu.id
                     ? 'text-orange-500 bg-orange-500/5'
                     : 'text-neutral-400 hover:text-white hover:bg-white/5'
@@ -246,16 +246,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Horizontal Mobile Category Menu */}
-      <div className="flex overflow-x-auto border-t border-white/5 bg-neutral-950 px-4 py-2 md:hidden no-scrollbar">
-        <div className="flex gap-4">
+      <div className="flex overflow-x-auto border-t border-white/5 bg-neutral-950 px-2 py-2 md:hidden no-scrollbar">
+        <div className="flex gap-1.5">
           {menus.map((menu) => (
             <button
               key={menu.id}
               onClick={() => onMenuClick(menu.id)}
-              className={`whitespace-nowrap rounded-full px-5 py-2 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center ${
+              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-tight transition-all flex items-center justify-center ${
                 activeMenu === menu.id
                   ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20'
-                  : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-800'
+                  : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-800 border border-white/5'
               }`}
             >
               {menu.label && <span>{menu.label}</span>}

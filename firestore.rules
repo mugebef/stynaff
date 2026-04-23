@@ -32,6 +32,25 @@ service cloud.firestore {
       return resource.data;
     }
 
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidLiveStream(data) {
+      return data.title is string && data.title.size() <= 100 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.streamerId == request.auth.uid &&
+             data.streamerName is string && data.streamerName.size() <= 100 &&
+             data.status in ['live', 'ended'] &&
+             data.createdAt == request.time;
+    }
+
+    function isValidLiveComment(data) {
+      return data.text is string && data.text.size() <= 500 &&
+             data.user is string && data.userId == request.auth.uid &&
+             data.createdAt == request.time;
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
@@ -41,30 +60,24 @@ service cloud.firestore {
       allow create: if (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) 
                     || isAdmin() 
-                    || (userId.matches('^fake_.*') && isSignedIn()); // Allow anyone signed in to update AI status (typing indicator)
+                    || (userId.matches('^fake_.*') && isSignedIn());
       allow delete: if isAdmin();
     }
 
     match /messages/{messageId} {
-      // Expanded read access to support collection queries
       allow read: if isSignedIn() && (
         (resource == null) || 
         (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid)
       );
-      
-      // Allow create if sender is self OR if sender is a fake profile (AI response simulation)
       allow create: if isSignedIn() && (
         (request.auth.uid == incoming().senderId) ||
         (incoming().senderId.matches('^fake_.*'))
       );
-      
-      // Allow update for status/read receipts
       allow update: if isSignedIn() && (
         (request.auth.uid == resource.data.receiverId) ||
         (request.auth.uid == resource.data.senderId) ||
         isAdmin()
       );
-      
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.senderId || isAdmin());
     }
 
@@ -79,6 +92,29 @@ service cloud.firestore {
         allow create: if isSignedIn();
         allow update: if isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin());
         allow delete: if isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin());
+      }
+    }
+
+    match /live_streams/{streamId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn();
+      
+      allow create: if isSignedIn() && isValidLiveStream(incoming()) && 
+                    incoming().keys().hasAll(['title', 'category', 'streamerId', 'streamerName', 'streamerPhoto', 'viewers', 'status', 'createdAt']) &&
+                    incoming().keys().size() == 8;
+
+      allow update: if (isOwner(existing().streamerId) || isAdmin()) &&
+                    (incoming().status != 'live' || existing().status == 'live') &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'viewers', 'streamerPhoto', 'title', 'category']) &&
+                    incoming().streamerId == existing().streamerId;
+      
+      allow delete: if isOwner(existing().streamerId) || isAdmin();
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && isValidLiveComment(incoming()) &&
+                      exists(/databases/$(database)/documents/live_streams/$(streamId));
+        allow delete: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/live_streams/$(streamId)).data.streamerId == request.auth.uid);
       }
     }
 

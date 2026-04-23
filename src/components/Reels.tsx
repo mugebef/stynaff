@@ -568,14 +568,14 @@ export const Reels: React.FC<ReelsProps> = ({
         </div>
       )}
 
-      {/* Upload Button - Hidden on mobile, visible on desktop within the reels container */}
-      <div className="hidden md:flex md:absolute md:bottom-10 md:right-10 md:z-50">
+      {/* Upload Button - Visible on all devices within the reels container */}
+      <div className="absolute bottom-6 right-6 z-50 md:bottom-10 md:right-10">
         <button
           onClick={() => setIsUploadOpen(true)}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:scale-110 transition-all active:scale-95 ring-4 ring-black/20"
+          className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:scale-110 transition-all active:scale-95 ring-4 ring-black/20"
           title="Upload Video"
         >
-          <Plus size={32} strokeWidth={3} />
+          <Plus size={24} strokeWidth={3} className="md:w-8 md:h-8" />
         </button>
       </div>
 

@@ -374,7 +374,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-140px)] w-full max-w-none overflow-hidden rounded-none md:rounded-[2.5rem] border-none md:border md:border-white/5 bg-[#0b141a] shadow-2xl ring-0 md:ring-1 md:ring-white/5">
+    <div className={`mx-auto flex h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] w-full max-w-none overflow-hidden rounded-none md:rounded-[2.5rem] border-none md:border md:border-white/5 bg-[#0b141a] shadow-2xl ring-0 md:ring-1 md:ring-white/5 ${selectedUser ? 'fixed inset-0 z-[110] md:relative md:inset-auto md:z-0' : ''}`}>
       {/* Sidebar - Chat List */}
       <div className={`w-full flex-col bg-[#111b21] md:flex md:w-80 lg:w-96 border-r border-white/5 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
         {/* Mobile-style Header */}
@@ -464,51 +464,44 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       </div>
 
       {/* Main Chat Area */}
-      <div className={`flex flex-1 flex-col bg-[#0b141a] relative ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex flex-1 flex-col bg-[#0b141a] relative ${!selectedUser ? 'hidden md:flex' : 'fixed inset-0 z-[110] md:relative md:inset-auto md:z-0 flex'}`}>
         {selectedUser ? (
           <>
-            {/* Chat Header */}
-            <div className="relative z-10 flex items-center justify-between bg-[#202c33] p-2.5 shadow-md text-[#aebac1] border-l border-white/5">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedUser(null)} className="md:hidden p-2 text-[#e9edef] hover:bg-white/5 rounded-full transition-colors mr-2">
+            {/* Chat Header - WhatsApp Style */}
+            <div className="relative z-20 flex items-center justify-between bg-[#202c33] px-3 py-2 shadow-md text-[#aebac1] border-l border-white/5 shrink-0">
+              <div className="flex items-center gap-2 overflow-hidden flex-1">
+                <button 
+                  onClick={() => setSelectedUser(null)} 
+                  className="md:hidden p-2 text-[#e9edef] hover:bg-neutral-800 rounded-full transition-colors shrink-0"
+                >
                   <ArrowLeft size={24} />
                 </button>
-                <div className="flex items-center gap-3 cursor-pointer">
-                  <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
+                <div className="flex items-center gap-3 cursor-pointer overflow-hidden flex-1">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800 border border-white/10 hidden sm:block">
                     {selectedUser.photoURL ? (
                       <img src={selectedUser.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-neutral-500">
-                        <User size={24} />
+                        <User size={20} />
                       </div>
                     )}
                   </div>
-                  <div className="overflow-hidden">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-[16px] text-[#e9edef] leading-tight truncate">{selectedUser.displayName}</h4>
-                      {selectedUser.uid.startsWith('fake_') && (
-                        <div className="flex items-center gap-1 rounded-full bg-orange-600/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-orange-500 border border-orange-500/20">
-                          <Sparkles size={10} />
-                          AI
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-[13px] text-[#8696a0] truncate">
-                      {(selectedUser.isOnline || selectedUser.uid.startsWith('fake_')) ? (
-                        <span className="text-[#00a884]">online</span>
-                      ) : (
-                        'last seen recently'
-                      )}
+                  <div className="flex flex-col min-w-0">
+                    <h3 className="truncate text-[15px] font-black text-[#e9edef] leading-tight">
+                      {selectedUser.displayName} 
+                      {selectedUser.uid.startsWith('fake_') && <CheckCircle size={10} className="inline ml-1 fill-[#53bdeb] text-white" />}
+                    </h3>
+                    <p className="text-[11px] font-bold text-[#00a884]">
+                      {(selectedUser.isOnline || selectedUser.uid.startsWith('fake_')) ? 'online' : 'offline'}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><Video size={20} /></button>
-                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><Phone size={20} /></button>
-                <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
-                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><Search size={20} /></button>
-                <button className="hover:bg-white/5 p-2 rounded-full text-[#aebac1] hover:text-white transition-all"><MoreVertical size={20} /></button>
+              <div className="flex items-center gap-4 shrink-0 px-2 lg:gap-6">
+                <button className="hover:text-white transition-all hidden sm:block"><Video size={20} /></button>
+                <button className="hover:text-white transition-all hidden sm:block"><Phone size={20} /></button>
+                <button className="hover:text-white transition-all"><Search size={20} /></button>
+                <button className="hover:text-white transition-all"><MoreVertical size={20} /></button>
               </div>
             </div>
             
@@ -598,9 +591,9 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             )}
 
             {/* Input Area */}
-            <div className="relative z-10 bg-[#202c33] p-3 md:p-4 flex items-center gap-3 border-t border-white/5">
-              <div className="flex-1 flex items-center gap-3 bg-[#2a3942] rounded-[2rem] px-5 py-2.5 shadow-inner">
-                <button type="button" className="text-[#8696a0] hover:text-white transition-all hover:scale-110"><Smile size={26} /></button>
+            <div className="relative z-10 bg-[#202c33] p-2 md:p-3 flex items-center gap-2 border-t border-white/5 pb-[env(safe-area-inset-bottom,8px)]">
+              <div className="flex-1 flex items-center gap-2 bg-[#2a3942] rounded-[1.5rem] px-2 md:px-3 py-1.5 shadow-inner">
+                <button type="button" className="text-[#8696a0] hover:text-white transition-all shrink-0 hidden sm:block"><Smile size={24} /></button>
                 <input
                   type="text"
                   value={newMessage}
@@ -610,28 +603,38 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                     setNewMessage(e.target.value);
                     setIsTyping(true);
                   }}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(e as any)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e as any);
+                    }
+                  }}
                   placeholder="Type a message"
-                  className="flex-1 bg-transparent py-1 text-[16px] text-[#e9edef] focus:outline-none placeholder:text-[#8696a0]/50"
+                  className="flex-1 bg-transparent py-1 md:py-1.5 text-sm md:text-[15px] text-[#e9edef] focus:outline-none placeholder:text-[#8696a0]/50"
+                  autoComplete="off"
                 />
-                <button type="button" className="text-[#8696a0] hover:text-white transition-all hover:scale-110"><Paperclip size={24} className="-rotate-45" /></button>
+                <button type="button" className="text-[#8696a0] hover:text-white transition-all shrink-0"><Paperclip size={20} md:size={22} className="-rotate-45" /></button>
                 {!newMessage.trim() && (
-                  <button type="button" className="text-[#8696a0] hover:text-white transition-all hover:scale-110"><ImageIcon size={24} /></button>
+                  <button type="button" className="text-[#8696a0] hover:text-white transition-all shrink-0"><ImageIcon size={20} md:size={22} /></button>
                 )}
               </div>
               
-              {newMessage.trim() ? (
-                <button 
-                  onClick={(e) => handleSendMessage(e)}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_10px_20px_rgba(234,88,12,0.3)] active:scale-90 transition-all shrink-0"
-                >
-                  <Send size={24} />
-                </button>
-              ) : (
-                <button className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_10px_20px_rgba(234,88,12,0.3)] active:scale-90 transition-all shrink-0">
-                  <Mic size={24} />
-                </button>
-              )}
+              <button 
+                onClick={(e) => {
+                  if (newMessage.trim()) {
+                    handleSendMessage(e);
+                  } else {
+                    // Logic for Mic could go here
+                  }
+                }}
+                className={`flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full transition-all shrink-0 active:scale-95 shadow-lg ${
+                  newMessage.trim() 
+                    ? 'bg-[#00a884] text-white' 
+                    : 'bg-[#00a884] text-white'
+                }`}
+              >
+                {newMessage.trim() ? <Send size={18} md:size={20} /> : <Mic size={18} md:size={20} />}
+              </button>
             </div>
           </>
         ) : (

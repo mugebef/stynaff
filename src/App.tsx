@@ -1190,7 +1190,7 @@ export default function App() {
 
   if (!isAuthReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white overflow-hidden relative">
+      <div className="flex min-h-screen items-center justify-center bg-[#0c0c0c] overflow-hidden relative">
         {/* Animated Water Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {[...Array(5)].map((_, i) => (
@@ -1301,7 +1301,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h1 className="text-4xl font-black text-neutral-900 tracking-tighter mb-2">
+            <h1 className="text-4xl font-black text-white tracking-tighter mb-2">
               {APP_NAME}
             </h1>
             
@@ -1353,7 +1353,7 @@ export default function App() {
         appConfig={appConfig}
       />
 
-      <main className={`mx-auto ${activeMenu === 'chat' ? 'max-w-none px-0 pt-16 md:pt-0' : 'max-w-7xl px-4 pt-20 pb-12 md:px-6'}`}>
+      <main className={`mx-auto ${activeMenu === 'chat' ? 'max-w-none px-0 pt-[104px] md:pt-0' : 'max-w-7xl px-4 pt-[110px] pb-12 md:px-6 md:pt-24'}`}>
         {activeMenu === 'profile' && profileUser ? (
           <Profile 
             user={profileUser}
@@ -1573,24 +1573,6 @@ export default function App() {
         onClose={() => setIsGlobalUploadOpen(false)} 
         onUpload={handleReelUpload}
       />
-
-      {/* Global Floating Action Button for Mobile Upload - Only on Reels page */}
-      {user && activeMenu === 'reels' && (
-        <motion.div 
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="fixed bottom-20 right-6 z-50 md:hidden"
-        >
-          <button
-            onClick={() => setIsGlobalUploadOpen(true)}
-            className="flex h-14 items-center gap-2 rounded-full bg-orange-600 px-6 text-white shadow-[0_10px_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all ring-4 ring-neutral-900"
-            title="Upload Content"
-          >
-            <Plus size={24} strokeWidth={3} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Upload</span>
-          </button>
-        </motion.div>
-      )}
 
       {/* Privacy Policy Modal */}
       <AnimatePresence>

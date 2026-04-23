@@ -57,28 +57,29 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 relative">
-      <div className="mb-12 flex items-center justify-between">
+    <div className="mx-auto max-w-7xl px-4 py-4 md:py-8 relative">
+      <div className="mb-6 md:mb-12 flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-bold tracking-tight text-white">Cinema</h2>
+          <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white">Cinema</h2>
         </div>
-        <div className="flex gap-4">
-          <button className="rounded-full bg-neutral-900 p-4 text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 transition-all border border-white/5">
-            <Search size={24} />
+        <div className="flex gap-2 md:gap-4">
+          <button className="rounded-full bg-neutral-900 p-2.5 md:p-4 text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 transition-all border border-white/5">
+            <Search size={20} className="md:w-6 md:h-6" />
           </button>
-          <button className="rounded-full bg-neutral-900 p-4 text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 transition-all border border-white/5">
-            <Filter size={24} />
+          <button className="rounded-full bg-neutral-900 p-2.5 md:p-4 text-neutral-500 hover:bg-orange-600/10 hover:text-orange-500 transition-all border border-white/5">
+            <Filter size={20} className="md:w-6 md:h-6" />
           </button>
         </div>
       </div>
 
       {/* Featured Movie */}
-      <div className="group relative mb-16 aspect-[21/9] w-full overflow-hidden rounded-[40px] bg-neutral-950 shadow-2xl border border-white/5">
+      <div className="group relative mb-8 md:mb-16 aspect-[16/9] md:aspect-[21/9] w-full overflow-hidden rounded-2xl md:rounded-[40px] bg-neutral-950 shadow-2xl border border-white/5">
         {featuredMovie?.trailerUrl && showTrailer ? (
           <video
             src={featuredMovie.trailerUrl}
             autoPlay
             loop
+            muted
             playsInline
             className="h-full w-full object-cover opacity-60 transition-all duration-1000 scale-105 group-hover:scale-100"
             onEnded={() => setShowTrailer(false)}
@@ -92,17 +93,17 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/80 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/80 via-transparent to-transparent hidden md:block"></div>
         
-        <div className="absolute bottom-0 left-0 w-full p-12 text-white z-10">
+        <div className="absolute bottom-0 left-0 w-full p-4 md:p-12 text-white z-10">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-4 text-sm font-black uppercase tracking-[0.3em] text-orange-500 mb-6"
+            className="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-orange-500 mb-2 md:mb-6"
           >
-            <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
+            <div className="h-1 w-8 md:w-12 bg-orange-600 rounded-full"></div>
             <div className="flex items-center gap-2">
-              <Star size={16} fill="currentColor" />
+              <Star size={12} className="md:w-4 md:h-4" fill="currentColor" />
               {featuredMovie ? 'Featured Movie' : 'Coming Soon'}
             </div>
           </motion.div>
@@ -111,7 +112,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-7xl font-black leading-none tracking-tighter uppercase italic"
+            className="text-2xl md:text-5xl lg:text-7xl font-black leading-tight md:leading-none tracking-tighter uppercase italic"
           >
             {featuredMovie?.title || "The African Dream"}
           </motion.h3>
@@ -120,7 +121,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mt-8 max-w-2xl text-lg leading-relaxed text-neutral-400 font-medium"
+            className="mt-2 md:mt-8 max-w-2xl text-xs md:text-lg leading-relaxed text-neutral-400 font-medium line-clamp-2 md:line-clamp-none"
           >
             {featuredMovie?.description || "An epic journey across the continent, exploring the beauty, culture, and resilience of the African spirit."}
           </motion.p>
@@ -129,7 +130,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-12 flex flex-wrap gap-6"
+            className="mt-4 md:mt-12 flex flex-wrap gap-2 md:gap-6"
           >
             {featuredMovie && (
               <>
@@ -141,46 +142,47 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                       handlePurchaseClick(featuredMovie);
                     }
                   }}
-                  className="group relative flex items-center gap-4 overflow-hidden rounded-full bg-orange-600 px-12 py-6 text-xl font-black text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
+                  className="group relative flex items-center gap-2 md:gap-4 overflow-hidden rounded-full bg-orange-600 px-4 py-2 md:px-12 md:py-6 text-xs md:text-xl font-black text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:bg-orange-700 transition-all active:scale-95"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                  <Play size={28} fill="currentColor" />
-                  {hasAccess(featuredMovie) ? 'Watch Full Movie' : `Unlock for ${featuredMovie.price} Points`}
+                  <Play size={16} className="md:w-7 md:h-7" fill="currentColor" />
+                  <span className="hidden md:inline">{hasAccess(featuredMovie) ? 'Watch Full Movie' : `Unlock for ${featuredMovie.price} Points`}</span>
+                  <span className="md:hidden">{hasAccess(featuredMovie) ? 'Watch' : `${featuredMovie.price} Pts`}</span>
                 </button>
                 
                 {featuredMovie.trailerUrl && (
                   <button 
                     onClick={() => openPlayer(featuredMovie, true)}
-                    className="flex items-center gap-4 rounded-full border border-white/10 bg-white/5 px-12 py-6 text-xl font-black text-white backdrop-blur-xl hover:bg-white/10 transition-all active:scale-95"
+                    className="flex items-center gap-2 md:gap-4 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:px-12 md:py-6 text-xs md:text-xl font-black text-white backdrop-blur-xl hover:bg-white/10 transition-all active:scale-95"
                   >
-                    <PlayCircle size={28} />
-                    Watch Trailer
+                    <PlayCircle size={16} className="md:w-7 md:h-7" />
+                    Trailer
                   </button>
                 )}
               </>
             )}
-            <button className="flex items-center gap-4 rounded-full border border-white/10 bg-white/5 px-12 py-6 text-xl font-black text-white backdrop-blur-xl hover:bg-white/10 transition-all active:scale-95">
-              <Info size={28} />
-              Details
+            <button className="flex items-center gap-2 md:gap-4 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:px-12 md:py-6 text-xs md:text-xl font-black text-white backdrop-blur-xl hover:bg-white/10 transition-all active:scale-95">
+              <Info size={16} className="md:w-7 md:h-7" />
+              Info
             </button>
           </motion.div>
         </div>
       </div>
       
       {/* Recently Added Section */}
-      <div className="mb-20">
-        <div className="flex items-center gap-4 mb-10">
+      <div className="mb-12 md:mb-20">
+        <div className="flex items-center gap-2 md:gap-4 mb-6 md:mb-10">
           <div className="h-2 w-2 rounded-full bg-orange-600 animate-pulse"></div>
-          <h3 className="text-2xl font-black uppercase tracking-widest text-white">Recently Added</h3>
+          <h3 className="text-lg md:text-2xl font-black uppercase tracking-widest text-white">Recently Added</h3>
           <div className="h-[1px] flex-1 bg-gradient-to-r from-orange-600/50 to-transparent"></div>
         </div>
         
-        <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar -mx-4 px-4">
+        <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-8 no-scrollbar -mx-4 px-4">
           {recentlyAdded.map((movie) => (
             <motion.div
               key={`recent-${movie.id}`}
-              whileHover={{ y: -10 }}
-              className="relative min-w-[280px] group cursor-pointer"
+              whileHover={{ y: -5 }}
+              className="relative min-w-[200px] md:min-w-[280px] group cursor-pointer"
               onClick={() => {
                 if (hasAccess(movie)) {
                   openPlayer(movie, false);
@@ -242,15 +244,15 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
       </div>
 
       {/* Movie Grid */}
-      <div className="mb-10 flex items-center gap-4">
-        <h3 className="text-2xl font-black uppercase tracking-widest text-white">Full Library</h3>
+      <div className="mb-6 md:mb-10 flex items-center gap-4">
+        <h3 className="text-xl md:text-2xl font-black uppercase tracking-widest text-white">Full Library</h3>
         <div className="h-[1px] flex-1 bg-neutral-800"></div>
       </div>
-      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:gap-10 grid-cols-2 lg:grid-cols-4">
         {movies.length === 0 ? (
           <div className="col-span-full py-20 text-center">
-            <Film size={48} className="mx-auto mb-4 text-neutral-700" />
-            <p className="text-xl font-bold text-neutral-500">No movies found.</p>
+            <Film size={40} className="mx-auto mb-4 text-neutral-700 md:w-12 md:h-12" />
+            <p className="text-lg md:text-xl font-bold text-neutral-500">No movies found.</p>
           </div>
         ) : (
           movies.map((movie) => (
@@ -267,7 +269,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 }
               }}
             >
-              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-3xl bg-neutral-900 shadow-xl transition-all hover:shadow-2xl border border-white/5 group-hover:border-orange-600/30">
+              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl md:rounded-3xl bg-neutral-900 shadow-xl transition-all hover:shadow-2xl border border-white/5 group-hover:border-orange-600/30">
                 <img
                   src={movie.thumbnailUrl}
                   alt={movie.title}
@@ -276,9 +278,9 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                 
-                <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20 backdrop-blur-[2px]">
-                  <div className="rounded-full bg-orange-600 p-6 text-white shadow-xl shadow-orange-900/40 transform scale-75 group-hover:scale-100 transition-transform duration-500">
-                    {hasAccess(movie) ? <Play size={32} fill="currentColor" /> : (movie.trailerUrl ? <PlayCircle size={32} /> : <Lock size={32} />)}
+                <div className="absolute inset-0 flex items-center justify-center gap-2 md:gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20 backdrop-blur-[2px]">
+                  <div className="rounded-full bg-orange-600 p-2.5 md:p-6 text-white shadow-xl shadow-orange-900/40 transform scale-75 group-hover:scale-100 transition-transform duration-500">
+                    {hasAccess(movie) ? <Play size={16} className="md:w-8 md:h-8" fill="currentColor" /> : (movie.trailerUrl ? <PlayCircle size={16} className="md:w-8 md:h-8" /> : <Lock size={16} className="md:w-8 md:h-8" />)}
                   </div>
                   {isAdmin && (
                     <div 
@@ -291,49 +293,49 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                           price: movie.price
                         });
                       }}
-                      className="rounded-full bg-neutral-800 p-6 text-white shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-500 hover:bg-orange-600"
+                      className="rounded-full bg-neutral-800 p-2.5 md:p-6 text-white shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-500 hover:bg-orange-600"
                     >
-                      <Pencil size={32} />
+                      <Pencil size={16} className="md:w-8 md:h-8" />
                     </div>
                   )}
                 </div>
                 
                 {!hasAccess(movie) && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-end p-6">
-                    <div className="w-full space-y-2">
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-2 md:p-6">
+                    <div className="w-full space-y-1 md:space-y-2">
                       {movie.trailerUrl && (
-                        <div className="flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10">
-                          <PlayCircle size={14} />
-                          Watch Trailer
+                        <div className="flex items-center justify-center gap-1 md:gap-2 rounded-lg md:rounded-xl bg-white/10 py-1 md:py-2 text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10">
+                          <PlayCircle size={10} className="md:w-3.5 md:h-3.5" />
+                          Trailer
                         </div>
                       )}
-                      <div className="flex items-center justify-center gap-2 rounded-xl bg-orange-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-2xl">
-                        <CreditCard size={14} />
-                        {movie.price} Points
+                      <div className="flex items-center justify-center gap-1 md:gap-2 rounded-lg md:rounded-xl bg-orange-600 py-1.5 md:py-3 text-[10px] md:text-xs font-black uppercase tracking-widest text-white shadow-2xl">
+                        <CreditCard size={10} className="md:w-3.5 md:h-3.5" />
+                        {movie.price} Pts
                       </div>
                     </div>
                   </div>
                 )}
-                <div className="absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 text-[10px] font-black text-white backdrop-blur-md border border-white/10 tracking-widest uppercase">
+                <div className="absolute right-2 top-2 md:right-4 md:top-4 rounded-full bg-black/50 px-2 py-0.5 md:px-3 md:py-1 text-[8px] md:text-[10px] font-black text-white backdrop-blur-md border border-white/10 tracking-widest uppercase">
                   {movie.price > 0 ? 'PREMIUM' : 'FREE'}
                 </div>
               </div>
-              <div className="mt-6">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors">{movie.title}</h4>
-                  <div className="flex items-center gap-1 text-sm font-bold text-orange-500">
-                    <Star size={14} fill="currentColor" />
+              <div className="mt-2 md:mt-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-2">
+                  <h4 className="text-[10px] md:text-xl font-bold text-white group-hover:text-orange-500 transition-colors truncate">{movie.title}</h4>
+                  <div className="flex items-center gap-1 text-[8px] md:text-sm font-bold text-orange-500 shrink-0">
+                    <Star size={8} className="md:w-3.5 md:h-3.5" fill="currentColor" />
                     {movie.rating || '0.0'}
                   </div>
                 </div>
-                <div className="mt-2 flex items-center gap-4 text-sm text-neutral-500">
-                  <div className="flex items-center gap-1">
-                    <Clock size={14} />
-                    {movie.duration || '2h 15m'}
+                <div className="mt-0.5 md:mt-2 flex items-center gap-1.5 md:gap-4 text-[8px] md:text-sm text-neutral-500">
+                  <div className="flex items-center gap-0.5 md:gap-1">
+                    <Clock size={8} className="md:w-3.5 md:h-3.5" />
+                    <span>{movie.duration || '2h 15m'}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <User size={14} />
-                    {movie.genre || 'Action'}
+                  <div className="flex items-center gap-0.5 md:gap-1">
+                    <Film size={8} className="md:w-3.5 md:h-3.5" />
+                    <span className="truncate">{movie.genre || 'Action'}</span>
                   </div>
                 </div>
               </div>
@@ -344,12 +346,12 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
 
       {/* Upload Button - Only for Admins */}
       {isAdmin && (
-        <div className="fixed bottom-10 right-10 z-50">
+        <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50">
           <button
             onClick={() => setIsUploadOpen(true)}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] hover:scale-110 transition-all active:scale-95 ring-4 ring-neutral-950"
+            className="flex h-12 w-12 md:h-16 md:w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] hover:scale-110 transition-all active:scale-95 ring-4 ring-neutral-950"
           >
-            <Plus size={32} strokeWidth={3} />
+            <Plus size={24} className="md:w-8 md:h-8" strokeWidth={3} />
           </button>
         </div>
       )}

@@ -255,7 +255,7 @@ export const Profile: React.FC<ProfileProps> = ({
         <div className="flex flex-col items-center md:flex-row md:items-end md:gap-8">
           {/* Profile Photo */}
           <div 
-            className="relative -mt-24 h-48 w-48 overflow-hidden rounded-[2.5rem] border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] md:-mt-32 md:h-56 md:w-56 group cursor-pointer"
+            className="relative -mt-16 h-32 w-32 md:-mt-32 md:h-56 md:w-56 overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border-4 md:border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] group cursor-pointer"
             onClick={() => !isEditing && setIsPhotoZoomed(true)}
           >
             {photoPreview || user.photoURL ? (
@@ -287,24 +287,24 @@ export const Profile: React.FC<ProfileProps> = ({
           </div>
 
           {/* Name & Actions */}
-          <div className="mt-6 flex flex-1 flex-col items-center text-center md:mb-6 md:items-start md:text-left">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-black text-white tracking-tighter uppercase">{user.displayName}</h1>
-              {user.isVerified && <CheckCircle size={24} className="fill-blue-500 text-white" />}
+          <div className="mt-4 flex flex-1 flex-col items-center text-center md:mt-6 md:mb-6 md:items-start md:text-left">
+            <div className="flex items-center gap-3 mb-1 md:mb-2">
+              <h1 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase">{user.displayName}</h1>
+              {user.isVerified && <CheckCircle size={20} md:size={24} className="fill-blue-500 text-white shrink-0" />}
             </div>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm font-black text-neutral-500 uppercase tracking-widest">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6 text-[10px] md:text-sm font-black text-neutral-500 uppercase tracking-widest leading-none">
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-[10px] text-neutral-600 mb-1">STYN ID</span>
+                <span className="text-[8px] md:text-[10px] text-neutral-600 mb-0.5 md:mb-1">STYN ID</span>
                 <span className="text-white tracking-tighter">#{user.uid.slice(0, 8)}</span>
               </div>
-              <div className="h-8 w-px bg-white/5 hidden md:block"></div>
+              <div className="h-6 w-px bg-white/5 hidden md:block"></div>
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-[10px] text-neutral-600 mb-1">Friends</span>
+                <span className="text-[8px] md:text-[10px] text-neutral-600 mb-0.5 md:mb-1">Friends</span>
                 <span className="text-white tracking-tighter">{user.friends?.length || 0}</span>
               </div>
-              <div className="h-8 w-px bg-white/5 hidden md:block"></div>
+              <div className="h-6 w-px bg-white/5 hidden md:block"></div>
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-[10px] text-neutral-600 mb-1">Followers</span>
+                <span className="text-[8px] md:text-[10px] text-neutral-600 mb-0.5 md:mb-1">Followers</span>
                 <span className="text-white tracking-tighter">{user.followers?.length || 0}</span>
               </div>
             </div>
@@ -398,11 +398,15 @@ export const Profile: React.FC<ProfileProps> = ({
                   </div>
                   <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-neutral-500">Joined</span>
-                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">8 July 2025</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">
+                      {user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : '8 July 2025'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-500">Last Login</span>
-                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">9 March 2026</span>
+                    <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-black text-neutral-400">
+                      {user.lastLoginAt ? new Date(user.lastLoginAt.toDate()).toLocaleDateString() : '9 March 2026'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -744,7 +748,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 <div className="space-y-3 border-t border-white/5 pt-4">
                   <div className="flex items-center gap-3 text-sm text-neutral-400">
                     <Briefcase size={18} className="text-neutral-500" />
-                    <span>Works at <span className="font-bold text-white">STYN</span></span>
+                    <span>Role: <span className="font-bold text-white uppercase tracking-widest text-[10px]">{user.role || 'User'}</span></span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-neutral-400">
                     <Calendar size={18} className="text-neutral-500" />
@@ -764,7 +768,9 @@ export const Profile: React.FC<ProfileProps> = ({
                   </div>
                   <div className="flex items-center gap-3 text-sm text-neutral-400">
                     <Calendar size={18} className="text-neutral-500" />
-                    <span>Joined <span className="font-bold text-white">April 2026</span></span>
+                    <span>Joined <span className="font-bold text-white">
+                      {user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'April 2026'}
+                    </span></span>
                   </div>
                 </div>
               </div>

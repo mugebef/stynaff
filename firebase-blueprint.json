@@ -65,6 +65,23 @@
         "genre": { "type": "string", "description": "Movie genre" }
       },
       "required": ["title", "description", "thumbnailUrl", "videoUrl", "authorId", "createdAt"]
+    },
+    "LiveStream": {
+      "title": "LiveStream",
+      "description": "A live video broadcast session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique session ID" },
+        "title": { "type": "string", "description": "Stream title" },
+        "category": { "type": "string", "description": "Stream category" },
+        "streamerId": { "type": "string", "description": "UID of the streamer" },
+        "streamerName": { "type": "string", "description": "Name of the streamer" },
+        "streamerPhoto": { "type": "string", "description": "Photo of the streamer" },
+        "viewers": { "type": "number", "description": "Current viewer count" },
+        "status": { "type": "string", "enum": ["live", "ended"], "description": "Current status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the stream started" }
+      },
+      "required": ["title", "streamerId", "streamerName", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -83,6 +100,14 @@
     "/movies/{movieId}": {
       "schema": "Movie",
       "description": "Blockbuster movies and trailers"
+    },
+    "/live_streams/{streamId}": {
+      "schema": "LiveStream",
+      "description": "Active and past live streams"
+    },
+    "/live_streams/{streamId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Real-time comments on a live stream"
     }
   }
 }

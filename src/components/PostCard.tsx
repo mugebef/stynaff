@@ -182,37 +182,37 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
       </AnimatePresence>
 
       {/* Actions */}
-      <div className="flex items-center justify-between border-t border-white/5 p-2 md:p-4">
-        <div className="flex items-center gap-1 md:gap-2">
+      <div className="flex items-center justify-between border-t border-white/5 p-1 md:p-4">
+        <div className="flex items-center gap-0.5 md:gap-2">
           <button 
             onClick={() => onLike(post.id)}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 md:gap-2 rounded-full px-2.5 md:px-4 py-2 text-xs md:text-sm font-bold transition-all ${
               isLiked ? 'bg-red-500/10 text-red-500' : 'text-neutral-400 hover:bg-neutral-800'
             }`}
           >
-            <Heart size={20} className={isLiked ? 'fill-current' : ''} />
+            <Heart size={18} md:size={20} className={isLiked ? 'fill-current' : ''} />
             <span>{post.likes.length}</span>
           </button>
           <button 
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 md:gap-2 rounded-full px-2.5 md:px-4 py-2 text-xs md:text-sm font-bold transition-all ${
               showComments ? 'bg-orange-500/10 text-orange-500' : 'text-neutral-400 hover:bg-neutral-800'
             }`}
           >
-            <MessageCircle size={20} />
+            <MessageCircle size={18} md:size={20} />
             <span>{post.comments.length}</span>
           </button>
           <button 
             onClick={() => onShare && onShare(post.id)}
-            className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-neutral-400 transition-all hover:bg-neutral-800 hover:text-orange-500"
+            className="flex items-center gap-1.5 md:gap-2 rounded-full px-2.5 md:px-4 py-2 text-xs md:text-sm font-bold text-neutral-400 transition-all hover:bg-neutral-800 hover:text-orange-500"
           >
-            <Share2 size={20} />
+            <Share2 size={18} md:size={20} />
             <span>{post.shares}</span>
           </button>
         </div>
         
-        <div className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-neutral-500">
-          <Eye size={18} />
+        <div className="flex items-center gap-1.5 md:gap-2 rounded-full px-2 md:px-4 py-2 text-[10px] md:text-sm font-bold text-neutral-500">
+          <Eye size={16} md:size={18} />
           <span>{post.views || 0}</span>
         </div>
       </div>
