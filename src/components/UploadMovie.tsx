@@ -215,7 +215,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
 
                       {isEditing && (
                         <div>
-                          <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Access Fee (Points)</label>
+                          <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Access Price</label>
                           <div className="relative">
                             <input
                               type="number"
@@ -224,7 +224,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                               onChange={(e) => setPrice(Number(e.target.value))}
                               className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
                             />
-                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-500">POINTS</span>
+                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-500 uppercase">Amount</span>
                           </div>
                         </div>
                       )}
@@ -390,7 +390,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                       className="space-y-6"
                     >
                       <div>
-                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Access Fee (Points)</label>
+                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Set Access Price</label>
                         <div className="relative">
                           <input
                             type="number"
@@ -399,9 +399,9 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                             onChange={(e) => setPrice(Number(e.target.value))}
                             className="w-full rounded-2xl border border-white/5 bg-neutral-950 px-5 py-4 text-sm font-bold text-white focus:border-orange-600 focus:bg-neutral-900 focus:outline-none transition-all"
                           />
-                          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-500">POINTS</span>
+                          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-500 uppercase tracking-widest">Amount</span>
                         </div>
-                        <p className="mt-2 text-[10px] text-neutral-500">Users will need to pay this amount to unlock the full movie.</p>
+                        <p className="mt-2 text-[10px] text-neutral-500">Users will need to pay this amount to unlock and watch the full movie.</p>
                       </div>
 
                       {status === 'success' && (

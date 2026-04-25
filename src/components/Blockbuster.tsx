@@ -147,8 +147,8 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                   <Play size={16} className="md:w-7 md:h-7" fill="currentColor" />
-                  <span className="hidden md:inline">{hasAccess(featuredMovie) ? 'Watch Full Movie' : `Unlock for ${featuredMovie.price} Points`}</span>
-                  <span className="md:hidden">{hasAccess(featuredMovie) ? 'Watch' : `${featuredMovie.price} Pts`}</span>
+                  <span className="hidden md:inline">{hasAccess(featuredMovie) ? 'Watch Full Movie' : `Unlock for $${featuredMovie.price}`}</span>
+                  <span className="md:hidden">{hasAccess(featuredMovie) ? 'Watch' : `$${featuredMovie.price}`}</span>
                 </button>
                 
                 {featuredMovie.trailerUrl && (
@@ -246,7 +246,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                   <div className="flex items-center gap-3 text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
                     <span>{movie.genre || 'Action'}</span>
                     <span className="h-1 w-1 rounded-full bg-orange-600"></span>
-                    <span>{movie.price} Points</span>
+                    <span>${movie.price}</span>
                   </div>
                 </div>
               </div>
@@ -334,7 +334,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
                       )}
                       <div className="flex items-center justify-center gap-1 md:gap-2 rounded-lg md:rounded-xl bg-orange-600 py-1.5 md:py-3 text-[10px] md:text-xs font-black uppercase tracking-widest text-white shadow-2xl">
                         <CreditCard size={10} className="md:w-3.5 md:h-3.5" />
-                        {movie.price} Pts
+                        Price: ${movie.price}
                       </div>
                     </div>
                   </div>

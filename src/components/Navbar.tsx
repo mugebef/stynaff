@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           className="flex w-full items-center gap-3 rounded-xl px-4 py-2 text-sm font-bold text-neutral-300 hover:bg-neutral-800 transition-all"
                         >
                           <WalletIcon size={18} />
-                          Wallet & Points
+                          Wallet & Balance
                         </button>
                         <div className="my-2 border-t border-white/5"></div>
                         <button

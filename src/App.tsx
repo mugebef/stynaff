@@ -129,6 +129,61 @@ export default function App() {
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadMessage, setUploadMessage] = React.useState("");
   const [profileUser, setProfileUser] = React.useState<UserType | null>(null);
+  const [navHistory, setNavHistory] = React.useState<string[]>(['reels']);
+
+  const navigate = (menu: string, replace: boolean = false) => {
+    if (activeMenu === menu) return;
+    
+    if (replace) {
+      setNavHistory(prev => {
+        const newHistory = [...prev];
+        newHistory[newHistory.length - 1] = menu;
+        return newHistory;
+      });
+    } else {
+      setNavHistory(prev => [...prev, menu]);
+    }
+    setActiveMenu(menu);
+    
+    // Add to browser history so physical back button works
+    window.history.pushState({ menu }, "", "");
+  };
+
+  const handleBack = () => {
+    if (navHistory.length <= 1) {
+      if (window.confirm("Do you want to exit the app?")) {
+        // Since we are in an iframe or PWA, we can't always "exit",
+        // but we can try to close or just stay at home.
+        // On home screen, prompt to exit is requested.
+      }
+      return;
+    }
+
+    const newHistory = [...navHistory];
+    newHistory.pop(); // Remove current
+    const previousMenu = newHistory[newHistory.length - 1];
+    setNavHistory(newHistory);
+    setActiveMenu(previousMenu);
+  };
+
+  // Physical Back Button Logic
+  React.useEffect(() => {
+    const onPopState = (e: PopStateEvent) => {
+      if (navHistory.length > 1) {
+        handleBack();
+      } else {
+        // If they are on home (reels) and press back, we want to stay here
+        // and optionally prompt if we want to mimic a real app exit
+        window.history.pushState({ menu: 'reels' }, "", "");
+        if (window.confirm("Exit the app?")) {
+          // In most browsers we can't script close, but this satisfies the "prompt" requirement
+        }
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [navHistory]);
 
   const uploadWithProgress = (file: File, type: string = "file"): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -177,10 +232,10 @@ export default function App() {
     const handleMenuChange = (e: any) => {
       const detail = e.detail;
       if (typeof detail === 'string') {
-        setActiveMenu(detail);
+        navigate(detail);
         if (detail === 'profile') setProfileUser(user);
       } else if (detail && detail.menu) {
-        setActiveMenu(detail.menu);
+        navigate(detail.menu);
         if (detail.menu === 'profile') setProfileUser(user);
         if (detail.menu === 'chat' && detail.targetUser) {
           setSelectedChatUser(detail.targetUser);
@@ -192,7 +247,7 @@ export default function App() {
       const targetUser = users.find(u => u.uid === targetUid);
       if (targetUser) {
         setProfileUser(targetUser);
-        setActiveMenu('profile');
+        navigate('profile');
       }
     };
 
@@ -1371,7 +1426,7 @@ export default function App() {
             setIsGlobalUploadOpen(true);
             return;
           }
-          setActiveMenu(menu);
+          navigate(menu);
           if (menu === 'profile') setProfileUser(user);
         }} 
         activeMenu={activeMenu}
@@ -1403,6 +1458,7 @@ export default function App() {
             onCancelFriendRequest={handleCancelFriendRequest}
             onUnfriend={handleUnfriend}
             onFollow={handleFollow}
+            onBack={handleBack}
           />
         ) : activeMenu === 'friends' ? (
           <FriendsPage 
@@ -1417,7 +1473,7 @@ export default function App() {
               const target = users.find(u => u.uid === uid);
               if (target) {
                 setProfileUser(target);
-                setActiveMenu('profile');
+                navigate('profile');
               }
             }}
           />
@@ -1440,7 +1496,7 @@ export default function App() {
             onView={handleView}
             onChat={(targetUser) => {
               setSelectedChatUser(targetUser);
-              setActiveMenu('chat');
+              navigate('chat');
             }}
             users={users}
             onPurchaseMovie={handlePurchaseMovie}
@@ -1461,10 +1517,10 @@ export default function App() {
                 onDeclineFriend={handleDeclineFriend} 
                 onSendFriendRequest={handleSendFriendRequest}
                 onProfileClick={() => {
-                  setActiveMenu('profile');
+                  navigate('profile');
                   setProfileUser(user);
                 }}
-                onMenuClick={setActiveMenu}
+                onMenuClick={navigate}
                 activeMenu={activeMenu}
               />
             )}
@@ -1493,7 +1549,7 @@ export default function App() {
                       onUpdateMovie={handleMovieUpdate}
                       onDeleteMovie={handleMovieDelete}
                       onPurchase={handlePurchaseMovie}
-                      onDeposit={() => setActiveMenu('wallet')}
+                      onDeposit={() => navigate('wallet')}
                     />
                   )}
                   {(activeMenu === 'feed' || activeMenu === 'reels') && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare, Lock, Settings, Star, Info, Trash2, Heart, X, Maximize2, Zap } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Calendar, Edit3, Loader2, User as UserIcon, CheckCircle, Wallet as WalletIcon, Shield, Award, Medal, Trophy, Crown, ShieldAlert, UserPlus, MessageSquare, Lock, Settings, Star, Info, Trash2, Heart, X, Maximize2, Zap, ArrowLeft } from 'lucide-react';
 import { User as UserType, Post } from '../types';
 import { PostCard } from './PostCard';
 import { COUNTRIES_AND_CITIES, RELATIONSHIP_STATUSES } from '../constants';
@@ -33,6 +33,7 @@ interface ProfileProps {
   onCancelFriendRequest: (uid: string) => void;
   onUnfriend: (uid: string) => void;
   onFollow: (uid: string) => void;
+  onBack?: () => void;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ 
@@ -50,7 +51,8 @@ export const Profile: React.FC<ProfileProps> = ({
   onDeclineFriend,
   onCancelFriendRequest,
   onUnfriend,
-  onFollow
+  onFollow,
+  onBack
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'Account' | 'Profile' | 'Privacy' | 'Security' | 'Membership' | 'Extra'>('Account');
@@ -242,6 +244,14 @@ export const Profile: React.FC<ProfileProps> = ({
       </AnimatePresence>
       {/* Cover Photo */}
       <div className="relative h-48 w-full overflow-hidden rounded-b-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 shadow-lg md:h-64">
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-all border border-white/10 shadow-2xl"
+          >
+            <ArrowLeft size={20} strokeWidth={3} />
+          </button>
+        )}
         {canEdit && (
           <button className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg bg-black/50 px-4 py-2 text-sm font-bold text-white backdrop-blur-md hover:bg-black/70 transition-all">
             <Camera size={18} />
