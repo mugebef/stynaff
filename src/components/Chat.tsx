@@ -362,7 +362,8 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         handleAIResponse(msgContent);
       }
     } catch (err) {
-      console.error(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(msg);
     }
   };
 

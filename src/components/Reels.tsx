@@ -281,8 +281,9 @@ export const Reels: React.FC<ReelsProps> = ({
                 muted={isMuted}
                 playsInline
                 preload="auto"
-                onError={(e) => {
-                  console.error("Video Error:", e);
+                onError={() => {
+                  // Handle video load errors safely without logging complex objects that might cause circular dependency issues during stringification
+                  console.warn(`Video unavailable for reel: ${reel.id}`);
                 }}
                 onClick={(e) => {
                   e.stopPropagation();

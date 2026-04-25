@@ -94,25 +94,19 @@ interface FirestoreErrorInfo {
 }
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
+  const errInfo = {
+    error: errorMessage,
     operationType,
-    path
+    path,
+    userId: auth.currentUser?.uid,
+    timestamp: new Date().toISOString()
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  
+  console.error('Firestore Error:', errorMessage, operationType, path);
+  
+  // Safe stringification by only using primitive fields
   throw new Error(JSON.stringify(errInfo));
 }
 
@@ -1237,7 +1231,8 @@ export default function App() {
         });
       }
     } catch (error) {
-      console.error(`View increment failed for ID: ${cleanId}`, error);
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`View increment failed for ID: ${cleanId}`, msg);
     }
   };
 

@@ -70,7 +70,8 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
           });
         setMatches(potentialMatches);
       } catch (err) {
-        console.error(err);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(msg);
       } finally {
         setLoading(false);
       }
