@@ -95,7 +95,7 @@ export const Reels: React.FC<ReelsProps> = ({
       scoreB += (b.views || 0) * 0.1;
 
       // 6. Recency (Favor newer content)
-      const now = Date.now() / 1000;
+      const now = Math.floor(Date.now() / 600000) * 600; // Round to 10 min
       const recencyA = a.createdAt?.seconds ? (now - a.createdAt.seconds) / 3600 : 0;
       const recencyB = b.createdAt?.seconds ? (now - b.createdAt.seconds) / 3600 : 0;
       scoreA -= Math.min(recencyA, 1000); // Penalty for age, capped
@@ -115,29 +115,37 @@ export const Reels: React.FC<ReelsProps> = ({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const videoRefs = React.useRef<{ [key: string]: HTMLVideoElement | null }>({});
   const viewedReels = React.useRef<Set<string>>(new Set());
+  const onViewRef = React.useRef(onView);
+  onViewRef.current = onView;
 
   // Intersection Observer for auto-play/pause
   React.useEffect(() => {
     const options = {
       root: containerRef.current,
       rootMargin: '0px',
-      threshold: 0.6 
+      threshold: 0.8
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const video = entry.target as HTMLVideoElement;
+        const reelId = video.dataset.reelId;
+        
         if (entry.isIntersecting) {
           video.play().catch(() => {});
           setIsPlaying(true);
-          const index = Object.values(videoRefs.current).indexOf(video);
-          if (index !== -1) {
-            setActiveIndex(index);
-            // Track view
-            const currentReel = reels[index];
-            if (currentReel && onView && !viewedReels.current.has(currentReel.id)) {
-              onView(currentReel.id);
-              viewedReels.current.add(currentReel.id);
+          
+          if (reelId) {
+            const index = reels.findIndex(r => r.id === reelId);
+            if (index !== -1) {
+              setActiveIndex(index);
+              
+              // Track view
+              const currentReel = reels[index];
+              if (currentReel && onViewRef.current && !viewedReels.current.has(currentReel.id)) {
+                onViewRef.current(currentReel.id);
+                viewedReels.current.add(currentReel.id);
+              }
             }
           }
         } else {
@@ -156,7 +164,7 @@ export const Reels: React.FC<ReelsProps> = ({
         if (video) observer.unobserve(video);
       });
     };
-  }, [reels]);
+  }, [reels]); // Removed onView as a dependency to prevent churn
 
   const handleLikeWithFeedback = (postId: string) => {
     onLike(postId);
@@ -184,10 +192,11 @@ export const Reels: React.FC<ReelsProps> = ({
       setTimeout(() => setShowHeart(null), 1000);
     } else {
       // Single tap to play/pause with a small overlay feedback
-      const video = videoRefs.current[activeIndex];
+      const currentReel = reels[activeIndex];
+      const video = currentReel ? videoRefs.current[currentReel.id] : null;
       if (video) {
         if (video.paused) {
-          video.play();
+          video.play().catch(() => {});
           setIsPlaying(true);
         } else {
           video.pause();
@@ -258,26 +267,32 @@ export const Reels: React.FC<ReelsProps> = ({
         >
           {reels.map((reel, index) => (
             <div 
-              key={`${reel.id}-${index}`} 
+              key={reel.id} 
               className="relative h-full w-full snap-start overflow-hidden"
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >
               {/* Video Player */}
                <video
-                ref={el => videoRefs.current[index] = el}
+                ref={el => videoRefs.current[reel.id] = el}
+                data-reel-id={reel.id}
                 src={reel.mediaUrl}
                 autoPlay={index === activeIndex}
                 loop
                 muted={isMuted}
                 playsInline
+                preload="auto"
+                onError={(e) => {
+                  console.error("Video Error:", e);
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (videoRefs.current[index]) {
-                    if (videoRefs.current[index]?.paused) {
-                      videoRefs.current[index]?.play();
+                  const v = videoRefs.current[reel.id];
+                  if (v) {
+                    if (v.paused) {
+                      v.play().catch(() => {});
                       setIsPlaying(true);
                     } else {
-                      videoRefs.current[index]?.pause();
+                      v.pause();
                       setIsPlaying(false);
                     }
                   }
