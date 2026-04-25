@@ -1371,7 +1371,28 @@ export default function App() {
               className="absolute inset-4 rounded-[3rem] border-2 border-dashed border-orange-600/40"
             />
             
-            {/* Logo and floating icons removed */}
+            {/* Logo and floating icons */}
+            {appConfig?.logoUrl ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 flex justify-center"
+              >
+                <img 
+                  src={appConfig.logoUrl} 
+                  alt="Logo" 
+                  className="h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(234,88,12,0.4)]" 
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-orange-600/10"
+              >
+                <Video size={40} className="text-orange-500" />
+              </motion.div>
+            )}
           </div>
           
           <motion.div

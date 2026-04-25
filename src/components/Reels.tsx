@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Share2, Music, User as UserIcon, CheckCircle, Vol
 import { Post, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { UploadReel } from './UploadReel';
+import { getMediaSource } from '../utils';
 
 interface ReelsProps {
   posts: Post[];
@@ -272,20 +273,30 @@ export const Reels: React.FC<ReelsProps> = ({
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >
               {/* Video Player */}
-               <video
-                ref={el => videoRefs.current[reel.id] = el}
-                data-reel-id={reel.id}
-                src={reel.mediaUrl}
-                autoPlay={index === activeIndex}
-                loop
-                muted={isMuted}
-                playsInline
-                preload="auto"
-                onError={() => {
-                  // Handle video load errors safely without logging complex objects that might cause circular dependency issues during stringification
-                  console.warn(`Video unavailable for reel: ${reel.id}`);
-                }}
-                onClick={(e) => {
+                <video
+                  ref={el => videoRefs.current[reel.id] = el}
+                  data-reel-id={reel.id}
+                  src={getMediaSource(reel.mediaUrl)}
+                  autoPlay={index === activeIndex}
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  preload="auto"
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover cursor-pointer"
+                  onError={(e) => {
+                    const target = e.target as HTMLVideoElement;
+                    console.warn(`Video load failed for reel ${reel.id}:`, target.error?.message);
+                    // Try to reload once if it fails
+                    if (!target.dataset.retried) {
+                      target.dataset.retried = 'true';
+                      const currentSrc = target.src;
+                      target.src = '';
+                      setTimeout(() => { target.src = currentSrc; }, 1000);
+                    }
+                  }}
+                  onClick={(e) => {
                   e.stopPropagation();
                   const v = videoRefs.current[reel.id];
                   if (v) {
@@ -298,7 +309,6 @@ export const Reels: React.FC<ReelsProps> = ({
                     }
                   }
                 }}
-                className="h-full w-full object-cover cursor-pointer"
               />
 
               {/* Pin Indicator */}

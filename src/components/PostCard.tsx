@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, User, Zap, CheckC
 import { Post, User as UserType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
+import { getMediaSource } from '../utils';
 
 interface PostCardProps {
   post: Post;
@@ -142,7 +143,18 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
               onClick={() => setIsImageZoomed(true)}
             />
           ) : (
-            <video src={post.mediaUrl} controls className="h-full w-full object-cover" />
+            <video 
+              src={getMediaSource(post.mediaUrl)} 
+              controls 
+              playsInline
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
+              className="h-full w-full object-cover" 
+              onError={(e) => {
+                const target = e.target as HTMLVideoElement;
+                console.warn(`Video load failed for post ${post.id}:`, target.error?.message);
+              }}
+            />
           )}
         </div>
       )}

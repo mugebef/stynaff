@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Play, CreditCard, Lock, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getMediaSource } from '../utils';
 
 interface MoviePlayerProps {
   movie: any;
@@ -58,11 +59,18 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({
             {videoUrl ? (
               <video
                 ref={videoRef}
-                src={videoUrl}
+                src={getMediaSource(videoUrl)}
                 controls
                 autoPlay
+                playsInline
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
                 onEnded={handleVideoEnded}
                 className="h-full w-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLVideoElement;
+                  console.warn("Movie playback error:", target.error?.message);
+                }}
               />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center text-neutral-500">
