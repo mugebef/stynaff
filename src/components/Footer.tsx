@@ -6,9 +6,18 @@ interface FooterProps {
   onOpenPrivacy?: () => void;
   onOpenTerms?: () => void;
   onOpenAbout?: () => void;
+  onOpenSafety?: () => void;
+  onOpenContact?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ appConfig, onOpenPrivacy, onOpenTerms, onOpenAbout }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  appConfig, 
+  onOpenPrivacy, 
+  onOpenTerms, 
+  onOpenAbout,
+  onOpenSafety,
+  onOpenContact
+}) => {
   return (
     <footer className="border-t border-white/5 bg-neutral-900 py-12">
       <div className="mx-auto max-w-7xl px-6">
@@ -20,7 +29,9 @@ export const Footer: React.FC<FooterProps> = ({ appConfig, onOpenPrivacy, onOpen
             <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
             <button onClick={onOpenTerms} className="hover:text-orange-500 transition-colors cursor-pointer">Terms & Conditions</button>
             <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
-            <a href="mailto:support@styni.com" className="hover:text-orange-500 transition-colors">Support</a>
+            <button onClick={onOpenSafety} className="hover:text-orange-500 transition-colors cursor-pointer">Safety Standards</button>
+            <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
+            <button onClick={onOpenContact} className="hover:text-orange-500 transition-colors cursor-pointer">Contact Us</button>
           </div>
         </div>
 

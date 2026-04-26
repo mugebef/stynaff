@@ -5,7 +5,7 @@ import { APP_NAME } from '../constants';
 
 interface InfoPageProps {
   onClose: () => void;
-  type: 'privacy' | 'terms' | 'about';
+  type: 'privacy' | 'terms' | 'about' | 'safety' | 'contact';
 }
 
 export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
@@ -13,6 +13,7 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
     privacy: {
       title: 'Privacy Policy',
       icon: <Shield className="text-blue-500" size={40} />,
+      externalUrl: 'https://styni.com/privacy-policy',
       sections: [
         {
           title: 'Data Collection',
@@ -25,10 +26,6 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
         {
           title: 'Media and Photos',
           text: 'When you upload photos or videos, we store them on our secure servers. We also extract metadata for optimization but do not share this raw data with third parties without your consent.'
-        },
-        {
-          title: 'Information Sharing',
-          text: 'We do not sell your personal data. We share information with other users as part of the social and dating features (per your privacy settings) and with service providers who perform work on our behalf.'
         }
       ]
     },
@@ -43,14 +40,6 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
         {
           title: 'User Conduct',
           text: 'You are responsible for all activity that occurs under your account. You agree not to use the services for any unlawful or prohibited purpose, including harassment, scamming, or uploading prohibited content.'
-        },
-        {
-          title: 'Prohibited Content',
-          text: 'Uploading illegal material, hate speech, or explicit adult content that violates our community guidelines will result in an immediate and permanent ban without refund of any points or subscriptions.'
-        },
-        {
-          title: 'Payments and Refunds',
-          text: 'Purchases made within the app (Verification, Boosting, Points) are generally non-refundable unless required by law. Digital goods are consumed immediately upon activation.'
         }
       ]
     },
@@ -65,10 +54,44 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
         {
           title: 'Dating Redefined',
           text: 'We believe dating should be transparent and fun. Our verification system and point-based interactions ensure a quality environment for everyone looking for love or friendship.'
+        }
+      ]
+    },
+    safety: {
+      title: 'Safety Standards',
+      icon: <Lock className="text-emerald-500" size={40} />,
+      externalUrl: 'https://styni.com/safety-standards',
+      sections: [
+        {
+          title: 'Child Safety (CSAE)',
+          text: `${APP_NAME} has a zero-tolerance policy regarding child sexual abuse and exploitation. We use automated tools and human moderation to identify, remove, and report such content to relevant authorities immediately.`
         },
         {
-          title: 'Innovation',
-          text: 'Powered by cutting-edge technology and a passion for African and global storytelling, we are constantly evolving to provide the best social experience on the continent.'
+          title: 'Community Protection',
+          text: 'Our platform is designed with safety first. All users must undergo basic verification to participate in dating features, and we provide robust reporting tools for any suspicious activity.'
+        },
+        {
+          title: 'Data Security',
+          text: 'We use industry-standard encryption to protect your personal information and private communications. Your data is stored on secure cloud infrastructure with strict access controls.'
+        }
+      ]
+    },
+    contact: {
+      title: 'Contact Us',
+      icon: <Zap className="text-yellow-500" size={40} />,
+      externalUrl: 'https://styni.com/contact-us',
+      sections: [
+        {
+          title: 'Email Support',
+          text: 'For general inquiries, technical support, or billing issues, please reach out to our dedicated support team at support@styni.com. We typically respond within 24-48 hours.'
+        },
+        {
+          title: 'Business Inquiries',
+          text: 'Interested in partnering with us or advertising on the platform? Contact our business development team at partnerships@styni.com.'
+        },
+        {
+          title: 'Office Address',
+          text: 'Styn INC, Digital Innovation Hub, Lagos, Nigeria. (By appointment only)'
         }
       ]
     }
@@ -97,7 +120,7 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-black text-white italic uppercase tracking-tighter leading-none">{activeContent.title}</h1>
-              <p className="text-xs font-black uppercase tracking-widest text-neutral-500 mt-2">Last Updated: March 2026</p>
+              <p className="text-xs font-black uppercase tracking-widest text-neutral-500 mt-2">Last Updated: April 2026</p>
             </div>
           </div>
           <button 
@@ -110,6 +133,18 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 md:p-12 no-scrollbar">
+          {activeContent.externalUrl && (
+            <a 
+              href={activeContent.externalUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mb-10 inline-flex items-center gap-2 rounded-full bg-orange-600/10 px-4 py-2 text-xs font-bold text-orange-500 hover:bg-orange-600/20 transition-all"
+            >
+              <Globe size={14} />
+              View Official {activeContent.title} Online
+            </a>
+          )}
+
           <div className="space-y-12 max-w-2xl">
             {activeContent.sections.map((section, i) => (
               <motion.section 
