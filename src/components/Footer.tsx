@@ -8,6 +8,7 @@ interface FooterProps {
   onOpenAbout?: () => void;
   onOpenSafety?: () => void;
   onOpenContact?: () => void;
+  onOpenDeletion?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
@@ -16,7 +17,8 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenTerms, 
   onOpenAbout,
   onOpenSafety,
-  onOpenContact
+  onOpenContact,
+  onOpenDeletion
 }) => {
   return (
     <footer className="border-t border-white/5 bg-neutral-900 py-12">
@@ -32,6 +34,8 @@ export const Footer: React.FC<FooterProps> = ({
             <button onClick={onOpenSafety} className="hover:text-orange-500 transition-colors cursor-pointer">Safety Standards</button>
             <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
             <button onClick={onOpenContact} className="hover:text-orange-500 transition-colors cursor-pointer">Contact Us</button>
+            <span className="h-1 w-1 rounded-full bg-neutral-800"></span>
+            <button onClick={onOpenDeletion} className="hover:text-red-500 transition-colors cursor-pointer">Account Deletion</button>
           </div>
         </div>
 

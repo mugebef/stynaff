@@ -219,7 +219,7 @@ export default function App() {
   const [ads, setAds] = React.useState<any[]>([]);
 
   const [selectedChatUser, setSelectedChatUser] = React.useState<UserType | null>(null);
-  const [activeInfoPage, setActiveInfoPage] = React.useState<'privacy' | 'terms' | 'about' | 'safety' | 'contact' | null>(null);
+  const [activeInfoPage, setActiveInfoPage] = React.useState<'privacy' | 'terms' | 'about' | 'safety' | 'contact' | 'deletion' | null>(null);
 
   // Listen for menu changes from other components
   React.useEffect(() => {
@@ -1676,6 +1676,7 @@ export default function App() {
           onOpenAbout={() => setActiveInfoPage('about')}
           onOpenSafety={() => setActiveInfoPage('safety')}
           onOpenContact={() => setActiveInfoPage('contact')}
+          onOpenDeletion={() => setActiveInfoPage('deletion')}
         />
       )}
 

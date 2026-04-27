@@ -5,7 +5,7 @@ import { APP_NAME } from '../constants';
 
 interface InfoPageProps {
   onClose: () => void;
-  type: 'privacy' | 'terms' | 'about' | 'safety' | 'contact';
+  type: 'privacy' | 'terms' | 'about' | 'safety' | 'contact' | 'deletion';
 }
 
 export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
@@ -92,6 +92,25 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
         {
           title: 'Office Address',
           text: 'Styn INC, Digital Innovation Hub, Lagos, Nigeria. (By appointment only)'
+        }
+      ]
+    },
+    deletion: {
+      title: 'Account Deletion',
+      icon: <AlertTriangle className="text-red-500" size={40} />,
+      externalUrl: 'https://styni.com/delete-account',
+      sections: [
+        {
+          title: 'How to Delete Your Account',
+          text: 'You can request account deletion at any time. Go to Settings > Profile > Delete Account within the app, or use the official web link provided above.'
+        },
+        {
+          title: 'What Happens Next?',
+          text: 'Once you request deletion, your profile, photos, videos, and matches will be removed from public view immediately. Your data will be permanently deleted from our servers after a 30-day grace period, unless we are required to retain certain information by law.'
+        },
+        {
+          title: 'Subscription & Payments',
+          text: 'Please note that deleting your account does not automatically cancel active third-party subscriptions (e.g., Apple App Store or Google Play Store). You must cancel those separately through the respective platform settings.'
         }
       ]
     }
