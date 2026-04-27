@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'stynaff',
       script: './server.ts',
-      cwd: '/home/styni.com/stynaff',
+      cwd: '/home/stynaff',
       interpreter: 'node',
       interpreter_args: '--import tsx',
       max_memory_restart: '1000M',
