@@ -54,12 +54,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Set limits early to handle large payloads (Reels, movies)
-  app.use(express.json({ limit: '2gb' }));
-  app.use(express.urlencoded({ extended: true, limit: '2gb' }));
-
+  // 0. LOGGING FIRST (Critical for debugging why requests might be dropped)
   app.use((req, res, next) => {
-    log(`${req.method} ${req.url}`);
+    log(`${req.method} ${req.url} (Content-Length: ${req.headers['content-length'] || 'unknown'})`);
     req.on('close', () => {
       if (!res.writableEnded) {
         log(`>>> Request closed prematurely: ${req.method} ${req.url}`);
@@ -67,6 +64,10 @@ async function startServer() {
     });
     next();
   });
+
+  // 1. LIMITS (Right after app init and logging)
+  app.use(express.json({ limit: '2gb' }));
+  app.use(express.urlencoded({ extended: true, limit: '2gb' }));
 
   app.use("/uploads", express.static(baseUploadsDir));
 
@@ -88,10 +89,25 @@ async function startServer() {
   });
 
   // 1. API Routes
-  app.post("/api/upload", upload.single("file"), async (req, res) => {
+  app.post("/api/upload", (req, res, next) => {
+    log(`>>> Starting upload processing for ${req.url}`);
+    
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        log(`>>> Multer Error: ${err.message} (${err.code})`);
+        return res.status(400).json({ error: `Upload error: ${err.message}`, code: err.code });
+      } else if (err) {
+        log(`>>> Unknown Upload Error: ${err.message}`);
+        return res.status(500).json({ error: "Unknown upload error", details: err.message });
+      }
+      
+      // No error, continue to handler
+      next();
+    });
+  }, async (req, res) => {
     try {
       if (!req.file) {
-        log("Upload attempt with no file");
+        log(">>> Upload attempt with no file");
         return res.status(400).json({ error: "No file uploaded" });
       }
       
@@ -226,7 +242,8 @@ async function startServer() {
 
   // Global Error Handler - Ensure all errors return JSON
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error(">>> Server Error:", err);
+    const errorMsg = `>>> Global Server Error: ${err.message || err}\nStack: ${err.stack}`;
+    log(errorMsg);
     res.status(err.status || 500).json({
       error: err.message || "Internal Server Error",
       code: err.code || "UNKNOWN_ERROR"
