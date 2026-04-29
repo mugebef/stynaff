@@ -29,14 +29,24 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Ensure uploads directory exists within the workspace
-const baseUploadsDir = path.join(process.cwd(), "uploads");
+// Priority for custom VPS path requested by user, fallback to local project root
+const customVpsPath = "/home/stynaff/uploads";
+const localUploadsPath = path.join(process.cwd(), "uploads");
+const baseUploadsDir = fs.existsSync(customVpsPath) ? customVpsPath : localUploadsPath;
+
 const videoUploadDir = path.join(baseUploadsDir, "videos");
 const imageUploadDir = path.join(baseUploadsDir, "images");
 
+log(`Using uploads base directory: ${baseUploadsDir}`);
+
 [baseUploadsDir, videoUploadDir, imageUploadDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-    log(`Created directory: ${dir}`);
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      log(`Created directory: ${dir}`);
+    } catch (e: any) {
+      log(`Failed to create directory ${dir}: ${e.message}`);
+    }
   }
 });
 
@@ -69,7 +79,13 @@ async function startServer() {
   app.use(express.json({ limit: '2gb' }));
   app.use(express.urlencoded({ extended: true, limit: '2gb' }));
 
+  // Serve from both custom and local paths to avoid mismatch
+  log(`Setting up static serving for /uploads to ${baseUploadsDir}`);
   app.use("/uploads", express.static(baseUploadsDir));
+  if (baseUploadsDir !== localUploadsPath) {
+    log(`Adding secondary static serving for /uploads to ${localUploadsPath}`);
+    app.use("/uploads", express.static(localUploadsPath));
+  }
 
   // Multer Configuration
   const multerStorage = multer.diskStorage({
@@ -120,7 +136,13 @@ async function startServer() {
       // If compression is needed, it should be done as a background worker process.
       
       const fileUrl = `/uploads/${subDir}/${finalFilename}`;
-      log(`Upload successful: ${fileUrl} (${req.file.size} bytes)`);
+      const stats = fs.statSync(req.file.path);
+      log(`Upload successful: ${fileUrl} (Size: ${stats.size} bytes, Multer reported: ${req.file.size})`);
+      
+      if (stats.size === 0) {
+        log(`>>> CRITICAL: Uploaded file ${finalFilename} is 0 bytes!`);
+      }
+      
       res.json({ url: fileUrl });
     } catch (err: any) {
       log(`Upload handler error: ${err.message}`);
