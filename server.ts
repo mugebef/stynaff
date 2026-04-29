@@ -54,6 +54,10 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Set limits early to handle large payloads (Reels, movies)
+  app.use(express.json({ limit: '2gb' }));
+  app.use(express.urlencoded({ extended: true, limit: '2gb' }));
+
   app.use((req, res, next) => {
     log(`${req.method} ${req.url}`);
     req.on('close', () => {
@@ -64,8 +68,6 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: '2gb' }));
-  app.use(express.urlencoded({ extended: true, limit: '2gb' }));
   app.use("/uploads", express.static(baseUploadsDir));
 
   // Multer Configuration
