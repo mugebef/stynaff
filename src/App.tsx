@@ -200,10 +200,21 @@ export default function App() {
               const data = JSON.parse(xhr.responseText);
               resolve(data.url);
             } catch (err) {
+              console.error("Upload response parse error:", xhr.responseText);
               reject(new Error("Failed to parse upload response"));
             }
           } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
+            let errorMsg = `Upload failed with status ${xhr.status}`;
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              if (errorData.error) errorMsg = errorData.error;
+            } catch (e) {
+              // If not JSON, use the status text or status code
+              if (xhr.status === 413) errorMsg = "File is too large for the network to handle. Try a smaller file.";
+              else if (xhr.status === 504 || xhr.status === 502) errorMsg = "Server took too long to respond. Connection reset.";
+            }
+            console.error("Upload error details:", errorMsg, xhr.status, xhr.responseText);
+            reject(new Error(errorMsg));
           }
         }
       };

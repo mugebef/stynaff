@@ -87,52 +87,27 @@ async function startServer() {
 
   // 1. API Routes
   app.post("/api/upload", upload.single("file"), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-    
-    const isVideo = req.file.mimetype.startsWith('video/');
-    const subDir = isVideo ? 'videos' : 'images';
-    let finalFilename = req.file.filename;
-
-    if (isVideo) {
-      const inputPath = req.file.path;
-      const compressedFilename = `compressed-${req.file.filename}`;
-      const outputPath = path.join(videoUploadDir, compressedFilename);
-      
-      try {
-        log(`Compressing video: ${req.file.filename}`);
-        await new Promise<void>((resolve, reject) => {
-          ffmpeg(inputPath)
-            .output(outputPath)
-            .videoCodec('libx264')
-            .size('720x?') // Optimize for mobile: 720p height
-            .addOptions([
-              '-crf 28',        // Constant Rate Factor: 28 is a good balance
-              '-preset faster', // Faster encoding
-              '-movflags +faststart' // Enable fast start for web streaming
-            ])
-            .on('end', () => resolve())
-            .on('error', (err) => reject(err))
-            .run();
-        });
-        
-        // Remove original and use compressed
-        if (fs.existsSync(outputPath)) {
-          fs.unlinkSync(inputPath);
-          finalFilename = compressedFilename;
-          log(`Compression complete: ${finalFilename}`);
-        }
-      } catch (err: any) {
-        log(`Video compression failed: ${err.message}. Using original file.`);
-        // Fallback to original file if compression fails
+    try {
+      if (!req.file) {
+        log("Upload attempt with no file");
+        return res.status(400).json({ error: "No file uploaded" });
       }
+      
+      const isVideo = req.file.mimetype.startsWith('video/');
+      const subDir = isVideo ? 'videos' : 'images';
+      const finalFilename = req.file.filename;
+
+      // Note: Video compression is disabled during the HTTP request to prevent timeouts
+      // Especially crucial for large (up to 2GB) files.
+      // If compression is needed, it should be done as a background worker process.
+      
+      const fileUrl = `/uploads/${subDir}/${finalFilename}`;
+      log(`Upload successful: ${fileUrl} (${req.file.size} bytes)`);
+      res.json({ url: fileUrl });
+    } catch (err: any) {
+      log(`Upload handler error: ${err.message}`);
+      res.status(500).json({ error: "Internal server error during upload finishing" });
     }
-    
-    const fileUrl = `/uploads/${subDir}/${finalFilename}`;
-    
-    log(`File ready: ${fileUrl}`);
-    res.json({ url: fileUrl });
   });
 
   app.get("/api/health", (req, res) => {
