@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const menus = [
     { id: 'reels', label: 'Reels', icon: <Video size={18} /> },
-    { id: 'blockbuster', label: 'Movies', icon: <Play size={18} /> },
+    { id: 'blockbuster', label: 'Blockbuster', icon: <Play size={18} /> },
     { id: 'dating', label: 'Dating', icon: <Heart size={18} /> },
     { id: 'chat', label: 'Chat', icon: <MessageSquare size={18} /> },
     { id: 'live', label: 'Live', icon: <Radio size={18} /> },

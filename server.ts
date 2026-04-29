@@ -64,8 +64,8 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: '500mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '500mb' }));
+  app.use(express.json({ limit: '2gb' }));
+  app.use(express.urlencoded({ extended: true, limit: '2gb' }));
   app.use("/uploads", express.static(baseUploadsDir));
 
   // Multer Configuration
@@ -82,7 +82,7 @@ async function startServer() {
 
   const upload = multer({ 
     storage: multerStorage,
-    limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
+    limits: { fileSize: 2048 * 1024 * 1024 } // 2GB limit for all, client differentiates
   });
 
   // 1. API Routes

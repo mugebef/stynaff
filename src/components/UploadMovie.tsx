@@ -58,9 +58,9 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
 
     if (!movieFile || !thumbnailFile || !title) return;
 
-    if (movieFile.size > 1536 * 1024 * 1024) {
+    if (movieFile.size > 2048 * 1024 * 1024) {
       setStatus('error');
-      alert('Movie file is too large. Max size is 1.5GB.');
+      alert('Movie file is too large. Max size is 2GB.');
       return;
     }
 
@@ -368,7 +368,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
                               <p className="text-sm font-bold text-white">
                                 {movieFile ? movieFile.name : 'Select Full Movie Video'}
                               </p>
-                              <p className="text-xs text-neutral-500 mt-1">Max file size: 1.5GB</p>
+                              <p className="text-xs text-neutral-500 mt-1">Max file size: 2GB</p>
                             </div>
                           </div>
                           <input id="movie-input" type="file" accept="video/*" required className="hidden" onChange={(e) => setMovieFile(e.target.files?.[0] || null)} />
