@@ -10,7 +10,10 @@ export const getMediaSource = (url: string) => {
                       window.location.hostname.includes('127.0.0.1');
                       
     if (isPreview) {
-      return `https://styni.com${url}`;
+      // For testing in AI Studio, we should use the local server to verify uploads work.
+      // If you want to force production files, uncomment the line below.
+      // return `https://styni.com${url}`;
+      return url;
     }
   }
   

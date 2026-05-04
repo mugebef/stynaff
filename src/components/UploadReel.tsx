@@ -41,10 +41,10 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
         setErrorMessage('Please select a valid video file.');
         return;
       }
-      // Increased to 2GB to match server limits for "Reels, movies"
-      if (selectedFile.size > 2048 * 1024 * 1024) { 
+      // Enforce 50MB limit for Reels as requested
+      if (selectedFile.size > 50 * 1024 * 1024) { 
         setStatus('error');
-        setErrorMessage('Video file is too large. Max size is 2GB.');
+        setErrorMessage('Reel video file is too large. Max size for Reels is 50MB.');
         return;
       }
       setFile(selectedFile);

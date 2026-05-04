@@ -30,9 +30,26 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Ensure uploads directory exists within the workspace
 // Priority for custom VPS path requested by user, fallback to local project root
-const customVpsPath = "/home/stynaff/uploads";
+const customVpsPath = process.env.UPLOAD_DIR || "/home/stynaff/uploads";
 const localUploadsPath = path.join(process.cwd(), "uploads");
-const baseUploadsDir = fs.existsSync(customVpsPath) ? customVpsPath : localUploadsPath;
+let baseUploadsDir = localUploadsPath;
+
+// If a custom VPS path is provided and it either exists or we are in a production-like environment (VPS)
+// we try to use it.
+if (fs.existsSync(customVpsPath)) {
+  baseUploadsDir = customVpsPath;
+} else if (customVpsPath.startsWith('/home/')) {
+  // If it's a specified home directory, try to create it to honor user request
+  try {
+    fs.mkdirSync(customVpsPath, { recursive: true });
+    // Verify it's actually writable
+    fs.accessSync(customVpsPath, fs.constants.W_OK);
+    baseUploadsDir = customVpsPath;
+  } catch (e) {
+    log(`Custom path ${customVpsPath} not accessible/writable, falling back to local: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    baseUploadsDir = localUploadsPath;
+  }
+}
 
 const videoUploadDir = path.join(baseUploadsDir, "videos");
 const imageUploadDir = path.join(baseUploadsDir, "images");
@@ -272,10 +289,15 @@ async function startServer() {
     });
   });
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
     console.log(`>>> Domain: https://styni.com/`);
   });
+
+  // Set timeout to 1 hour for very large video uploads (2GB)
+  server.timeout = 3600000;
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
 }
 
 startServer().catch((err) => {

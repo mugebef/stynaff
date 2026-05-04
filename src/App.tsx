@@ -206,12 +206,17 @@ export default function App() {
           } else {
             let errorMsg = `Upload failed with status ${xhr.status}`;
             try {
-              const errorData = JSON.parse(xhr.responseText);
-              if (errorData.error) errorMsg = errorData.error;
+              if (xhr.responseText) {
+                const errorData = JSON.parse(xhr.responseText);
+                if (errorData.error) errorMsg = `${errorData.error} (${xhr.status})`;
+                else if (errorData.details) errorMsg = `${errorData.details} (${xhr.status})`;
+              }
             } catch (e) {
               // If not JSON, use the status text or status code
-              if (xhr.status === 413) errorMsg = "File is too large for the network to handle. Try a smaller file.";
-              else if (xhr.status === 504 || xhr.status === 502) errorMsg = "Server took too long to respond. Connection reset.";
+              if (xhr.status === 413) errorMsg = "File is too large for the network to handle. (413 Payload Too Large)";
+              else if (xhr.status === 504 || xhr.status === 502) errorMsg = "Server took too long to respond. (Gateway Timeout)";
+              else if (xhr.status === 0) errorMsg = "Request was blocked or connection failed. (CORS/Network Error)";
+              else errorMsg = `Server error ${xhr.status}: ${xhr.statusText || 'No response'}`;
             }
             console.error("Upload error details:", errorMsg, xhr.status, xhr.responseText);
             reject(new Error(errorMsg));
@@ -800,9 +805,10 @@ export default function App() {
         createdAt: serverTimestamp()
       });
       alert('Reel uploaded successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading reel:', error);
-      alert('Failed to upload reel.');
+      const errorMsg = error.message || 'Unknown error';
+      alert(`Failed to upload reel: ${errorMsg}`);
     } finally {
       setIsUploading(false);
     }
