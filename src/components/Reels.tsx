@@ -109,6 +109,13 @@ export const Reels: React.FC<ReelsProps> = ({
   const [isMuted, setIsMuted] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const [videoError, setVideoError] = React.useState<Set<string>>(new Set());
+  const skipToNextReel = () => {
+    if (activeIndex < reels.length - 1) {
+      setActiveIndex(prev => prev + 1);
+      // The intersection observer or useEffect will handle the scroll/play
+      containerRef.current?.children[activeIndex + 1]?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
@@ -316,20 +323,11 @@ export const Reels: React.FC<ReelsProps> = ({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          setVideoError(prev => {
-                            const next = new Set(prev);
-                            next.delete(reel.id);
-                            return next;
-                          });
-                          const v = videoRefs.current[reel.id];
-                          if (v) {
-                            v.dataset.retried = '';
-                            v.load();
-                          }
+                          skipToNextReel();
                         }}
-                        className="mt-6 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-white/20 transition-all"
+                        className="mt-6 rounded-full bg-white/20 px-6 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-white/30 transition-all border border-white/10"
                       >
-                        Try Again
+                        Skip to Next
                       </button>
                     </div>
                   </div>
@@ -364,7 +362,11 @@ export const Reels: React.FC<ReelsProps> = ({
                           video.load();
                         }, 2000);
                       } else {
+                        // After retrying twice, show error and auto-skip to next if it's the active one
                         setVideoError(prev => new Set(prev).add(reel.id));
+                        if (index === activeIndex) {
+                          setTimeout(skipToNextReel, 3000);
+                        }
                       }
                     }}
                     onClick={(e) => {

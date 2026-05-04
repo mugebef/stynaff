@@ -24,6 +24,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
   const [boostPrice, setBoostPrice] = React.useState(5);
   const [boostDuration, setBoostDuration] = React.useState(24); // hours
   const [isImageZoomed, setIsImageZoomed] = React.useState(false);
+  const [mediaError, setMediaError] = React.useState(false);
+
+  if (mediaError) return null; // Auto-hide if deleted or corrupted
 
   const author = users.find(u => u.uid === post.authorId);
   const authorPhoto = author?.photoURL || post.authorPhoto;
@@ -141,6 +144,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
               className="h-full w-full object-cover cursor-zoom-in transition-all hover:scale-105 active:scale-100" 
               referrerPolicy="no-referrer" 
               onClick={() => setIsImageZoomed(true)}
+              onError={() => setMediaError(true)}
             />
           ) : (
             <video 
@@ -155,7 +159,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
                   video.dataset.retried = 'true';
                   setTimeout(() => {
                     video.load();
-                  }, 1000);
+                  }, 2000);
+                } else {
+                  setMediaError(true);
                 }
               }}
             >

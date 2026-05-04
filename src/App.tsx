@@ -551,17 +551,20 @@ export default function App() {
     const seen = new Set<string>();
     const combined: Post[] = [];
     
-    // Add posts that are reels/videos, ensuring uniqueness
+    // Add posts that are reels/videos, ensuring uniqueness and valid media
     reelsFromPosts.forEach(p => {
-      if (!seen.has(p.id)) {
+      // Ensure we have a valid media URL and haven't seen this ID
+      if (p.id && !seen.has(p.id) && p.mediaUrl && p.mediaUrl.trim() !== "") {
         combined.push(p);
         seen.add(p.id);
       }
     });
     
-    // Add trailers, ensuring no duplicates
+    // Add trailers, ensuring no duplicates and valid media
     trailersFromMovies.forEach(trailer => {
-      if (!seen.has(trailer.id)) {
+      // Trailers are given 'trailer-' prefix IDs in the mapping logic above,
+      // so we use that to check uniqueness.
+      if (trailer.id && !seen.has(trailer.id) && trailer.mediaUrl && trailer.mediaUrl.trim() !== "") {
         combined.push(trailer);
         seen.add(trailer.id);
       }

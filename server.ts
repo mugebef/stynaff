@@ -125,8 +125,10 @@ async function startServer() {
   // Explicitly 404 for missing upload files to avoid falling through to SPA index.html
   // FALLBACK: Try to serve from production domain if missing locally
   app.use("/uploads", async (req, res) => {
-    // req.path is decoded. We should re-encode each part to ensure special characters like # are handled.
-    const encodedPath = req.path.split('/').map(part => encodeURIComponent(part)).join('/');
+    // req.path is already decoded by Express.
+    // To proxy correctly, we must re-encode each part for the outgoing request.
+    const parts = req.path.split('/');
+    const encodedPath = parts.map(part => encodeURIComponent(part)).join('/');
     const prodUrl = `https://styni.com/uploads${encodedPath}`;
     
     log(`Local file missing [${req.path}], proxying from production: ${prodUrl}`);
@@ -149,10 +151,13 @@ async function startServer() {
         }
 
         // Copy headers from production
-        if (proxyRes.headers['content-type']) res.setHeader('Content-Type', proxyRes.headers['content-type']);
+        if (contentType) res.setHeader('Content-Type', contentType);
         if (proxyRes.headers['content-length']) res.setHeader('Content-Length', proxyRes.headers['content-length']);
         if (proxyRes.headers['accept-ranges']) res.setHeader('Accept-Ranges', proxyRes.headers['accept-ranges']);
+        if (proxyRes.headers['content-range']) res.setHeader('Content-Range', proxyRes.headers['content-range']);
+        
         res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
 
         // Pipe the content
         proxyRes.pipe(res);
@@ -175,6 +180,14 @@ async function startServer() {
   });
 
   // Multer Configuration
+  const sanitizeFilename = (filename: string) => {
+    return filename
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+      .replace(/[^\x20-\x7E]/g, '') // Remove non-printable/non-ASCII
+      .replace(/[\s#%&{}\\<>*?/$!'":@+`|=]+/g, '_') // Replace dangerous URL characters with underscores
+      .substring(0, 80); // Limit length
+  };
+
   const multerStorage = multer.diskStorage({
     destination: (req, file, cb) => {
       const isVideo = file.mimetype.startsWith('video/');
@@ -182,7 +195,10 @@ async function startServer() {
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
+      const ext = path.extname(file.originalname).toLowerCase();
+      const nameOnly = path.basename(file.originalname, ext);
+      const safeName = sanitizeFilename(nameOnly);
+      cb(null, `${uniqueSuffix}-${safeName || 'file'}${ext}`);
     }
   });
 
