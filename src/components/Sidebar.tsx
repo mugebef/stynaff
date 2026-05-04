@@ -93,9 +93,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation Menu */}
       <div className="rounded-[2rem] border border-white/5 bg-neutral-900/50 p-2 shadow-2xl ring-1 ring-white/5 backdrop-blur-xl">
         <div className="space-y-1">
-          {menuItems.map((item) => (
+          {menuItems.map((item, index) => (
             <button
-              key={item.id}
+              key={`${item.id}-${index}`}
               onClick={() => onMenuClick(item.id)}
               className={`flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-black uppercase tracking-widest transition-all group ${
                 activeMenu === item.id 

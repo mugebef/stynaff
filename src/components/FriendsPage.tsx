@@ -120,8 +120,8 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
                 <p className="text-neutral-500">Try searching for someone else or find new friends in suggestions.</p>
               </div>
             ) : (
-              filteredFriends.map((friend) => (
-                <div key={friend.uid} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
+              filteredFriends.map((friend, index) => (
+                <div key={`friend-${friend.uid || 'friend'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
                   <div 
                     onClick={() => onViewProfile(friend.uid)}
                     className="flex cursor-pointer items-center gap-3 overflow-hidden"
@@ -171,8 +171,8 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
                 {incomingRequests.length === 0 ? (
                   <p className="text-sm text-neutral-500">No incoming friend requests.</p>
                 ) : (
-                  incomingRequests.map((req) => (
-                    <div key={req.uid} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
+                  incomingRequests.map((req, index) => (
+                    <div key={`incoming-${req.uid || 'req'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
                       <div 
                         onClick={() => onViewProfile(req.uid)}
                         className="flex cursor-pointer items-center gap-3 overflow-hidden"
@@ -218,8 +218,8 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
                 {outgoingRequests.length === 0 ? (
                   <p className="text-sm text-neutral-500">No sent requests.</p>
                 ) : (
-                  outgoingRequests.map((req) => (
-                    <div key={req.uid} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
+                  outgoingRequests.map((req, index) => (
+                    <div key={`outgoing-${req.uid || 'req'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
                       <div 
                         onClick={() => onViewProfile(req.uid)}
                         className="flex cursor-pointer items-center gap-3 overflow-hidden"
@@ -265,8 +265,8 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
                 <p className="text-neutral-500">No suggestions available at the moment.</p>
               </div>
             ) : (
-              suggestions.map((sUser) => (
-                <div key={sUser.uid} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
+              suggestions.map((sUser, index) => (
+                <div key={`suggestion-${sUser.uid || 'user'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
                   <div 
                     onClick={() => onViewProfile(sUser.uid)}
                     className="flex cursor-pointer items-center gap-3 overflow-hidden"

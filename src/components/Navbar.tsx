@@ -64,9 +64,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Desktop Menu - Modern Navigation */}
           <div className="hidden items-center gap-0.5 md:flex">
-            {menus.map((menu) => (
+            {menus.map((menu, index) => (
               <button
-                key={menu.id}
+                key={`${menu.id}-${index}`}
                 onClick={() => onMenuClick(menu.id)}
                 className={`relative flex items-center justify-center rounded-xl px-2 lg:px-4 py-2 text-[10px] lg:text-xs font-black uppercase tracking-tighter lg:tracking-widest transition-all ${
                   activeMenu === menu.id
@@ -251,9 +251,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Horizontal Mobile Category Menu */}
       <div className="flex overflow-x-auto border-t border-white/5 bg-neutral-950 px-2 py-2 md:hidden no-scrollbar">
         <div className="flex gap-1.5">
-          {menus.map((menu) => (
+          {menus.map((menu, index) => (
             <button
-              key={menu.id}
+              key={`mobile-category-${menu.id}-${index}`}
               onClick={() => onMenuClick(menu.id)}
               className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-tight transition-all flex items-center justify-center ${
                 activeMenu === menu.id
@@ -287,9 +287,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="absolute left-0 right-0 top-full z-50 border-t border-white/5 bg-neutral-900 p-4 shadow-2xl md:hidden"
             >
               <div className="flex flex-col gap-2">
-                {menus.map((menu) => (
+                {menus.map((menu, index) => (
                   <button
-                    key={menu.id}
+                    key={`mobile-overlay-${menu.id}-${index}`}
                     onClick={() => {
                       onMenuClick(menu.id);
                       setIsMobileMenuOpen(false);

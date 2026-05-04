@@ -690,8 +690,8 @@ export const Profile: React.FC<ProfileProps> = ({
                     <div className="space-y-1">
                       <label className="text-xs font-bold uppercase tracking-widest text-neutral-500">Interests</label>
                       <div className="flex flex-wrap gap-2">
-                        {user.interests?.map(interest => (
-                          <span key={interest} className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-bold text-neutral-400">
+                        {user.interests?.map((interest, idx) => (
+                          <span key={`${interest}-${idx}`} className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-bold text-neutral-400">
                             {interest}
                           </span>
                         ))}
@@ -793,8 +793,8 @@ export const Profile: React.FC<ProfileProps> = ({
                   <button className="text-sm font-bold text-orange-500 hover:underline">See all</button>
                 </div>
                 <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={`profile-gallery-${i}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={`profile-gallery-${i}-${user.uid}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
                       <img 
                         src={`https://picsum.photos/seed/${user.uid + i}/200`} 
                         alt="Gallery" 
@@ -815,9 +815,9 @@ export const Profile: React.FC<ProfileProps> = ({
                     <p className="text-neutral-500">No posts on this timeline yet.</p>
                   </div>
                 ) : (
-                  userPosts.map(post => (
+                  userPosts.map((post, index) => (
                     <PostCard 
-                      key={post.id}
+                      key={`${post.id || 'post'}-${index}`}
                       post={post}
                       currentUser={currentUser}
                       users={users}

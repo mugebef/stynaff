@@ -126,7 +126,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
           {post.content.split(/(#\w+)/g).map((part, i) => (
             part.startsWith('#') ? (
-              <span key={`hashtag-${i}`} className="font-bold text-orange-500 hover:underline cursor-pointer transition-all">
+              <span key={`hashtag-${part}-${i}`} className="font-bold text-orange-500 hover:underline cursor-pointer transition-all">
                 {part}
               </span>
             ) : part
@@ -262,8 +262,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
                 />
               </form>
               <div className="space-y-4">
-                {post.comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
+                {post.comments.map((comment, index) => (
+                  <div key={`${comment.id || 'comment'}-${post.id}-${index}`} className="flex gap-3">
                     <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800"></div>
                     <div className="flex-1 rounded-2xl bg-neutral-900 p-3 shadow-sm ring-1 ring-white/5">
                       <h5 className="mb-1 text-xs font-bold text-white">{comment.authorName}</h5>

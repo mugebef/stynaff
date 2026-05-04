@@ -568,8 +568,8 @@ export const Live: React.FC = () => {
                   <p className="text-xs font-bold text-neutral-600 uppercase tracking-widest">No comments yet. Be the first!</p>
                 </div>
               )}
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3 animate-in fade-in slide-in-from-bottom-2">
+              {comments.map((comment, index) => (
+                <div key={`live-comment-${comment.id || 'comment'}-${index}`} className="flex gap-3 animate-in fade-in slide-in-from-bottom-2">
                   <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-[10px] font-bold text-neutral-500 uppercase">
                     {comment.user.charAt(0)}
                   </div>
@@ -631,9 +631,9 @@ export const Live: React.FC = () => {
             </div>
           ) : (
             <div className="grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {streams.map((stream) => (
+              {streams.map((stream, index) => (
                 <motion.div 
-                  key={stream.id}
+                  key={`live-stream-${stream.id || 'stream'}-${index}`}
                   whileHover={{ y: -8 }}
                   onClick={() => setSelectedStream({ ...stream, isMine: stream.streamerId === auth.currentUser?.uid })}
                   className="group cursor-pointer overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900 shadow-xl transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:border-orange-600/30"

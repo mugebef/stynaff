@@ -496,7 +496,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
                       onChange={(e) => onUpdateUser(user.uid, { tier: e.target.value as any })}
                       className="rounded-lg border border-white/5 bg-neutral-950 px-2 py-1 text-xs font-bold text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-600"
                     >
-                      {['General', 'Bronze', 'Silver', 'Gold', 'Platinum'].map(t => <option key={t} value={t}>{t}</option>)}
+                      {['General', 'Bronze', 'Silver', 'Gold', 'Platinum'].map((t, idx) => <option key={`tier-opt-${t}-${idx}`} value={t}>{t}</option>)}
                     </select>
                   </td>
                   <td className="px-6 py-4">
