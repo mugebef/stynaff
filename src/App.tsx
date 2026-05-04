@@ -548,7 +548,26 @@ export default function App() {
       createdAt: m.createdAt
     })) as Post[];
 
-    const combined = [...reelsFromPosts, ...trailersFromMovies].sort((a, b) => {
+    const seen = new Set<string>();
+    const combined: Post[] = [];
+    
+    // Add posts that are reels/videos, ensuring uniqueness
+    reelsFromPosts.forEach(p => {
+      if (!seen.has(p.id)) {
+        combined.push(p);
+        seen.add(p.id);
+      }
+    });
+    
+    // Add trailers, ensuring no duplicates
+    trailersFromMovies.forEach(trailer => {
+      if (!seen.has(trailer.id)) {
+        combined.push(trailer);
+        seen.add(trailer.id);
+      }
+    });
+
+    combined.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
       const timeA = a.createdAt?.seconds || 0;

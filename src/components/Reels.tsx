@@ -108,6 +108,7 @@ export const Reels: React.FC<ReelsProps> = ({
 
   const [isMuted, setIsMuted] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(true);
+  const [videoError, setVideoError] = React.useState<Set<string>>(new Set());
   const [showHeart, setShowHeart] = React.useState<{ x: number, y: number } | null>(null);
   const [likedMessage, setLikedMessage] = React.useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
@@ -133,20 +134,28 @@ export const Reels: React.FC<ReelsProps> = ({
         const reelId = video.dataset.reelId;
         
         if (entry.isIntersecting) {
-          video.play().catch(() => {});
-          setIsPlaying(true);
+          const index = reels.findIndex(r => r.id === reelId);
           
-          if (reelId) {
-            const index = reels.findIndex(r => r.id === reelId);
-            if (index !== -1) {
-              setActiveIndex(index);
-              
-              // Track view
-              const currentReel = reels[index];
-              if (currentReel && onViewRef.current && !viewedReels.current.has(currentReel.id)) {
-                onViewRef.current(currentReel.id);
-                viewedReels.current.add(currentReel.id);
+          video.play()
+            .then(() => {
+              if (index !== -1) {
+                // If it's the one we just played, we are playing
+                setIsPlaying(true);
               }
+            })
+            .catch((err) => {
+              console.warn("Autoplay blocked or failed:", err);
+              setIsPlaying(false);
+            });
+          
+          if (reelId && index !== -1) {
+            setActiveIndex(index);
+              
+            // Track view
+            const currentReel = reels[index];
+            if (currentReel && onViewRef.current && !viewedReels.current.has(currentReel.id)) {
+              onViewRef.current(currentReel.id);
+              viewedReels.current.add(currentReel.id);
             }
           }
         } else {
@@ -166,6 +175,31 @@ export const Reels: React.FC<ReelsProps> = ({
       });
     };
   }, [reels]); // Removed onView as a dependency to prevent churn
+
+  // Sync active video playback
+  React.useEffect(() => {
+    const activeReel = reels[activeIndex];
+    const video = activeReel ? videoRefs.current[activeReel.id] : null;
+    if (video) {
+      if (isPlaying) {
+        video.play().catch((err) => {
+          console.warn("Manual play failed:", err);
+          // If play failed (e.g. user hasn't interacted), we might stay in "paused" state visually
+          // but we don't want to force setIsPlaying(false) if it was an autoplay block
+        });
+      } else {
+        video.pause();
+      }
+    }
+    
+    // Pause all other videos
+    Object.entries(videoRefs.current).forEach(([id, v]) => {
+      const videoEl = v as HTMLVideoElement | null;
+      if (videoEl && id !== activeReel?.id) {
+        videoEl.pause();
+      }
+    });
+  }, [activeIndex, isPlaying, reels]);
 
   const handleLikeWithFeedback = (postId: string) => {
     onLike(postId);
@@ -268,51 +302,86 @@ export const Reels: React.FC<ReelsProps> = ({
         >
           {reels.map((reel, index) => (
             <div 
-              key={reel.id} 
+              key={reel.id || `reel-${index}`} 
               className="relative h-full w-full snap-start overflow-hidden"
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >
               {/* Video Player */}
-                <video
-                  ref={el => videoRefs.current[reel.id] = el}
-                  data-reel-id={reel.id}
-                  autoPlay={index === activeIndex}
-                  loop
-                  muted={isMuted}
-                  playsInline
-                  preload="auto"
-                  crossOrigin="anonymous"
-                  className="h-full w-full object-cover cursor-pointer"
-                  onError={(e) => {
-                    const video = e.currentTarget;
-                    console.warn(`Video load failed for reel ${reel.id}:`, video.error?.message);
-                    // Try to reload once if it fails
-                    if (!video.dataset.retried) {
-                      video.dataset.retried = 'true';
-                      setTimeout(() => { 
-                        video.src = getMediaSource(reel.mediaUrl);
-                        video.load();
-                      }, 1000);
-                    }
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const v = videoRefs.current[reel.id];
-                    if (v) {
-                      if (v.paused) {
-                        v.play().catch(() => {});
+                {videoError.has(reel.id) ? (
+                  <div className="flex h-full w-full items-center justify-center bg-neutral-900 border border-white/5 px-8 text-center">
+                    <div>
+                      <Video size={48} className="mx-auto mb-4 text-neutral-600" />
+                      <p className="text-white font-bold mb-1">Video Unavailable</p>
+                      <p className="text-xs text-neutral-500">This content could not be loaded or has been moved.</p>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setVideoError(prev => {
+                            const next = new Set(prev);
+                            next.delete(reel.id);
+                            return next;
+                          });
+                          const v = videoRefs.current[reel.id];
+                          if (v) {
+                            v.dataset.retried = '';
+                            v.load();
+                          }
+                        }}
+                        className="mt-6 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-white/20 transition-all"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <video
+                    ref={el => videoRefs.current[reel.id] = el}
+                    data-reel-id={reel.id}
+                    src={getMediaSource(reel.mediaUrl)}
+                    autoPlay={index === activeIndex}
+                    loop
+                    muted={isMuted}
+                    playsInline
+                    preload="auto"
+                    crossOrigin="anonymous"
+                    className="h-full w-full object-cover cursor-pointer"
+                    onLoadedMetadata={(e) => {
+                      const video = e.currentTarget;
+                      if (index === activeIndex && !video.paused) {
                         setIsPlaying(true);
-                      } else {
-                        v.pause();
-                        setIsPlaying(false);
                       }
-                    }
-                  }}
-                >
-                  <source src={getMediaSource(reel.mediaUrl)} type="video/mp4" />
-                  <source src={getMediaSource(reel.mediaUrl)} type="video/quicktime" />
-                  Your browser does not support the video tag.
-                </video>
+                    }}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onError={(e) => {
+                      const video = e.currentTarget;
+                      console.error(`Video load failed for reel ${reel.id}:`, video.error?.code, video.error?.message, getMediaSource(reel.mediaUrl));
+                      
+                      // Try to reload once if it fails
+                      if (!video.dataset.retried) {
+                        video.dataset.retried = 'true';
+                        setTimeout(() => { 
+                          video.load();
+                        }, 2000);
+                      } else {
+                        setVideoError(prev => new Set(prev).add(reel.id));
+                      }
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const v = videoRefs.current[reel.id];
+                      if (v) {
+                        if (v.paused) {
+                          v.play().catch(err => console.error("Play error:", err));
+                        } else {
+                          v.pause();
+                        }
+                      }
+                    }}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
 
               {/* Pin Indicator */}
               {reel.isPinned && (
@@ -349,7 +418,7 @@ export const Reels: React.FC<ReelsProps> = ({
                     className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
                   >
                     <div className="rounded-full bg-black/40 p-6 backdrop-blur-md">
-                      <Pause size={48} className="text-white fill-current" />
+                      <Play size={48} className="text-white fill-current" />
                     </div>
                   </motion.div>
                 )}

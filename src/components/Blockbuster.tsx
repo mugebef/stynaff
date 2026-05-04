@@ -79,6 +79,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
       <div className="group relative mb-8 md:mb-24 aspect-video md:aspect-[21/9] w-full overflow-hidden rounded-[24px] md:rounded-[60px] bg-neutral-950 shadow-2xl border border-white/5 ring-1 ring-white/10">
         {featuredMovie?.trailerUrl && showTrailer ? (
           <video
+            src={getMediaSource(featuredMovie.trailerUrl)}
             autoPlay
             loop
             muted
@@ -92,14 +93,11 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
               if (!video.dataset.retried) {
                 video.dataset.retried = 'true';
                 setTimeout(() => {
-                  video.src = getMediaSource(featuredMovie.trailerUrl);
                   video.load();
                 }, 1000);
               }
             }}
           >
-            <source src={getMediaSource(featuredMovie.trailerUrl)} type="video/mp4" />
-            <source src={getMediaSource(featuredMovie.trailerUrl)} type="video/quicktime" />
           </video>
         ) : (
           <img

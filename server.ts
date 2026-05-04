@@ -122,6 +122,58 @@ async function startServer() {
     app.use("/uploads", express.static(localUploadsPath, staticOptions));
   }
 
+  // Explicitly 404 for missing upload files to avoid falling through to SPA index.html
+  // FALLBACK: Try to serve from production domain if missing locally
+  app.use("/uploads", async (req, res) => {
+    // req.path is decoded. We should re-encode each part to ensure special characters like # are handled.
+    const encodedPath = req.path.split('/').map(part => encodeURIComponent(part)).join('/');
+    const prodUrl = `https://styni.com/uploads${encodedPath}`;
+    
+    log(`Local file missing [${req.path}], proxying from production: ${prodUrl}`);
+    
+    try {
+      const { default: https } = await import("https");
+      
+      const proxyReq = https.get(prodUrl, (proxyRes) => {
+        // If not successful on prod, return 404
+        if (!proxyRes.statusCode || (proxyRes.statusCode !== 200 && proxyRes.statusCode !== 206)) {
+          log(`Production fallback failed with status ${proxyRes.statusCode} for ${prodUrl}`);
+          return res.status(404).json({ error: "File not found locally or on production" });
+        }
+
+        // Check if it's actually a video (or image) and not an HTML error page
+        const contentType = proxyRes.headers['content-type'];
+        if (contentType && contentType.includes('text/html')) {
+          log(`Production fallback returned HTML instead of media for ${prodUrl}`);
+          return res.status(404).json({ error: "File found but returned HTML (likely a 404 page)" });
+        }
+
+        // Copy headers from production
+        if (proxyRes.headers['content-type']) res.setHeader('Content-Type', proxyRes.headers['content-type']);
+        if (proxyRes.headers['content-length']) res.setHeader('Content-Length', proxyRes.headers['content-length']);
+        if (proxyRes.headers['accept-ranges']) res.setHeader('Accept-Ranges', proxyRes.headers['accept-ranges']);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        // Pipe the content
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on('error', (e) => {
+        log(`Proxy request error for ${prodUrl}: ${e.message}`);
+        res.status(502).json({ error: "Failed to proxy from production" });
+      });
+      
+      // Handle client disconnect
+      req.on('close', () => {
+        proxyReq.destroy();
+      });
+
+    } catch (err: any) {
+      log(`Proxy logic error: ${err.message}`);
+      res.status(500).json({ error: "Internal server error during proxying" });
+    }
+  });
+
   // Multer Configuration
   const multerStorage = multer.diskStorage({
     destination: (req, file, cb) => {

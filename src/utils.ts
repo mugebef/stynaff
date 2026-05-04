@@ -10,10 +10,13 @@ export const getMediaSource = (url: string) => {
                       window.location.hostname.includes('127.0.0.1');
                       
     if (isPreview) {
-      // For testing in AI Studio, we should use the local server to verify uploads work.
-      // If you want to force production files, uncomment the line below.
-      // return `https://styni.com${url}`;
-      return url;
+      // Encode path parts but not the separators to handle special characters like #
+      const parts = url.split('/');
+      const encodedUrl = parts.map(part => encodeURIComponent(part)).join('/');
+      // Re-fix it because the first '/' became and encoded nothing if it was at start, 
+      // but actually parts[0] is "" if url starts with "/".
+      // Let's do it simpler.
+      return url.split('/').map(p => encodeURIComponent(p)).join('/').replace(/%2F/g, '/');
     }
   }
   

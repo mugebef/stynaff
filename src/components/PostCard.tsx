@@ -144,6 +144,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
             />
           ) : (
             <video 
+              src={getMediaSource(post.mediaUrl)}
               controls 
               playsInline
               crossOrigin="anonymous"
@@ -153,14 +154,11 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
                 if (!video.dataset.retried) {
                   video.dataset.retried = 'true';
                   setTimeout(() => {
-                    video.src = getMediaSource(post.mediaUrl);
                     video.load();
                   }, 1000);
                 }
               }}
             >
-              <source src={getMediaSource(post.mediaUrl)} type="video/mp4" />
-              <source src={getMediaSource(post.mediaUrl)} type="video/quicktime" />
               Your browser does not support the video tag.
             </video>
           )}

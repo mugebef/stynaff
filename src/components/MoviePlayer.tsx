@@ -59,6 +59,7 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({
             {videoUrl ? (
               <video
                 ref={videoRef}
+                src={getMediaSource(videoUrl)}
                 controls
                 autoPlay={!showPurchaseOverlay}
                 playsInline
@@ -71,14 +72,11 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({
                   if (!video.dataset.retried) {
                     video.dataset.retried = 'true';
                     setTimeout(() => {
-                      video.src = getMediaSource(videoUrl);
                       video.load();
                     }, 1000);
                   }
                 }}
               >
-                <source src={getMediaSource(videoUrl)} type="video/mp4" />
-                <source src={getMediaSource(videoUrl)} type="video/quicktime" />
                 Your browser does not support the video tag.
               </video>
             ) : (
