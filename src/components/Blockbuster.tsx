@@ -79,14 +79,28 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
       <div className="group relative mb-8 md:mb-24 aspect-video md:aspect-[21/9] w-full overflow-hidden rounded-[24px] md:rounded-[60px] bg-neutral-950 shadow-2xl border border-white/5 ring-1 ring-white/10">
         {featuredMovie?.trailerUrl && showTrailer ? (
           <video
-            src={getMediaSource(featuredMovie.trailerUrl)}
             autoPlay
             loop
             muted
             playsInline
+            crossOrigin="anonymous"
             className="h-full w-full object-cover opacity-60 transition-all duration-1000 scale-105 group-hover:scale-100"
             onEnded={() => setShowTrailer(false)}
-          />
+            onError={(e) => {
+              const target = e.target as HTMLVideoElement;
+              console.warn("Featured trailer error:", target.error?.message);
+              if (!target.dataset.retried) {
+                target.dataset.retried = 'true';
+                setTimeout(() => {
+                  target.src = getMediaSource(featuredMovie.trailerUrl);
+                  target.load();
+                }, 1000);
+              }
+            }}
+          >
+            <source src={getMediaSource(featuredMovie.trailerUrl)} type="video/mp4" />
+            <source src={getMediaSource(featuredMovie.trailerUrl)} type="video/quicktime" />
+          </video>
         ) : (
           <img
             src={getMediaSource(featuredMovie?.thumbnailUrl) || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=2000"}

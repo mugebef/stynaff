@@ -276,14 +276,12 @@ export const Reels: React.FC<ReelsProps> = ({
                 <video
                   ref={el => videoRefs.current[reel.id] = el}
                   data-reel-id={reel.id}
-                  src={getMediaSource(reel.mediaUrl)}
                   autoPlay={index === activeIndex}
                   loop
                   muted={isMuted}
                   playsInline
                   preload="auto"
                   crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
                   className="h-full w-full object-cover cursor-pointer"
                   onError={(e) => {
                     const target = e.target as HTMLVideoElement;
@@ -293,23 +291,30 @@ export const Reels: React.FC<ReelsProps> = ({
                       target.dataset.retried = 'true';
                       const currentSrc = target.src;
                       target.src = '';
-                      setTimeout(() => { target.src = currentSrc; }, 1000);
+                      setTimeout(() => { 
+                        target.src = getMediaSource(reel.mediaUrl);
+                        target.load();
+                      }, 1000);
                     }
                   }}
                   onClick={(e) => {
-                  e.stopPropagation();
-                  const v = videoRefs.current[reel.id];
-                  if (v) {
-                    if (v.paused) {
-                      v.play().catch(() => {});
-                      setIsPlaying(true);
-                    } else {
-                      v.pause();
-                      setIsPlaying(false);
+                    e.stopPropagation();
+                    const v = videoRefs.current[reel.id];
+                    if (v) {
+                      if (v.paused) {
+                        v.play().catch(() => {});
+                        setIsPlaying(true);
+                      } else {
+                        v.pause();
+                        setIsPlaying(false);
+                      }
                     }
-                  }
-                }}
-              />
+                  }}
+                >
+                  <source src={getMediaSource(reel.mediaUrl)} type="video/mp4" />
+                  <source src={getMediaSource(reel.mediaUrl)} type="video/quicktime" />
+                  Your browser does not support the video tag.
+                </video>
 
               {/* Pin Indicator */}
               {reel.isPinned && (

@@ -59,19 +59,28 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({
             {videoUrl ? (
               <video
                 ref={videoRef}
-                src={getMediaSource(videoUrl)}
                 controls
-                autoPlay
+                autoPlay={!showPurchaseOverlay}
                 playsInline
                 crossOrigin="anonymous"
-                referrerPolicy="no-referrer"
                 onEnded={handleVideoEnded}
                 className="h-full w-full object-contain"
                 onError={(e) => {
                   const target = e.target as HTMLVideoElement;
                   console.warn("Movie playback error:", target.error?.message);
+                  if (!target.dataset.retried) {
+                    target.dataset.retried = 'true';
+                    setTimeout(() => {
+                      target.src = getMediaSource(videoUrl);
+                      target.load();
+                    }, 1000);
+                  }
                 }}
-              />
+              >
+                <source src={getMediaSource(videoUrl)} type="video/mp4" />
+                <source src={getMediaSource(videoUrl)} type="video/quicktime" />
+                Your browser does not support the video tag.
+              </video>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center text-neutral-500">
                 <Info size={64} className="mb-4" />

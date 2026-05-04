@@ -144,17 +144,26 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
             />
           ) : (
             <video 
-              src={getMediaSource(post.mediaUrl)} 
               controls 
               playsInline
               crossOrigin="anonymous"
-              referrerPolicy="no-referrer"
               className="h-full w-full object-cover" 
               onError={(e) => {
                 const target = e.target as HTMLVideoElement;
                 console.warn(`Video load failed for post ${post.id}:`, target.error?.message);
+                if (!target.dataset.retried) {
+                  target.dataset.retried = 'true';
+                  setTimeout(() => {
+                    target.src = getMediaSource(post.mediaUrl);
+                    target.load();
+                  }, 1000);
+                }
               }}
-            />
+            >
+              <source src={getMediaSource(post.mediaUrl)} type="video/mp4" />
+              <source src={getMediaSource(post.mediaUrl)} type="video/quicktime" />
+              Your browser does not support the video tag.
+            </video>
           )}
         </div>
       )}

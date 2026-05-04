@@ -98,10 +98,28 @@ async function startServer() {
 
   // Serve from both custom and local paths to avoid mismatch
   log(`Setting up static serving for /uploads to ${baseUploadsDir}`);
-  app.use("/uploads", express.static(baseUploadsDir));
+  const staticOptions = {
+    setHeaders: (res: express.Response, filePath: string) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      // Ensure correct MIME types for common video formats
+      if (filePath.endsWith('.mp4')) {
+        res.setHeader('Content-Type', 'video/mp4');
+      } else if (filePath.endsWith('.mov')) {
+        res.setHeader('Content-Type', 'video/quicktime');
+      } else if (filePath.endsWith('.m4v')) {
+        res.setHeader('Content-Type', 'video/x-m4v');
+      }
+    }
+  };
+
+  app.use("/uploads", express.static(baseUploadsDir, staticOptions));
   if (baseUploadsDir !== localUploadsPath) {
     log(`Adding secondary static serving for /uploads to ${localUploadsPath}`);
-    app.use("/uploads", express.static(localUploadsPath));
+    app.use("/uploads", express.static(localUploadsPath, staticOptions));
   }
 
   // Multer Configuration
