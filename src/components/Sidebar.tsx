@@ -135,8 +135,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="h-px flex-1 bg-white/5 ml-4"></div>
         </div>
         <div className="space-y-5">
-          {suggestedFriends.map((sUser) => (
-            <div key={sUser.uid} className="flex items-center justify-between gap-3">
+          {suggestedFriends.map((sUser, index) => (
+            <div key={`${sUser.uid || 'suggested'}-${index}`} className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-neutral-800 ring-2 ring-orange-900/20">
                   {sUser.photoURL ? (
@@ -173,11 +173,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </div>
           <div className="space-y-4">
-            {Array.from(new Set(friendRequests.map(r => r.uid))).map((uid) => {
+            {Array.from(new Set(friendRequests.map(r => r.uid))).map((uid, index) => {
               const req = friendRequests.find(r => r.uid === uid);
               if (!req) return null;
               return (
-                <div key={uid} className="flex items-center justify-between gap-2">
+                <div key={`${uid || 'req'}-${index}`} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800"></div>
                     <span className="truncate text-xs font-bold text-neutral-300">{req.displayName}</span>

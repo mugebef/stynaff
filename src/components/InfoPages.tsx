@@ -167,7 +167,7 @@ export const InfoPages: React.FC<InfoPageProps> = ({ onClose, type }) => {
           <div className="space-y-12 max-w-2xl">
             {activeContent.sections.map((section, i) => (
               <motion.section 
-                key={i}
+                key={`info-section-${i}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}

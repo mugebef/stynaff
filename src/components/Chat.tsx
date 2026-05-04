@@ -578,7 +578,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
               <div className="relative z-20 bg-[#0b141a]/80 backdrop-blur-md px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar border-t border-white/5">
                 {smartReplies.map((reply, i) => (
                   <button
-                    key={i}
+                    key={`reply-${i}-${reply}`}
                     onClick={() => {
                       setNewMessage(reply);
                       handleSendMessage(new Event('submit') as any);

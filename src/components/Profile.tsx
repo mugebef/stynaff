@@ -794,7 +794,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 </div>
                 <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl">
                   {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
+                    <div key={`profile-gallery-${i}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
                       <img 
                         src={`https://picsum.photos/seed/${user.uid + i}/200`} 
                         alt="Gallery" 

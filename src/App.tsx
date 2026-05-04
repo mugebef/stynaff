@@ -197,11 +197,17 @@ export default function App() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
             try {
-              const data = JSON.parse(xhr.responseText);
+              const text = xhr.responseText;
+              if (text.includes('<doctype html>') || text.includes('<html') || text.includes('Cookie check')) {
+                console.error("Platform security check intercepted upload:", text);
+                reject(new Error("Authentication check required. Please refresh the page or open the app in a new tab to complete the upload."));
+                return;
+              }
+              const data = JSON.parse(text);
               resolve(data.url);
             } catch (err) {
               console.error("Upload response parse error:", xhr.responseText);
-              reject(new Error("Failed to parse upload response"));
+              reject(new Error("Failed to parse upload response. The server may be busy or session expired."));
             }
           } else {
             let errorMsg = `Upload failed with status ${xhr.status}`;
@@ -501,7 +507,8 @@ export default function App() {
         '1776171287690-728881083',
         '1776337851694-34368666',
         '1777223284892-630774047',
-        '1776173516754-528542977'
+        '1776173516754-528542977',
+        '1777892867237-62070073'
       ];
 
       const filteredPosts = postsData.filter(p => {
@@ -732,6 +739,9 @@ export default function App() {
         
         if (!res.ok) {
           const errorText = await res.text();
+          if (errorText.includes('<doctype html>') || errorText.includes('<html') || errorText.includes('Cookie check')) {
+            throw new Error("Authentication check required. Please refresh the page or open the app in a new tab.");
+          }
           try {
             const errorJson = JSON.parse(errorText);
             throw new Error(errorJson.error || `Upload failed with status ${res.status}`);
@@ -740,7 +750,11 @@ export default function App() {
           }
         }
         
-        const data = await res.json();
+        const responseText = await res.text();
+        if (responseText.includes('<doctype html>') || responseText.includes('<html') || responseText.includes('Cookie check')) {
+          throw new Error("Authentication check required. Please refresh the page or open the app in a new tab.");
+        }
+        const data = JSON.parse(responseText);
         mediaUrl = data.url;
         mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
         if (mediaType === 'video') {
@@ -1324,8 +1338,7 @@ export default function App() {
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {[...Array(5)].map((_, i) => (
             <motion.div
-              key={i}
-              initial={{ y: "100%", opacity: 0.1 }}
+              key={`loading-wave-${i}`}
               animate={{ 
                 y: ["100%", "90%", "100%"],
                 opacity: [0.1, 0.2, 0.1]
@@ -1345,8 +1358,7 @@ export default function App() {
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(12)].map((_, i) => (
             <motion.div
-              key={i}
-              initial={{ scale: 0, opacity: 0 }}
+              key={`loading-splash-${i}`}
               animate={{ 
                 scale: [0, 4, 10], 
                 opacity: [0.8, 0.3, 0],

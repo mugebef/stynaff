@@ -181,7 +181,7 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
               {currentMatch.interests && currentMatch.interests.length > 0 && (
                 <div className="mt-6 flex flex-wrap gap-2">
                   {currentMatch.interests.slice(0, 3).map((interest, i) => (
-                    <span key={i} className="rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest backdrop-blur-xl border border-white/10">
+                    <span key={`dating-interest-${i}`} className="rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest backdrop-blur-xl border border-white/10">
                       {interest}
                     </span>
                   ))}

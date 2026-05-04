@@ -177,7 +177,7 @@ export const UploadMovie: React.FC<UploadMovieProps> = ({ isOpen, onClose, onUpl
               {!isEditing && (
                 <div className="mb-8 flex gap-2">
                   {[1, 2, 3, 4].map(i => (
-                    <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
+                    <div key={`movie-step-${i}`} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
                   ))}
                 </div>
               )}

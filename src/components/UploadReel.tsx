@@ -132,7 +132,7 @@ export const UploadReel: React.FC<UploadReelProps> = ({ isOpen, onClose, onUploa
               <div className="px-8 pt-4">
                 <div className="flex gap-2">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
+                    <div key={`upload-step-${i}`} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= step ? 'bg-orange-600' : 'bg-neutral-800'}`} />
                   ))}
                 </div>
               </div>

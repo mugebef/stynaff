@@ -30,24 +30,20 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Ensure uploads directory exists within the workspace
 // Priority for custom VPS path requested by user, fallback to local project root
-const customVpsPath = process.env.UPLOAD_DIR || "/home/stynaff/uploads";
+const customVpsPath = "/home/styni.com/stynaff/uploads";
 const localUploadsPath = path.join(process.cwd(), "uploads");
 let baseUploadsDir = localUploadsPath;
 
-// If a custom VPS path is provided and it either exists or we are in a production-like environment (VPS)
-// we try to use it.
-if (fs.existsSync(customVpsPath)) {
-  baseUploadsDir = customVpsPath;
-} else if (customVpsPath.startsWith('/home/')) {
-  // If it's a specified home directory, try to create it to honor user request
+// If a custom VPS path exists or we can create it (production VPS)
+if (fs.existsSync("/home/styni.com/stynaff")) {
   try {
-    fs.mkdirSync(customVpsPath, { recursive: true });
-    // Verify it's actually writable
+    if (!fs.existsSync(customVpsPath)) {
+      fs.mkdirSync(customVpsPath, { recursive: true });
+    }
     fs.accessSync(customVpsPath, fs.constants.W_OK);
     baseUploadsDir = customVpsPath;
   } catch (e) {
-    log(`Custom path ${customVpsPath} not accessible/writable, falling back to local: ${e instanceof Error ? e.message : 'Unknown error'}`);
-    baseUploadsDir = localUploadsPath;
+    log(`Custom path ${customVpsPath} not accessible/writable: ${e instanceof Error ? e.message : 'Unknown error'}`);
   }
 }
 
@@ -191,12 +187,10 @@ async function startServer() {
   const multerStorage = multer.diskStorage({
     destination: (req, file, cb) => {
       const isVideo = file.mimetype.startsWith('video/');
-      const prodRoot = "/home/styni.com/stynaff/uploads";
-      const devRoot = path.join(process.cwd(), 'public', 'uploads');
-      // If the production directory exists, use it, otherwise use local public dev folder
-      const baseDir = fs.existsSync("/home/styni.com") ? prodRoot : devRoot;
-      const finalDir = path.join(baseDir, isVideo ? 'videos' : 'images');
-      fs.mkdirSync(finalDir, { recursive: true });
+      const finalDir = path.join(baseUploadsDir, isVideo ? 'videos' : 'images');
+      if (!fs.existsSync(finalDir)) {
+        fs.mkdirSync(finalDir, { recursive: true });
+      }
       cb(null, finalDir);
     },
     filename: (req, file, cb) => {
@@ -244,7 +238,7 @@ async function startServer() {
       // Especially crucial for large (up to 2GB) files.
       // If compression is needed, it should be done as a background worker process.
       
-      const fileUrl = `/uploads/${subDir}/${finalFilename}`;
+      const fileUrl = `https://styni.com/uploads/${subDir}/${finalFilename}`;
       const stats = fs.statSync(req.file.path);
       log(`Upload successful: ${fileUrl} (Size: ${stats.size} bytes, Multer reported: ${req.file.size})`);
       
