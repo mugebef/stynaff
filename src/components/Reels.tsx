@@ -284,16 +284,14 @@ export const Reels: React.FC<ReelsProps> = ({
                   crossOrigin="anonymous"
                   className="h-full w-full object-cover cursor-pointer"
                   onError={(e) => {
-                    const target = e.target as HTMLVideoElement;
-                    console.warn(`Video load failed for reel ${reel.id}:`, target.error?.message);
+                    const video = e.currentTarget;
+                    console.warn(`Video load failed for reel ${reel.id}:`, video.error?.message);
                     // Try to reload once if it fails
-                    if (!target.dataset.retried) {
-                      target.dataset.retried = 'true';
-                      const currentSrc = target.src;
-                      target.src = '';
+                    if (!video.dataset.retried) {
+                      video.dataset.retried = 'true';
                       setTimeout(() => { 
-                        target.src = getMediaSource(reel.mediaUrl);
-                        target.load();
+                        video.src = getMediaSource(reel.mediaUrl);
+                        video.load();
                       }, 1000);
                     }
                   }}

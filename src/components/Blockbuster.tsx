@@ -87,13 +87,13 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             className="h-full w-full object-cover opacity-60 transition-all duration-1000 scale-105 group-hover:scale-100"
             onEnded={() => setShowTrailer(false)}
             onError={(e) => {
-              const target = e.target as HTMLVideoElement;
-              console.warn("Featured trailer error:", target.error?.message);
-              if (!target.dataset.retried) {
-                target.dataset.retried = 'true';
+              const video = e.currentTarget;
+              console.warn("Featured trailer error:", video.error?.message);
+              if (!video.dataset.retried) {
+                video.dataset.retried = 'true';
                 setTimeout(() => {
-                  target.src = getMediaSource(featuredMovie.trailerUrl);
-                  target.load();
+                  video.src = getMediaSource(featuredMovie.trailerUrl);
+                  video.load();
                 }, 1000);
               }
             }}

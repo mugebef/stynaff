@@ -149,13 +149,12 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
               crossOrigin="anonymous"
               className="h-full w-full object-cover" 
               onError={(e) => {
-                const target = e.target as HTMLVideoElement;
-                console.warn(`Video load failed for post ${post.id}:`, target.error?.message);
-                if (!target.dataset.retried) {
-                  target.dataset.retried = 'true';
+                const video = e.currentTarget;
+                if (!video.dataset.retried) {
+                  video.dataset.retried = 'true';
                   setTimeout(() => {
-                    target.src = getMediaSource(post.mediaUrl);
-                    target.load();
+                    video.src = getMediaSource(post.mediaUrl);
+                    video.load();
                   }, 1000);
                 }
               }}

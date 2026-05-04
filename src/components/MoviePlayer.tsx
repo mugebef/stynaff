@@ -66,13 +66,13 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({
                 onEnded={handleVideoEnded}
                 className="h-full w-full object-contain"
                 onError={(e) => {
-                  const target = e.target as HTMLVideoElement;
-                  console.warn("Movie playback error:", target.error?.message);
-                  if (!target.dataset.retried) {
-                    target.dataset.retried = 'true';
+                  const video = e.currentTarget;
+                  console.warn("Movie playback error:", video.error?.message);
+                  if (!video.dataset.retried) {
+                    video.dataset.retried = 'true';
                     setTimeout(() => {
-                      target.src = getMediaSource(videoUrl);
-                      target.load();
+                      video.src = getMediaSource(videoUrl);
+                      video.load();
                     }, 1000);
                   }
                 }}
