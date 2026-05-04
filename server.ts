@@ -290,8 +290,8 @@ async function startServer() {
   });
 
   const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
-    console.log(`>>> Domain: https://styni.com/`);
+    log(`>>> Styn Africa Server running at http://0.0.0.0:${PORT}`);
+    log(`>>> Domain: https://styni.com/`);
   });
 
   // Set timeout to 1 hour for very large video uploads (2GB)
