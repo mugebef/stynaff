@@ -309,7 +309,7 @@ export const Reels: React.FC<ReelsProps> = ({
         >
           {reels.map((reel, index) => (
             <div 
-              key={reel.id || `reel-${index}`} 
+              key={`reel-item-${reel.id || index}-${index}`} 
               className="relative h-full w-full snap-start overflow-hidden"
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >

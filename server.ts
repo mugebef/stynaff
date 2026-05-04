@@ -125,11 +125,11 @@ async function startServer() {
   // Explicitly 404 for missing upload files to avoid falling through to SPA index.html
   // FALLBACK: Try to serve from production domain if missing locally
   app.use("/uploads", async (req, res) => {
-    // req.path is already decoded by Express.
-    // To proxy correctly, we must re-encode each part for the outgoing request.
-    const parts = req.path.split('/');
+    // req.path is decoded by Express. Re-encode correctly for the proxy request.
+    const decodedPath = decodeURIComponent(req.path);
+    const parts = decodedPath.split('/').filter(Boolean);
     const encodedPath = parts.map(part => encodeURIComponent(part)).join('/');
-    const prodUrl = `https://styni.com/uploads${encodedPath}`;
+    const prodUrl = `https://styni.com/uploads/${encodedPath}`;
     
     log(`Local file missing [${req.path}], proxying from production: ${prodUrl}`);
     
@@ -191,7 +191,13 @@ async function startServer() {
   const multerStorage = multer.diskStorage({
     destination: (req, file, cb) => {
       const isVideo = file.mimetype.startsWith('video/');
-      cb(null, isVideo ? videoUploadDir : imageUploadDir);
+      const prodRoot = "/home/styni.com/stynaff/uploads";
+      const devRoot = path.join(process.cwd(), 'public', 'uploads');
+      // If the production directory exists, use it, otherwise use local public dev folder
+      const baseDir = fs.existsSync("/home/styni.com") ? prodRoot : devRoot;
+      const finalDir = path.join(baseDir, isVideo ? 'videos' : 'images');
+      fs.mkdirSync(finalDir, { recursive: true });
+      cb(null, finalDir);
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

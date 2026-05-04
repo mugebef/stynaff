@@ -23,6 +23,10 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
   const [isPlayerOpen, setIsPlayerOpen] = React.useState(false);
   const [isTrailerMode, setIsTrailerMode] = React.useState(false);
   const [showTrailer, setShowTrailer] = React.useState(true);
+  const [mediaError, setMediaError] = React.useState(false);
+  const [featuredMediaError, setFeaturedMediaError] = React.useState(false);
+
+  if (mediaError) return null; // Avoid crashing if parent is mapped and child fails
 
   const isAdmin = currentUser?.role === 'admin';
   const featuredMovie = movies.length > 0 ? movies[0] : null;
@@ -89,12 +93,13 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             onEnded={() => setShowTrailer(false)}
             onError={(e) => {
               const video = e.currentTarget;
-              console.warn("Featured trailer error:", video.error?.message);
               if (!video.dataset.retried) {
                 video.dataset.retried = 'true';
                 setTimeout(() => {
                   video.load();
-                }, 1000);
+                }, 2000);
+              } else {
+                setFeaturedMediaError(true);
               }
             }}
           >
@@ -105,6 +110,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
             alt="Featured Movie"
             className="h-full w-full object-cover opacity-80 transition-all duration-1000 scale-105 group-hover:scale-100"
             referrerPolicy="no-referrer"
+            onError={() => setFeaturedMediaError(true)}
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent"></div>

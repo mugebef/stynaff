@@ -100,7 +100,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         const usersSnap = await getDocs(collection(db, 'users'));
         const postsSnap = await getDocs(collection(db, 'posts'));
         
-        setUsers(usersSnap.docs.map(d => d.data() as User));
+        setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as User)));
         setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Post)));
       } catch (err) {
         console.error(err);

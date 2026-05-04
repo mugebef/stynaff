@@ -494,10 +494,22 @@ export default function App() {
         ...doc.data()
       })) as Post[];
       
-      const reelsData = postsData.filter(p => p.isReel);
+      const BLACKLISTED = [
+        '1776795683945-922546171',
+        '1777885316861-831769443',
+        '1777138188254-806013710',
+        '1776171287690-728881083',
+        '1776337851694-34368666',
+        '1777223284892-630774047',
+        '1776173516754-528542977'
+      ];
+
+      const filteredPosts = postsData.filter(p => {
+        if (!p.mediaUrl) return true;
+        return !BLACKLISTED.some(id => p.mediaUrl?.includes(id));
+      });
       
-      // Enable Global Feed to avoid "broken content" gaps as requested
-      const allFetchedPosts = postsData;
+      const allFetchedPosts = filteredPosts;
 
       const sortedPosts = [...allFetchedPosts].sort((a, b) => {
         // Boosted/Sponsored always at top
@@ -1178,7 +1190,7 @@ export default function App() {
     try {
       await updateDoc(ref, {
         comments: arrayUnion({
-          id: Math.random().toString(),
+          id: `c-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           authorId: user.uid,
           authorName: user.displayName,
           content,
