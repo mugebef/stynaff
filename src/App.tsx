@@ -326,6 +326,11 @@ export default function App() {
 
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserType;
+            // Upgrade to admin if email matches
+            if (firebaseUser.email && ADMIN_EMAILS.includes(firebaseUser.email) && userData.role !== 'admin') {
+              userData.role = 'admin';
+              await updateDoc(userDocRef, { role: 'admin' }).catch(err => console.error("Failed to auto-upgrade to admin:", err));
+            }
             setUser(userData);
             await updateDoc(userDocRef, { isOnline: true, lastSeen: serverTimestamp() }).catch(() => {});
             if (activeMenu === 'profile' && profileUser?.uid === firebaseUser.uid) {
@@ -1697,8 +1702,8 @@ export default function App() {
                 <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
                   <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
                   <div className="space-y-4">
-                    {users.filter(u => u.uid !== user.uid).slice(0, 5).map((u, index) => (
-                      <div key={`suggested-${u.uid || 'user'}-${index}`} className="flex items-center justify-between">
+                    {users.filter(u => u.uid !== user.uid).slice(0, 5).map((u) => (
+                      <div key={u.uid} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
                             {u.photoURL ? (

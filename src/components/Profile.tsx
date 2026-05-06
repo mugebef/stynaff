@@ -815,9 +815,9 @@ export const Profile: React.FC<ProfileProps> = ({
                     <p className="text-neutral-500">No posts on this timeline yet.</p>
                   </div>
                 ) : (
-                  userPosts.map((post, index) => (
+                  userPosts.map((post) => (
                     <PostCard 
-                      key={`${post.id || 'post'}-${index}`}
+                      key={post.id}
                       post={post}
                       currentUser={currentUser}
                       users={users}

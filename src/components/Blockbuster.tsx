@@ -211,7 +211,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
         <div className="grid grid-cols-2 md:flex md:flex-row md:overflow-x-auto gap-4 md:gap-10 pb-10 md:pb-16 no-scrollbar -mx-2 md:-mx-6 px-2 md:px-6">
           {recentlyAdded.map((movie) => (
             <motion.div
-              key={`recent-${movie.id}`}
+              key={movie.id}
               whileHover={{ y: -12 }}
               className="relative min-w-0 md:min-w-[400px] group cursor-pointer"
               onClick={() => {

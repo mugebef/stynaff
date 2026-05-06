@@ -173,11 +173,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </div>
           <div className="space-y-4">
-            {Array.from(new Set(friendRequests.map(r => r.uid))).map((uid, index) => {
+            {Array.from(new Set(friendRequests.map(r => r.uid))).map((uid) => {
               const req = friendRequests.find(r => r.uid === uid);
               if (!req) return null;
               return (
-                <div key={`${uid || 'req'}-${index}`} className="flex items-center justify-between gap-2">
+                <div key={uid} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800"></div>
                     <span className="truncate text-xs font-bold text-neutral-300">{req.displayName}</span>

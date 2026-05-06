@@ -521,7 +521,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                 const isFirstInGroup = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
                 return (
                   <motion.div
-                    key={`msg-${msg.id || 'message'}-${idx}`}
+                    key={msg.id}
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}

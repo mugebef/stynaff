@@ -129,9 +129,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                               <p className="text-xs font-bold">No notifications yet</p>
                             </div>
                           ) : (
-                            notifications.map((notif, index) => (
+                            notifications.map((notif) => (
                               <div 
-                                key={notif.id || `notif-${index}`}
+                                key={notif.id}
                                 onClick={() => {
                                   if (!notif.read) onMarkRead(notif.id);
                                   setIsNotificationsOpen(false);

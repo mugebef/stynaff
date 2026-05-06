@@ -207,9 +207,9 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
           <h3 className="text-sm font-black uppercase tracking-widest text-white">Viral Hashtags</h3>
         </div>
         <div className="flex flex-wrap gap-2 p-6">
-          {['#STYN', '#SocialSuperApp', '#Viral', '#TrendingNow', '#TechInnovation', '#AfricaRising', '#UniqueExperience'].map((tag, index) => (
+          {['#STYN', '#SocialSuperApp', '#Viral', '#TrendingNow', '#TechInnovation', '#AfricaRising', '#UniqueExperience'].map((tag) => (
             <button 
-              key={`${tag}-${index}`}
+              key={tag}
               onClick={() => setContent(prev => prev + (prev.endsWith(' ') || prev === '' ? '' : ' ') + tag)}
               className="rounded-full bg-neutral-800 px-4 py-2 text-xs font-bold text-neutral-400 transition-all hover:bg-orange-600 hover:text-white active:scale-95"
             >
@@ -230,9 +230,9 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
             <p className="text-neutral-500">Follow more people to see what's happening!</p>
           </div>
         ) : (
-          posts.map((post, index) => (
+          posts.map((post) => (
             <PostCard
-              key={`${post.id || 'post'}-${index}`}
+              key={post.id}
               post={post}
               currentUser={currentUser}
               users={users}

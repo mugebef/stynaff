@@ -86,7 +86,7 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
 
             <ul className="mb-8 flex-1 space-y-4">
               {tier.features.map((feature, j) => (
-                <li key={j} className="flex items-start gap-3 text-sm font-medium text-neutral-400">
+                <li key={`feature-${tier.name}-${j}`} className="flex items-start gap-3 text-sm font-medium text-neutral-400">
                   <CheckCircle size={18} className="mt-0.5 shrink-0 text-orange-500" />
                   {feature}
                 </li>
