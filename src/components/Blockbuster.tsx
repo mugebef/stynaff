@@ -85,137 +85,118 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
         movies.map((movie, index) => (
           <section 
             key={`blockbuster-movie-${movie.id || index}-${index}`}
-            className="relative h-full w-full snap-start overflow-hidden flex flex-col items-center justify-center p-3 md:p-10"
+            className="relative h-full w-full snap-start overflow-hidden flex flex-col bg-black"
           >
-            {/* Background Parallax-like Image */}
+            {/* Background Content */}
             <div className="absolute inset-0 z-0">
               <img
                 src={getMediaSource(movie.thumbnailUrl)}
-                alt=""
-                className={`h-full w-full object-cover transition-opacity duration-1000 ${activeReelIndex === index ? 'opacity-30 scale-110' : 'opacity-10 scale-100'}`}
-                style={{ filter: 'blur(40px)' }}
+                alt={movie.title}
+                className={`h-full w-full object-cover transition-all duration-[2s] ${activeReelIndex === index ? 'opacity-60 scale-110' : 'opacity-100 scale-100'}`}
+                referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-black/60"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
             </div>
 
-            {/* The Movie Card */}
-            <motion.div 
-              style={{
-                scale: activeReelIndex === index ? 1 : 0.9,
-                opacity: activeReelIndex === index ? 1 : 0.5,
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="relative h-[85%] w-full max-w-4xl rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-neutral-900 border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] flex flex-col group"
-            >
-              {/* Poster Image */}
-              <div className="absolute inset-0 z-0">
-                <img
-                  src={getMediaSource(movie.thumbnailUrl)}
-                  alt={movie.title}
-                  className="h-full w-full object-cover transition-transform duration-[3s] group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-              </div>
-
-              {/* Card Header Labels */}
-              <div className="absolute top-6 left-6 right-6 flex items-start justify-between z-20">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md px-3 py-1 border border-white/10 w-fit">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
-                      {movie.genre || 'Exclusive'}
-                    </span>
-                  </div>
-                  {movie.isGlobalPremiere !== false && (
-                    <div className="flex items-center gap-1.5 rounded-full bg-orange-600 px-3 py-1 shadow-lg shadow-orange-900/40 w-fit">
-                      <Star size={10} className="text-white" fill="currentColor" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white">Global Premiere</span>
-                    </div>
-                  )}
-                </div>
-                
-                {movie.price > 0 && (
-                  <div className="rounded-2xl bg-neutral-950/90 backdrop-blur-xl px-4 py-2 border border-white/20 shadow-2xl">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Premium</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Content Area */}
-              <div className="absolute inset-0 z-10 flex flex-col justify-end p-6 md:p-12 pb-8 md:pb-16 bg-gradient-to-t from-black via-transparent to-transparent">
-                <div className="space-y-4 md:space-y-6">
-                  <motion.h2 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={activeReelIndex === index ? { opacity: 1, y: 0 } : {}}
-                    className="text-4xl md:text-7xl lg:text-8xl font-black leading-[0.9] tracking-tighter uppercase italic text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
-                    style={{ fontStretch: 'condensed' }}
-                  >
-                    {movie.title}
-                  </motion.h2>
-
-                  <div className="flex flex-wrap items-center gap-3 md:gap-6 pt-2">
-                    <button 
-                      onClick={() => {
-                        if (hasAccess(movie)) {
-                          openPlayer(movie, false);
-                        } else {
-                          handlePurchaseClick(movie);
-                        }
-                      }}
-                      className="group flex items-center justify-center gap-3 md:gap-4 rounded-2xl md:rounded-[2.5rem] bg-white px-6 py-3.5 md:px-12 md:py-5 text-sm md:text-xl font-black uppercase tracking-widest text-black hover:scale-105 transition-all active:scale-95 shadow-xl"
-                    >
-                      <Play size={18} className="md:w-6 md:h-6" fill="currentColor" />
-                      <span>{hasAccess(movie) ? 'Play Now' : `Unlock for $${movie.price}`}</span>
-                    </button>
-
-                    <button 
-                      onClick={() => openPlayer(movie, true)}
-                      className="flex items-center justify-center gap-3 md:gap-4 rounded-2xl md:rounded-[2.5rem] bg-neutral-900/60 backdrop-blur-xl border border-white/10 px-6 py-3.5 md:px-12 md:py-5 text-sm md:text-xl font-black uppercase tracking-widest text-white hover:bg-neutral-900 transition-all active:scale-95 shadow-xl"
-                    >
-                      <Info size={18} className="md:w-6 md:h-6" />
-                      <span className="hidden md:inline">Information</span>
-                      <span className="md:hidden">Info</span>
-                    </button>
-                  </div>
-
-                  {/* Metadata Row */}
-                  <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                    <div className="flex items-center gap-2">
-                      <Clock size={12} className="text-orange-500" />
-                      <span>{movie.duration || '2h 15m'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Star size={12} className="text-yellow-500" fill="currentColor" />
-                      <span className="text-white">4.9 Rating</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Coming Soon / Release Info */}
-                <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                   <div className="flex items-center gap-3">
-                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                     <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Available in HD</span>
-                   </div>
-                   {isAdmin && (
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => setEditingMovie(movie)}
-                          className="p-2 rounded-xl bg-white/5 text-white hover:bg-orange-600 transition-all border border-white/10"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button 
-                          onClick={() => onDeleteMovie?.(movie.id)}
-                          className="p-2 rounded-xl bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white transition-all border border-red-500/20"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+            {/* Content Overlay - Only fully seen when active */}
+            <AnimatePresence>
+              {activeReelIndex === index && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="relative z-10 h-full w-full flex flex-col justify-end p-8 md:p-16 pb-24 md:pb-32"
+                >
+                  <div className="space-y-6 md:space-y-8 max-w-5xl">
+                    <div className="flex items-center gap-4">
+                      <div className="h-[3px] w-12 bg-orange-600 rounded-full"></div>
+                      <div className="flex items-center gap-2 rounded-full bg-orange-600 px-4 py-1.5 shadow-lg shadow-orange-900/40">
+                        <Star size={14} className="text-white" fill="currentColor" />
+                        <span className="text-[10px] md:text-sm font-black uppercase tracking-[0.2em] text-white">
+                          GLOBAL PREMIERE
+                        </span>
                       </div>
-                    )}
-                </div>
+                    </div>
+
+                    <h2 
+                      className="text-4xl md:text-7xl font-black italic uppercase leading-[0.85] tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+                      style={{ fontStretch: 'extra-condensed' }}
+                    >
+                      {movie.title}
+                    </h2>
+
+                    <p className="text-base md:text-2xl font-bold text-neutral-300 tracking-tight max-w-2xl">
+                      {movie.genre || 'Epic Feature Presentation'}
+                    </p>
+
+                    <div className="flex items-center gap-3 md:gap-6 pt-3 md:pt-4">
+                      <button 
+                        onClick={() => {
+                          if (hasAccess(movie)) {
+                            openPlayer(movie, false);
+                          } else {
+                            handlePurchaseClick(movie);
+                          }
+                        }}
+                        className="flex items-center gap-3 md:gap-4 rounded-xl md:rounded-[1.5rem] bg-white px-5 py-3 md:px-10 md:py-5 text-xs md:text-lg font-black text-black hover:scale-105 active:scale-95 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.2)]"
+                      >
+                        <Play size={16} className="md:w-6 md:h-6" fill="currentColor" />
+                        <span>Play Now</span>
+                      </button>
+
+                      <button 
+                        onClick={() => openPlayer(movie, true)}
+                        className="flex items-center gap-3 md:gap-4 rounded-xl md:rounded-[1.5rem] bg-neutral-950/60 backdrop-blur-2xl border border-white/10 px-5 py-3 md:px-8 md:py-5 text-xs md:text-lg font-black text-white hover:bg-neutral-900 transition-all active:scale-95 shadow-2xl"
+                      >
+                        <Info size={16} className="md:w-6 md:h-6" />
+                        <span>Info</span>
+                      </button>
+
+                      {isAdmin && (
+                        <div className="flex gap-2 md:gap-3">
+                           <button 
+                              onClick={() => setEditingMovie(movie)}
+                              className="flex h-10 w-10 md:h-14 md:w-14 items-center justify-center rounded-lg md:rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all shadow-xl"
+                            >
+                              <Pencil size={14} className="md:w-6 md:h-6" />
+                            </button>
+                            <button 
+                              onClick={() => onDeleteMovie?.(movie.id)}
+                              className="flex h-10 w-10 md:h-14 md:w-14 items-center justify-center rounded-lg md:rounded-2xl bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-xl"
+                            >
+                              <Trash2 size={14} className="md:w-6 md:h-6" />
+                            </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Title overlay for inactive items (cleaner look when below) */}
+            <AnimatePresence>
+              {activeReelIndex !== index && (
+                <motion.div 
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   className="absolute inset-x-0 bottom-0 z-10 p-12 bg-gradient-to-t from-black via-black/40 to-transparent"
+                >
+                  <h3 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter text-white opacity-60">
+                    {movie.title}
+                  </h3>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Premium Badge */}
+            {movie.price > 0 && (
+              <div className="absolute top-10 right-10 z-20 rounded-[1.5rem] bg-black/80 backdrop-blur-xl px-6 py-3 border border-white/20 shadow-2xl">
+                <span className="text-[12px] md:text-lg font-black uppercase tracking-[0.3em] text-white">PREMIUM</span>
               </div>
-            </motion.div>
+            )}
           </section>
         ))
       )}

@@ -1587,6 +1587,16 @@ export default function App() {
           />
         ) : activeMenu === 'live' ? (
           <Live />
+        ) : activeMenu === 'blockbuster' ? (
+          <Blockbuster 
+            movies={movies} 
+            currentUser={user} 
+            onUpload={handleMovieUpload} 
+            onUpdateMovie={handleMovieUpdate}
+            onDeleteMovie={handleMovieDelete}
+            onPurchase={handlePurchaseMovie}
+            onDeposit={() => navigate('wallet')}
+          />
         ) : activeMenu === 'upgrade' ? (
           <Upgrade user={user} onUpgrade={(tier) => handleUpdateProfile({ tier: tier as any })} />
         ) : (
@@ -1624,17 +1634,6 @@ export default function App() {
                   )}
                   {activeMenu === 'dating' && user && (
                     <Dating currentUser={user} onSwipe={handleSwipe} />
-                  )}
-                  {activeMenu === 'blockbuster' && (
-                    <Blockbuster 
-                      movies={movies} 
-                      currentUser={user} 
-                      onUpload={handleMovieUpload} 
-                      onUpdateMovie={handleMovieUpdate}
-                      onDeleteMovie={handleMovieDelete}
-                      onPurchase={handlePurchaseMovie}
-                      onDeposit={() => navigate('wallet')}
-                    />
                   )}
                   {(activeMenu === 'feed' || activeMenu === 'reels') && (
                     <Feed 
