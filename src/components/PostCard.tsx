@@ -262,8 +262,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
                 />
               </form>
               <div className="space-y-4">
-                {post.comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
+                {post.comments.map((comment, index) => (
+                  <div key={`post-comment-${comment.id || index}-${index}`} className="flex gap-3">
                     <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800"></div>
                     <div className="flex-1 rounded-2xl bg-neutral-900 p-3 shadow-sm ring-1 ring-white/5">
                       <h5 className="mb-1 text-xs font-bold text-white">{comment.authorName}</h5>

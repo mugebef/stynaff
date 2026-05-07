@@ -254,7 +254,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {stats.map((stat, i) => (
-          <div key={`${stat.label}-${i}`} className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
+          <div key={`admin-stat-${stat.label || i}-${i}`} className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-950 shadow-inner border border-white/5">
               {stat.icon}
             </div>
@@ -478,7 +478,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
             </thead>
             <tbody className="divide-y divide-white/5">
               {filteredUsers.map((user, index) => (
-                <tr key={`${user.uid || 'user'}-${index}`} className="hover:bg-neutral-800 transition-colors">
+                <tr key={`admin-user-${user.uid || index}-${index}`} className="hover:bg-neutral-800 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
@@ -597,7 +597,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         <div className="p-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {ads.map((ad, index) => (
-              <div key={ad.id || `ad-${index}`} className="relative overflow-hidden rounded-2xl border border-white/5 bg-neutral-950 p-4 transition-all hover:shadow-md hover:border-orange-600/30">
+              <div key={`admin-ad-${ad.id || index}-${index}`} className="relative overflow-hidden rounded-2xl border border-white/5 bg-neutral-950 p-4 transition-all hover:shadow-md hover:border-orange-600/30">
                 <div className="mb-4 aspect-video w-full overflow-hidden rounded-xl bg-neutral-900 border border-white/5">
                   <img src={ad.imageUrl} alt={ad.title} className="h-full w-full object-cover" />
                 </div>
@@ -709,7 +709,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
             </thead>
             <tbody className="divide-y divide-white/5">
               {posts.slice(0, 10).map((post, index) => (
-                <tr key={post.id || `post-${index}`} className="hover:bg-neutral-800 transition-colors">
+                <tr key={`admin-recent-post-${post.id || index}-${index}`} className="hover:bg-neutral-800 transition-colors">
                   <td className="px-6 py-4">
                     <p className="text-sm font-bold text-white">{post.authorName}</p>
                   </td>

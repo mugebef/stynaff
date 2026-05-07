@@ -32,7 +32,7 @@ export const FriendRequestList: React.FC<FriendRequestListProps> = ({ requests, 
           </div>
         ) : (
           requests.map((req, index) => (
-            <div key={`${req.uid || 'req'}-${index}`} className="flex items-center justify-between gap-4 rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-xl ring-1 ring-white/5 transition-all hover:shadow-2xl hover:border-orange-600/30">
+            <div key={`friend-request-item-${req.uid || index}-${index}`} className="flex items-center justify-between gap-4 rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-xl ring-1 ring-white/5 transition-all hover:shadow-2xl hover:border-orange-600/30">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800 text-neutral-500 shadow-lg border border-white/5">
                   {req.photoURL ? (

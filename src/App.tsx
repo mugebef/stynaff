@@ -1521,7 +1521,7 @@ export default function App() {
       />
 
       <main className={`mx-auto ${
-        activeMenu === 'chat' || activeMenu === 'reels' || activeMenu === 'live'
+        activeMenu === 'chat' || activeMenu === 'reels' || activeMenu === 'live' || activeMenu === 'blockbuster'
           ? 'max-w-none px-0 h-[calc(100vh-72px)] md:h-[calc(100vh-84px)] mt-[72px] md:mt-[84px] overflow-hidden' 
           : 'max-w-7xl px-4 pt-[110px] pb-12 md:px-6 md:pt-24 min-h-screen'
       }`}>
@@ -1702,8 +1702,8 @@ export default function App() {
                 <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
                   <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
                   <div className="space-y-4">
-                    {users.filter(u => u.uid !== user.uid).slice(0, 5).map((u) => (
-                      <div key={u.uid} className="flex items-center justify-between">
+                    {users.filter(u => u.uid !== user.uid).slice(0, 5).map((u, index) => (
+                      <div key={`suggested-user-${u.uid || index}-${index}`} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
                             {u.photoURL ? (

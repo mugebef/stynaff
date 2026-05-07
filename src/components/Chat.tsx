@@ -428,7 +428,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
           ) : (
             chatUsers.map((user, index) => (
               <div
-                key={`${user.uid || 'chat'}-${index}`}
+                key={`chat-user-${user.uid || index}-${index}`}
                 onClick={() => setSelectedUser(user)}
                 className={`flex cursor-pointer items-center gap-4 px-4 py-4 transition-all hover:bg-[#202c33] border-b border-white/5 ${
                   selectedUser?.uid === user.uid ? 'bg-[#2a3942]' : ''
@@ -521,7 +521,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                 const isFirstInGroup = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
                 return (
                   <motion.div
-                    key={msg.id}
+                    key={`chat-msg-${msg.id || idx}-${idx}`}
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}

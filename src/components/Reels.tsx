@@ -332,57 +332,76 @@ export const Reels: React.FC<ReelsProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <video
-                    ref={el => videoRefs.current[reel.id] = el}
-                    data-reel-id={reel.id}
-                    src={getMediaSource(reel.mediaUrl)}
-                    autoPlay={index === activeIndex}
-                    loop
-                    muted={isMuted}
-                    playsInline
-                    preload="auto"
-                    crossOrigin="anonymous"
-                    className="h-full w-full object-cover cursor-pointer"
-                    onLoadedMetadata={(e) => {
-                      const video = e.currentTarget;
-                      if (index === activeIndex && !video.paused) {
-                        setIsPlaying(true);
-                      }
-                    }}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onError={(e) => {
-                      const video = e.currentTarget;
-                      console.error(`Video load failed for reel ${reel.id}:`, video.error?.code, video.error?.message, getMediaSource(reel.mediaUrl));
-                      
-                      // Try to reload once if it fails
-                      if (!video.dataset.retried) {
-                        video.dataset.retried = 'true';
-                        setTimeout(() => { 
-                          video.load();
-                        }, 2000);
-                      } else {
-                        // After retrying twice, show error and auto-skip to next if it's the active one
-                        setVideoError(prev => new Set(prev).add(reel.id));
-                        if (index === activeIndex) {
-                          setTimeout(skipToNextReel, 3000);
+                  <div className="relative h-full w-full">
+                    <video
+                      ref={el => videoRefs.current[reel.id] = el}
+                      data-reel-id={reel.id}
+                      src={getMediaSource(reel.mediaUrl)}
+                      autoPlay={index === activeIndex}
+                      loop
+                      muted={isMuted}
+                      playsInline
+                      preload="auto"
+                      crossOrigin="anonymous"
+                      className="h-full w-full object-cover cursor-pointer"
+                      onTimeUpdate={(e) => {
+                        const video = e.currentTarget;
+                        const progressBar = document.getElementById(`progress-${reel.id}`);
+                        if (progressBar) {
+                          const percentage = (video.currentTime / video.duration) * 100;
+                          progressBar.style.width = `${percentage}%`;
                         }
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const v = videoRefs.current[reel.id];
-                      if (v) {
-                        if (v.paused) {
-                          v.play().catch(err => console.error("Play error:", err));
+                      }}
+                      onLoadedMetadata={(e) => {
+                        const video = e.currentTarget;
+                        if (index === activeIndex && !video.paused) {
+                          setIsPlaying(true);
+                        }
+                      }}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      onError={(e) => {
+                        const video = e.currentTarget;
+                        console.error(`Video load failed for reel ${reel.id}:`, video.error?.code, video.error?.message, getMediaSource(reel.mediaUrl));
+                        
+                        // Try to reload once if it fails
+                        if (!video.dataset.retried) {
+                          video.dataset.retried = 'true';
+                          setTimeout(() => { 
+                            video.load();
+                          }, 2000);
                         } else {
-                          v.pause();
+                          // After retrying twice, show error and auto-skip to next if it's the active one
+                          setVideoError(prev => new Set(prev).add(reel.id));
+                          if (index === activeIndex) {
+                            setTimeout(skipToNextReel, 3000);
+                          }
                         }
-                      }
-                    }}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const v = videoRefs.current[reel.id];
+                        if (v) {
+                          if (v.paused) {
+                            v.play().catch(err => console.error("Play error:", err));
+                          } else {
+                            v.pause();
+                          }
+                        }
+                      }}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    
+                    {/* Progress Bar */}
+                    <div className="absolute bottom-0 left-0 h-1 w-full bg-white/20 z-50">
+                      <div 
+                        id={`progress-${reel.id}`}
+                        className="h-full bg-orange-600 transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(234,88,12,0.8)]"
+                        style={{ width: '0%' }}
+                      />
+                    </div>
+                  </div>
                 )}
 
               {/* Pin Indicator */}
@@ -734,8 +753,8 @@ export const Reels: React.FC<ReelsProps> = ({
                     <p className="text-xs">Start the conversation!</p>
                   </div>
                 ) : (
-                  reels.find(r => r.id === showComments)?.comments.map((comment: any) => (
-                    <div key={comment.id} className="flex gap-3">
+                  reels.find(r => r.id === showComments)?.comments.map((comment: any, index: number) => (
+                    <div key={`reel-comment-${comment.id || index}-${index}`} className="flex gap-3">
                       <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800 border border-white/10">
                         {users.find(u => u.uid === comment.authorId)?.photoURL && (
                           <img src={users.find(u => u.uid === comment.authorId)?.photoURL} className="h-full w-full rounded-full object-cover" alt="" />

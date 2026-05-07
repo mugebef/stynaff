@@ -121,7 +121,7 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
               </div>
             ) : (
               filteredFriends.map((friend, index) => (
-                <div key={`friend-${friend.uid || 'friend'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
+                <div key={`friend-item-${friend.uid || index}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
                   <div 
                     onClick={() => onViewProfile(friend.uid)}
                     className="flex cursor-pointer items-center gap-3 overflow-hidden"
@@ -172,7 +172,7 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
                   <p className="text-sm text-neutral-500">No incoming friend requests.</p>
                 ) : (
                   incomingRequests.map((req, index) => (
-                    <div key={`incoming-${req.uid || 'req'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
+                    <div key={`incoming-req-${req.uid || index}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
                       <div 
                         onClick={() => onViewProfile(req.uid)}
                         className="flex cursor-pointer items-center gap-3 overflow-hidden"
@@ -219,7 +219,7 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
                   <p className="text-sm text-neutral-500">No sent requests.</p>
                 ) : (
                   outgoingRequests.map((req, index) => (
-                    <div key={`outgoing-${req.uid || 'req'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
+                    <div key={`outgoing-req-${req.uid || index}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm hover:border-orange-600/30">
                       <div 
                         onClick={() => onViewProfile(req.uid)}
                         className="flex cursor-pointer items-center gap-3 overflow-hidden"
@@ -266,7 +266,7 @@ export const FriendsPage: React.FC<FriendsPageProps> = ({
               </div>
             ) : (
               suggestions.map((sUser, index) => (
-                <div key={`suggestion-${sUser.uid || 'user'}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
+                <div key={`suggestion-item-${sUser.uid || index}-${index}`} className="flex items-center justify-between rounded-3xl border border-white/5 bg-neutral-900 p-4 shadow-sm transition-all hover:shadow-md hover:border-orange-600/30">
                   <div 
                     onClick={() => onViewProfile(sUser.uid)}
                     className="flex cursor-pointer items-center gap-3 overflow-hidden"
