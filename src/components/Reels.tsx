@@ -249,7 +249,7 @@ export const Reels: React.FC<ReelsProps> = ({
   };
 
   return (
-    <div className="relative h-[88vh] w-full max-w-[450px] mx-auto overflow-hidden sm:rounded-[32px] bg-black shadow-2xl">
+    <div className="relative h-[85vh] md:h-[88vh] w-full max-w-[450px] mx-auto overflow-hidden sm:rounded-[32px] bg-black shadow-2xl border border-white/5">
       {/* Search Header */}
       <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
         <AnimatePresence>
@@ -360,6 +360,7 @@ export const Reels: React.FC<ReelsProps> = ({
                       }}
                       onPlay={() => setIsPlaying(true)}
                       onPause={() => setIsPlaying(false)}
+                      onEnded={skipToNextReel}
                       onError={(e) => {
                         const video = e.currentTarget;
                         console.error(`Video load failed for reel ${reel.id}:`, video.error?.code, video.error?.message, getMediaSource(reel.mediaUrl));
@@ -699,13 +700,14 @@ export const Reels: React.FC<ReelsProps> = ({
       )}
 
       {/* Upload Button - Visible on all devices within the reels container */}
-      <div className="absolute bottom-6 right-6 z-50 md:bottom-10 md:right-10">
+      <div className="absolute bottom-8 right-6 z-[100] md:bottom-12 md:right-10">
         <button
           onClick={() => setIsUploadOpen(true)}
-          className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_20px_50px_rgba(234,88,12,0.4)] hover:scale-110 transition-all active:scale-95 ring-4 ring-black/20"
+          className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-orange-600 text-white shadow-[0_0_30px_rgba(234,88,12,0.6)] hover:scale-110 hover:bg-orange-500 transition-all active:scale-95 ring-4 ring-black/40"
           title="Upload Video"
         >
-          <Plus size={24} strokeWidth={3} className="md:w-8 md:h-8" />
+          <div className="absolute inset-0 rounded-full bg-orange-500 animate-pulse opacity-20" />
+          <Plus size={32} strokeWidth={3} className="relative z-10" />
         </button>
       </div>
 
