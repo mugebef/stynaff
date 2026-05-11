@@ -342,7 +342,6 @@ export const Reels: React.FC<ReelsProps> = ({
                       muted={isMuted}
                       playsInline
                       preload="auto"
-                      crossOrigin="anonymous"
                       className="h-full w-full object-cover cursor-pointer"
                       onTimeUpdate={(e) => {
                         const video = e.currentTarget;

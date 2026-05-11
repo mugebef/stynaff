@@ -91,7 +91,9 @@ async function startServer() {
     // This prevents redirect loops on development/preview URLs
     if (host.includes('styni.com')) {
       const isWWW = host.startsWith('www.');
-      const isHTTP = req.protocol === 'http';
+      // Check both standard protocol and common proxy headers to avoid redirect loops
+      const proto = req.headers['x-forwarded-proto'] || req.protocol;
+      const isHTTP = proto === 'http';
       
       if (isWWW || isHTTP) {
         return res.redirect(301, `https://styni.com${req.url}`);
@@ -140,6 +142,8 @@ async function startServer() {
   
   // Explicitly 404 for missing upload files to match Nginx "try_files $uri $uri/ =404"
   app.use("/uploads", (req, res) => {
+    const fullPath = path.join(baseUploadsDir, req.url);
+    log(`>>> Upload 404: ${req.url} (Looking at: ${fullPath})`);
     res.status(404).send("File not found");
   });
 
@@ -206,7 +210,8 @@ async function startServer() {
       // Especially crucial for large (up to 2GB) files.
       // If compression is needed, it should be done as a background worker process.
       
-      const fileUrl = `https://styni.com/uploads/${subDir}/${finalFilename}`;
+      // Return relative URL to allow the same code to work on both dev/preview and production
+      const fileUrl = `/uploads/${subDir}/${finalFilename}`;
       const stats = fs.statSync(req.file.path);
       log(`Upload successful: ${fileUrl} (Size: ${stats.size} bytes, Multer reported: ${req.file.size})`);
       

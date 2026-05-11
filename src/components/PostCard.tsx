@@ -151,7 +151,6 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
               src={getMediaSource(post.mediaUrl)}
               controls 
               playsInline
-              crossOrigin="anonymous"
               className="h-full w-full object-cover" 
               onError={(e) => {
                 const video = e.currentTarget;

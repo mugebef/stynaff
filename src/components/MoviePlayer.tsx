@@ -94,7 +94,6 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({
                   controls={false}
                   autoPlay={!showPurchaseOverlay}
                   playsInline
-                  crossOrigin="anonymous"
                   onTimeUpdate={handleTimeUpdate}
                   onLoadedMetadata={handleLoadedMetadata}
                   onEnded={handleVideoEnded}
