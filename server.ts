@@ -75,10 +75,22 @@ try {
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', true);
   const PORT = 3000;
 
   // 0. LOGGING FIRST (Critical for debugging why requests might be dropped)
   app.use((req, res, next) => {
+    // A. Disable aggressive caching globally
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
+    // B. HTTPS and styni.com Logic
+    const host = req.headers.host;
+    if (host && (host.startsWith('www.') || req.protocol === 'http')) {
+      return res.redirect(301, `https://styni.com${req.url}`);
+    }
+
     log(`${req.method} ${req.url} (Content-Length: ${req.headers['content-length'] || 'unknown'})`);
     req.on('close', () => {
       if (!res.writableEnded) {
@@ -95,11 +107,16 @@ async function startServer() {
   // Serve from both custom and local paths to avoid mismatch
   log(`Setting up static serving for /uploads to ${baseUploadsDir}`);
   const staticOptions = {
+    etag: false,
+    lastModified: false,
     setHeaders: (res: express.Response, filePath: string) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
       res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       
       // Ensure correct MIME types for common video formats
       if (filePath.endsWith('.mp4')) {
@@ -293,14 +310,21 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     
     // Check if dist exists to prevent crash
-    import("fs").then((fs) => {
-      if (!fs.existsSync(distPath)) {
-        console.warn("WARNING: 'dist' directory not found. Did you run 'npm run build'?");
-      }
-    });
+    if (!fs.existsSync(distPath)) {
+      console.warn("WARNING: 'dist' directory not found. Did you run 'npm run build'?");
+    }
 
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      etag: false,
+      lastModified: false,
+      setHeaders: (res) => {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+      }
+    }));
     app.get("*", (req, res) => {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.sendFile(path.join(distPath, "index.html"), (err) => {
         if (err) {
           res.status(500).send("Server Error: Static files missing. Please run build.");
