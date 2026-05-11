@@ -86,9 +86,16 @@ async function startServer() {
     res.setHeader("Expires", "0");
 
     // B. HTTPS and styni.com Logic
-    const host = req.headers.host;
-    if (host && (host.startsWith('www.') || req.protocol === 'http')) {
-      return res.redirect(301, `https://styni.com${req.url}`);
+    const host = req.headers.host || "";
+    // Only apply redirect logic if the host is related to styni.com
+    // This prevents redirect loops on development/preview URLs
+    if (host.includes('styni.com')) {
+      const isWWW = host.startsWith('www.');
+      const isHTTP = req.protocol === 'http';
+      
+      if (isWWW || isHTTP) {
+        return res.redirect(301, `https://styni.com${req.url}`);
+      }
     }
 
     log(`${req.method} ${req.url} (Content-Length: ${req.headers['content-length'] || 'unknown'})`);
