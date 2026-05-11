@@ -1615,6 +1615,7 @@ export default function App() {
                   setProfileUser(user);
                 }}
                 onMenuClick={navigate}
+                onReelUploadClick={() => setIsGlobalUploadOpen(true)}
                 activeMenu={activeMenu}
               />
             )}

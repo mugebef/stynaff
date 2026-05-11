@@ -196,7 +196,7 @@ export const Live: React.FC = () => {
     if (!selectedStream?.id) return;
     
     // Add floating heart
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setReactions(prev => [...prev, { id, x: Math.random() * 80 + 10 }]);
     setTimeout(() => {
       setReactions(prev => prev.filter(r => r.id !== id));

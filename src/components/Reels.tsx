@@ -309,7 +309,7 @@ export const Reels: React.FC<ReelsProps> = ({
         >
           {reels.map((reel, index) => (
             <div 
-              key={`reel-item-${reel.id || index}-${index}`} 
+              key={`reel-item-${reel.id || index}-${index}-${reels.length}`} 
               className="relative h-full w-full snap-start overflow-hidden"
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >
@@ -438,8 +438,8 @@ export const Reels: React.FC<ReelsProps> = ({
                     exit={{ opacity: 0, scale: 0.5 }}
                     className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
                   >
-                    <div className="rounded-full bg-black/40 p-6 backdrop-blur-md">
-                      <Play size={48} className="text-white fill-current" />
+                    <div className="rounded-full bg-black/40 p-4 backdrop-blur-md">
+                      <Play size={24} className="text-white fill-current md:w-8 md:h-8" />
                     </div>
                   </motion.div>
                 )}
@@ -630,7 +630,7 @@ export const Reels: React.FC<ReelsProps> = ({
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-black tracking-tight drop-shadow-md hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}>
+                <span className="text-xs font-black tracking-tight drop-shadow-md hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); onChat(users.find(u => u.uid === reel.authorId) || reel as any); }}>
                   {reel.authorName}
                 </span>
                 {reel.authorVerified && <CheckCircle size={14} className="fill-blue-500 text-white" />}
@@ -649,7 +649,7 @@ export const Reels: React.FC<ReelsProps> = ({
             </div>
           </div>
 
-          <p className="text-sm font-medium leading-relaxed drop-shadow-md line-clamp-3">
+          <p className="text-xs font-medium leading-relaxed drop-shadow-md line-clamp-3">
             {reel.content}
           </p>
           

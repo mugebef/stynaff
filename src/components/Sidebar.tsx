@@ -22,6 +22,7 @@ interface SidebarProps {
   onSendFriendRequest: (uid: string) => void;
   onProfileClick: () => void;
   onMenuClick: (menu: string) => void;
+  onReelUploadClick?: () => void;
   activeMenu?: string;
 }
 
@@ -34,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSendFriendRequest,
   onProfileClick,
   onMenuClick,
+  onReelUploadClick,
   activeMenu
 }) => {
   const suggestedFriends = users
@@ -56,6 +58,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div className="hidden w-80 flex-col gap-6 lg:flex">
+      {/* Post Reel Quick Access */}
+      <button 
+        onClick={onReelUploadClick}
+        className="w-full flex items-center justify-center gap-3 rounded-2xl bg-orange-600 px-6 py-4 font-black uppercase tracking-widest text-white shadow-xl shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95 group mb-2"
+      >
+        <div className="rounded-lg bg-white/20 p-1 group-hover:rotate-90 transition-transform duration-500">
+          <Plus size={18} />
+        </div>
+        Post Reel
+      </button>
+
       {/* User Profile Card */}
       <div 
         onClick={onProfileClick}
