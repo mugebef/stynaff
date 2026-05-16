@@ -44,7 +44,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       alert(`${mockUsers.length} mock profiles cleared.`);
       // Refresh
       const usersSnap = await getDocs(collection(db, 'users'));
-      setUsers(usersSnap.docs.map(d => d.data() as User));
+      setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as User)));
     } catch (err) {
       console.error(err);
       alert('Failed to clear users');
@@ -194,7 +194,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       alert('10 Fake users added successfully!');
       // Refresh user list
       const usersSnap = await getDocs(collection(db, 'users'));
-      setUsers(usersSnap.docs.map(d => d.data() as User));
+      setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as User)));
     } catch (err) {
       console.error(err);
       alert('Failed to seed users');

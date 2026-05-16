@@ -64,7 +64,13 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
             className="h-10 w-10 cursor-pointer overflow-hidden rounded-full bg-neutral-800 ring-2 ring-orange-900/20 transition-all hover:ring-orange-500/30"
           >
             {authorPhoto ? (
-              <img src={authorPhoto} alt={authorName} className="h-full w-full object-cover" />
+              <img 
+                src={authorPhoto} 
+                alt={authorName} 
+                className="h-full w-full object-cover" 
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-neutral-500">
                 <User size={20} />
@@ -142,6 +148,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
               src={post.mediaUrl} 
               alt="Post content" 
               className="h-full w-full object-cover cursor-zoom-in transition-all hover:scale-105 active:scale-100" 
+              loading="lazy"
               referrerPolicy="no-referrer" 
               onClick={() => setIsImageZoomed(true)}
               onError={() => setMediaError(true)}

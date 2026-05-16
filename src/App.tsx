@@ -3,28 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Navbar } from './components/Navbar';
-import { Feed } from './components/Feed';
 import { Auth } from './components/Auth';
-import { Chat } from './components/Chat';
-import { Dating } from './components/Dating';
-import { Blockbuster } from './components/Blockbuster';
-import { Sidebar } from './components/Sidebar';
-import { Profile } from './components/Profile';
-import { AdminDashboard } from './components/AdminDashboard';
-import { Wallet } from './components/Wallet';
-import { Reels } from './components/Reels';
-import { Live } from './components/Live';
-import { UploadReel } from './components/UploadReel';
-import { InfoPages } from './components/InfoPages';
-import { Footer } from './components/Footer';
-import { Upgrade } from './components/Upgrade';
-import { FriendsPage } from './components/FriendsPage';
 import { Post, User as UserType, Notification } from './types';
 import { Globe, Loader2, LayoutDashboard, Wallet as WalletIcon, Video, Bell, Users, Flag, User, Heart, Play, MessageSquare, Plus, X, Shield } from 'lucide-react';
 import { APP_NAME, ADMIN_EMAILS } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Lazy load heavy components for better initial load speed
+const Feed = lazy(() => import('./components/Feed').then(mod => ({ default: mod.Feed })));
+const Chat = lazy(() => import('./components/Chat').then(mod => ({ default: mod.Chat })));
+const Dating = lazy(() => import('./components/Dating').then(mod => ({ default: mod.Dating })));
+const Blockbuster = lazy(() => import('./components/Blockbuster').then(mod => ({ default: mod.Blockbuster })));
+const Sidebar = lazy(() => import('./components/Sidebar').then(mod => ({ default: mod.Sidebar })));
+const Profile = lazy(() => import('./components/Profile').then(mod => ({ default: mod.Profile })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(mod => ({ default: mod.AdminDashboard })));
+const Wallet = lazy(() => import('./components/Wallet').then(mod => ({ default: mod.Wallet })));
+const Reels = lazy(() => import('./components/Reels').then(mod => ({ default: mod.Reels })));
+const Live = lazy(() => import('./components/Live').then(mod => ({ default: mod.Live })));
+const UploadReel = lazy(() => import('./components/UploadReel').then(mod => ({ default: mod.UploadReel })));
+const InfoPages = lazy(() => import('./components/InfoPages').then(mod => ({ default: mod.InfoPages })));
+const Footer = lazy(() => import('./components/Footer').then(mod => ({ default: mod.Footer })));
+const Upgrade = lazy(() => import('./components/Upgrade').then(mod => ({ default: mod.Upgrade })));
+const FriendsPage = lazy(() => import('./components/FriendsPage').then(mod => ({ default: mod.FriendsPage })));
 import { 
   auth, 
   db, 
@@ -1525,215 +1527,238 @@ export default function App() {
           ? 'max-w-none px-0 h-[calc(100vh-72px)] md:h-[calc(100vh-84px)] mt-[72px] md:mt-[84px] overflow-hidden' 
           : 'max-w-7xl px-4 pt-[110px] pb-12 md:px-6 md:pt-24 min-h-screen'
       }`}>
-        {activeMenu === 'profile' && profileUser ? (
-          <Profile 
-            user={profileUser}
-            currentUser={user}
-            users={users}
-            posts={posts}
-            onUpdateProfile={(updates) => handleUpdateProfile(updates, profileUser.uid)}
-            onLike={handleLike}
-            onDelete={handleDelete}
-            onComment={handleComment}
-            onBoost={handleBoost}
-            onSendFriendRequest={handleSendFriendRequest}
-            onAcceptFriend={handleAcceptFriend}
-            onDeclineFriend={handleDeclineFriend}
-            onCancelFriendRequest={handleCancelFriendRequest}
-            onUnfriend={handleUnfriend}
-            onFollow={handleFollow}
-            onBack={handleBack}
-          />
-        ) : activeMenu === 'friends' ? (
-          <FriendsPage 
-            currentUser={user}
-            users={users}
-            onAcceptFriend={handleAcceptFriend}
-            onDeclineFriend={handleDeclineFriend}
-            onCancelFriendRequest={handleCancelFriendRequest}
-            onSendFriendRequest={handleSendFriendRequest}
-            onUnfriend={handleUnfriend}
-            onViewProfile={(uid) => {
-              const target = users.find(u => u.uid === uid);
-              if (target) {
-                setProfileUser(target);
-                navigate('profile');
-              }
-            }}
-          />
-        ) : activeMenu === 'admin' && user?.role === 'admin' ? (
-          <AdminDashboard currentUser={user} onUpdateUser={handleUpdateUserAdmin} />
-        ) : activeMenu === 'wallet' ? (
-          <Wallet user={user} onUpdateUser={handleUpdateProfile} />
-        ) : activeMenu === 'reels' ? (
-          <Reels 
-            posts={allReels} 
-            currentUser={user} 
-            onLike={handleLike} 
-            onComment={handleComment} 
-            onUpload={handleReelUpload}
-            onUpdateReel={handleReelUpdate}
-            onPinReel={handlePinReel}
-            onDelete={handleDelete}
-            onFollow={handleFollow}
-            onShare={handleShare}
-            onView={handleView}
-            onChat={(targetUser) => {
-              setSelectedChatUser(targetUser);
-              navigate('chat');
-            }}
-            users={users}
-            onPurchaseMovie={handlePurchaseMovie}
-          />
-        ) : activeMenu === 'live' ? (
-          <Live />
-        ) : activeMenu === 'blockbuster' ? (
-          <Blockbuster 
-            movies={movies} 
-            currentUser={user} 
-            onUpload={handleMovieUpload} 
-            onUpdateMovie={handleMovieUpdate}
-            onDeleteMovie={handleMovieDelete}
-            onPurchase={handlePurchaseMovie}
-            onDeposit={() => navigate('wallet')}
-          />
-        ) : activeMenu === 'upgrade' ? (
-          <Upgrade user={user} onUpgrade={(tier) => handleUpdateProfile({ tier: tier as any })} />
-        ) : (
-          <div className="flex gap-8">
-            {/* Left Sidebar - Profile & Requests */}
-            {activeMenu !== 'blockbuster' && activeMenu !== 'chat' && (
-              <Sidebar 
-                user={user} 
-                users={users}
-                friendRequests={user?.friendRequests || []} 
-                onAcceptFriend={handleAcceptFriend} 
-                onDeclineFriend={handleDeclineFriend} 
-                onSendFriendRequest={handleSendFriendRequest}
-                onProfileClick={() => {
-                  navigate('profile');
-                  setProfileUser(user);
-                }}
-                onMenuClick={navigate}
-                onReelUploadClick={() => setIsGlobalUploadOpen(true)}
-                activeMenu={activeMenu}
-              />
-            )}
-
-            {/* Main Content Area */}
-            <div className="flex-1">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeMenu}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {activeMenu === 'chat' && user && (
-                    <Chat currentUser={user} users={users} initialSelectedUser={selectedChatUser} />
-                  )}
-                  {activeMenu === 'dating' && user && (
-                    <Dating currentUser={user} onSwipe={handleSwipe} />
-                  )}
-                  {(activeMenu === 'feed' || activeMenu === 'reels') && (
-                    <Feed 
-                      posts={posts} 
-                      currentUser={user} 
+        <Suspense fallback={
+          <div className="flex items-center justify-center p-20 bg-[#0c0c0c] min-h-[300px]">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-10 w-10 animate-spin text-orange-500 mb-4" />
+              <span className="text-sm font-bold uppercase tracking-widest text-neutral-400">Loading Styn Africa...</span>
+            </div>
+          </div>
+        }>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMenu}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.15 }}
+              className="h-full"
+            >
+              {['chat', 'reels', 'live', 'blockbuster', 'profile', 'friends', 'admin', 'wallet', 'upgrade'].includes(activeMenu) ? (
+                // Full-width or specific internal layouts 
+                <>
+                  {activeMenu === 'profile' && profileUser && (
+                    <Profile 
+                      user={profileUser}
+                      currentUser={user}
                       users={users}
-                      onPost={handlePost} 
+                      posts={posts}
+                      onUpdateProfile={(updates) => handleUpdateProfile(updates, profileUser.uid)}
                       onLike={handleLike}
                       onDelete={handleDelete}
                       onComment={handleComment}
                       onBoost={handleBoost}
+                      onSendFriendRequest={handleSendFriendRequest}
+                      onAcceptFriend={handleAcceptFriend}
+                      onDeclineFriend={handleDeclineFriend}
+                      onCancelFriendRequest={handleCancelFriendRequest}
+                      onUnfriend={handleUnfriend}
                       onFollow={handleFollow}
-                      onShare={handleShare}
-                      onReelUploadClick={() => setIsGlobalUploadOpen(true)}
-                      ads={ads}
+                      onBack={handleBack}
                     />
                   )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Right Sidebar - Suggestions & Ads */}
-            {activeMenu !== 'blockbuster' && activeMenu !== 'chat' && (
-              <div className="hidden w-80 flex-col gap-6 xl:flex">
-                {/* Sponsored Card */}
-                {ads.filter(a => a.active).length > 0 ? (
-                  <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
-                    <div className="relative aspect-video">
-                      <img src={ads.filter(a => a.active)[0].imageUrl} alt="Ad" className="h-full w-full object-cover" />
-                      <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                        Sponsored
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h4 className="mb-2 text-sm font-black text-white">{ads.filter(a => a.active)[0].title}</h4>
-                      <p className="mb-4 text-xs leading-relaxed text-neutral-400">{ads.filter(a => a.active)[0].description}</p>
-                      <a 
-                        href={ads.filter(a => a.active)[0].link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
-                      >
-                        Learn More
-                      </a>
-                    </div>
+                  {activeMenu === 'friends' && (
+                    <FriendsPage 
+                      currentUser={user}
+                      users={users}
+                      onAcceptFriend={handleAcceptFriend}
+                      onDeclineFriend={handleDeclineFriend}
+                      onCancelFriendRequest={handleCancelFriendRequest}
+                      onSendFriendRequest={handleSendFriendRequest}
+                      onUnfriend={handleUnfriend}
+                      onViewProfile={(uid) => {
+                        const target = users.find(u => u.uid === uid);
+                        if (target) {
+                          setProfileUser(target);
+                          navigate('profile');
+                        }
+                      }}
+                    />
+                  )}
+                  {activeMenu === 'admin' && user?.role === 'admin' && (
+                    <AdminDashboard currentUser={user} onUpdateUser={handleUpdateUserAdmin} />
+                  )}
+                  {activeMenu === 'wallet' && (
+                    <Wallet user={user} onUpdateUser={handleUpdateProfile} />
+                  )}
+                  {activeMenu === 'reels' && (
+                    <Reels 
+                      posts={allReels} 
+                      currentUser={user} 
+                      onLike={handleLike} 
+                      onComment={handleComment} 
+                      onUpload={handleReelUpload}
+                      onUpdateReel={handleReelUpdate}
+                      onPinReel={handlePinReel}
+                      onDelete={handleDelete}
+                      onFollow={handleFollow}
+                      onShare={handleShare}
+                      onView={handleView}
+                      onChat={(targetUser) => {
+                        setSelectedChatUser(targetUser);
+                        navigate('chat');
+                      }}
+                      users={users}
+                      onPurchaseMovie={handlePurchaseMovie}
+                    />
+                  )}
+                  {activeMenu === 'live' && <Live />}
+                  {activeMenu === 'blockbuster' && (
+                    <Blockbuster 
+                      movies={movies} 
+                      currentUser={user} 
+                      onUpload={handleMovieUpload} 
+                      onUpdateMovie={handleMovieUpdate}
+                      onDeleteMovie={handleMovieDelete}
+                      onPurchase={handlePurchaseMovie}
+                      onDeposit={() => navigate('wallet')}
+                    />
+                  )}
+                  {activeMenu === 'chat' && (
+                    <Chat user={user} users={users} selectedUser={selectedChatUser} onSelectUser={setSelectedChatUser} />
+                  )}
+                  {activeMenu === 'upgrade' && (
+                    <Upgrade user={user} onUpdateProfile={handleUpdateProfile} />
+                  )}
+                </>
+              ) : (
+                // Three-column layout for Feed/Dating
+                <div className="flex flex-col lg:flex-row gap-8">
+                  {/* Left Sidebar */}
+                  <div className="hidden lg:block w-70 shrink-0">
+                    <Sidebar 
+                      user={user} 
+                      users={users}
+                      friendRequests={user?.friendRequests || []} 
+                      onAcceptFriend={handleAcceptFriend} 
+                      onDeclineFriend={handleDeclineFriend} 
+                      onSendFriendRequest={handleSendFriendRequest}
+                      onProfileClick={() => {
+                        navigate('profile');
+                        setProfileUser(user);
+                      }}
+                      onMenuClick={navigate}
+                      onReelUploadClick={() => setIsGlobalUploadOpen(true)}
+                      activeMenu={activeMenu}
+                    />
                   </div>
-                ) : (
-                  <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
-                    <div className="relative aspect-video">
-                      <img src="https://picsum.photos/seed/safari/400/225" alt="Ad" className="h-full w-full object-cover" />
-                      <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                        Sponsored
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h4 className="mb-2 text-sm font-black text-white">Explore the Serengeti</h4>
-                      <p className="mb-4 text-xs leading-relaxed text-neutral-400">Book your next adventure with STYN Travel. Exclusive discounts for Platinum members.</p>
-                      <button className="w-full rounded-xl bg-orange-600 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95">
-                        Book Now
-                      </button>
-                    </div>
-                  </div>
-                )}
 
-                <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
-                  <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggested Friends</h4>
-                  <div className="space-y-4">
-                    {users.filter(u => u.uid !== user.uid).slice(0, 5).map((u, index) => (
-                      <div key={`suggested-user-${u.uid || index}-${index}`} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10">
-                            {u.photoURL ? (
-                              <img src={u.photoURL} alt="" className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-neutral-500">
-                                <User size={20} />
-                              </div>
-                            )}
+                  {/* Mobile Nav Helper */}
+                  <div className="lg:hidden flex items-center justify-between mb-4 px-2">
+                    <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+                      {activeMenu === 'feed' ? 'Explore' : 'Dating'}
+                    </h2>
+                  </div>
+
+                  {/* Central Content */}
+                  <div className="flex-1 min-w-0">
+                    {activeMenu === 'feed' ? (
+                      <Feed 
+                        user={user} 
+                        posts={posts} 
+                        ads={ads}
+                        onPost={handlePost} 
+                        onLike={handleLike} 
+                        onDelete={handleDelete}
+                        onComment={handleComment}
+                        onShare={handleShare}
+                        onBoost={handleBoost}
+                        onViewProfile={(uid) => {
+                          const target = users.find(u => u.uid === uid);
+                          if (target) {
+                            setProfileUser(target);
+                            navigate('profile');
+                          }
+                        }}
+                      />
+                    ) : (
+                      <Dating 
+                        user={user} 
+                        users={users} 
+                        onSwipe={handleSwipe} 
+                        onViewProfile={(target) => {
+                          setProfileUser(target);
+                          navigate('profile');
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Right Sidebar */}
+                  <div className="hidden xl:block w-80 shrink-0 space-y-6">
+                    {/* Sponsored Card */}
+                    {ads.find(a => a.active) && (
+                      <div className="overflow-hidden rounded-3xl border border-white/5 bg-neutral-900 shadow-xl ring-1 ring-white/5">
+                        <div className="relative aspect-video">
+                          <img src={ads.find(a => a.active).imageUrl} alt="Ad" className="h-full w-full object-cover" />
+                          <div className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                            Sponsored
                           </div>
-                          <span className="text-sm font-bold text-white">{u.displayName}</span>
                         </div>
-                        <button 
-                          onClick={() => handleFollow(u.uid)}
-                          className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
-                            user.following?.includes(u.uid) 
-                              ? 'bg-neutral-800 text-neutral-400' 
-                              : 'bg-orange-600/10 text-orange-500 hover:bg-orange-600 hover:text-white'
-                          }`}
-                        >
-                          {user.following?.includes(u.uid) ? 'Following' : 'Follow'}
-                        </button>
+                        <div className="p-6">
+                          <h4 className="mb-2 text-sm font-black text-white">{ads.find(a => a.active).title}</h4>
+                          <p className="mb-4 text-xs leading-relaxed text-neutral-400">{ads.find(a => a.active).description}</p>
+                          <a 
+                            href={ads.find(a => a.active).link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block w-full rounded-xl bg-orange-600 py-2.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-orange-900/20 hover:bg-orange-700 transition-all active:scale-95"
+                          >
+                            Explore
+                          </a>
+                        </div>
                       </div>
-                    ))}
+                    )}
+
+                    <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
+                      <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggestions</h4>
+                      <div className="space-y-4">
+                        {users.filter(u => u.uid !== user.uid && !user.following?.includes(u.uid)).slice(0, 5).map((u, i) => (
+                          <div key={`suggested-${u.uid || i}-${i}`} className="flex items-center justify-between">
+                            <div 
+                              className="flex items-center gap-3 cursor-pointer group"
+                              onClick={() => {
+                                setProfileUser(u);
+                                navigate('profile');
+                              }}
+                            >
+                              <div className="h-9 w-9 overflow-hidden rounded-full border border-white/10">
+                                {u.photoURL ? (
+                                  <img src={u.photoURL} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center bg-neutral-800 text-neutral-500">
+                                    <User size={16} />
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs font-bold text-white group-hover:text-orange-500 transition-colors truncate max-w-[100px]">{u.displayName}</span>
+                            </div>
+                            <button 
+                              onClick={() => handleFollow(u.uid)}
+                              className="rounded-full bg-orange-600/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-orange-500 hover:bg-orange-600 hover:text-white transition-all shadow-sm"
+                            >
+                              Follow
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </Suspense>
       </main>
 
       {(activeMenu === 'feed' || activeMenu === 'profile' || activeMenu === 'dating' || activeMenu === 'blockbuster') && (

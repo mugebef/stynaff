@@ -355,8 +355,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="group flex items-center justify-between rounded-2xl bg-neutral-950/50 p-5 border border-white/5 hover:border-orange-500/30 transition-all">
+              {transactions.map((tx, idx) => (
+                <div key={`tx-${tx.id || idx}-${idx}`} className="group flex items-center justify-between rounded-2xl bg-neutral-950/50 p-5 border border-white/5 hover:border-orange-500/30 transition-all">
                   <div className="flex items-center gap-5">
                     <div className={`flex h-12 w-12 items-center justify-center rounded-xl shadow-lg ${
                       tx.type === 'deposit' || tx.type === 'points_purchase' ? 'bg-green-500/10 text-green-500' : 
