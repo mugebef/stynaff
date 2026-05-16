@@ -1,5 +1,6 @@
 {
   "name": "Styn",
   "description": "A Facebook-like social platform for Africa featuring Chat, Dating, and Blockbuster entertainment.",
-  "requestFramePermissions": ["camera", "microphone"]
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

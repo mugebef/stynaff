@@ -16,19 +16,26 @@ const app = express();
 const PORT = 3000;
 
 // Setup OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is required");
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 // Middleware
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static files for uploads - Check both container and local VFS paths
-const uploadsDir = process.env.NODE_ENV === 'production' 
-  ? '/app/uploads' 
-  : path.join(__dirname, 'uploads');
+// Static files for uploads
+// Using a relative path from the current working directory is safer across dev/prod when bundled
+const uploadsDir = path.join(process.cwd(), 'uploads');
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -116,7 +123,8 @@ app.post("/api/ai/chat", async (req, res) => {
   }
 
   try {
-    const response = await openai.chat.completions.create({
+    const ai = getOpenAI();
+    const response = await ai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { 
@@ -131,7 +139,7 @@ app.post("/api/ai/chat", async (req, res) => {
     res.json({ text: response.choices[0].message.content });
   } catch (error: any) {
     log(`OpenAI error: ${error.message}`);
-    res.status(500).json({ error: "AI Service temporarily unavailable" });
+    res.status(500).json({ error: error.message || "AI Service temporarily unavailable" });
   }
 });
 
@@ -144,7 +152,8 @@ app.post("/api/ai/generate-replies", async (req, res) => {
   }
 
   try {
-    const response = await openai.chat.completions.create({
+    const ai = getOpenAI();
+    const response = await ai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { 
@@ -175,13 +184,18 @@ async function startServer() {
     log("Vite middleware initialized (dev mode)");
   } else {
     // Production serving
-    const distPath = path.join(__dirname, "dist");
+    const distPath = path.join(process.cwd(), "dist");
     if (!fs.existsSync(distPath)) {
       log("WARNING: dist folder not found. Run 'npm run build' first.");
     }
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      const indexPath = path.join(distPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send("Not Found");
+      }
     });
     log("Static file serving initialized (production mode)");
   }
