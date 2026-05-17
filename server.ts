@@ -30,11 +30,21 @@ app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static files for uploads
-// Using a relative path from the current working directory is safer across dev/prod when bundled
-const uploadsDir = path.join(process.cwd(), 'uploads');
-const videosDir = path.join(uploadsDir, 'videos');
-const imagesDir = path.join(uploadsDir, 'images');
+// Resolve paths properly for both dev (ESM/tsx) and production (bundled CJS)
+const isProduction = process.env.NODE_ENV === "production";
+
+// Use a robust way to find paths that works when running as ESM (dev) or CJS (prod bundle)
+const distPath = (typeof __dirname !== 'undefined') 
+  ? __dirname 
+  : path.resolve(process.cwd(), 'dist');
+
+const projectRoot = (typeof __dirname !== 'undefined')
+  ? path.resolve(__dirname, '..')
+  : process.cwd();
+
+const uploadsDir = path.resolve(projectRoot, 'uploads');
+const videosDir = path.resolve(uploadsDir, 'videos');
+const imagesDir = path.resolve(uploadsDir, 'images');
 
 // Ensure directories exist
 [uploadsDir, videosDir, imagesDir].forEach(dir => {
@@ -193,7 +203,6 @@ async function startServer() {
     log("Vite middleware initialized (dev mode)");
   } else {
     // Production serving
-    const distPath = path.resolve(process.cwd(), "dist");
     log(`Production mode: serving static files from ${distPath}`);
     
     if (!fs.existsSync(distPath)) {
@@ -213,7 +222,7 @@ async function startServer() {
         res.sendFile(indexPath);
       } else {
         log(`ERROR: index.html missing at ${indexPath}`);
-        res.status(404).send(`Not Found: The app is running in production mode but cannot find the compiled frontend. Expected at: ${indexPath}`);
+        res.status(404).send(`Not Found: The app is running in production mode but cannot find the compiled frontend. Expected at: ${indexPath}. Current projectRoot: ${projectRoot}`);
       }
     });
     log("Static file serving initialized (production mode)");
