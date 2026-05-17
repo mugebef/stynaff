@@ -186,14 +186,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </div>
           <div className="space-y-4">
-            {Array.from(new Set(friendRequests.map(r => r.uid))).map((uid, index) => {
-              const req = friendRequests.find(r => r.uid === uid);
-              if (!req) return null;
+            {friendRequests.map((req, index) => {
+              const uid = typeof req === 'string' ? req : (req.fromId || req.uid);
+              if (!uid) return null;
+              const displayName = typeof req === 'string' ? 'Unknown' : (req.fromName || req.displayName || 'User');
               return (
                 <div key={`sidebar-req-${uid}-${index}`} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800"></div>
-                    <span className="truncate text-xs font-bold text-neutral-300">{req.displayName}</span>
+                    <span className="truncate text-xs font-bold text-neutral-300">{displayName}</span>
                   </div>
                   <div className="flex gap-1">
                     <button 

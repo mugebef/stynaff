@@ -240,6 +240,16 @@ export default function App() {
   };
   const [appConfig, setAppConfig] = React.useState<any>(null);
   const [users, setUsers] = React.useState<UserType[]>([]);
+
+  const friendRequests = React.useMemo(() => {
+    if (!user?.friendRequests) return [];
+    // Deduplicate UIDs first to avoid duplicate keys
+    const uniqueUids = Array.from(new Set(user.friendRequests));
+    return uniqueUids.map(uid => {
+      const u = users.find(u => u.uid === uid);
+      return u ? { ...u, uid } : { uid, displayName: 'Unknown User' };
+    }).filter(Boolean);
+  }, [user?.friendRequests, users]);
   const [ads, setAds] = React.useState<any[]>([]);
 
   const [selectedChatUser, setSelectedChatUser] = React.useState<UserType | null>(null);
@@ -1639,7 +1649,7 @@ export default function App() {
                     <Sidebar 
                       user={user} 
                       users={users}
-                      friendRequests={user?.friendRequests || []} 
+                      friendRequests={friendRequests} 
                       onAcceptFriend={handleAcceptFriend} 
                       onDeclineFriend={handleDeclineFriend} 
                       onSendFriendRequest={handleSendFriendRequest}

@@ -9,9 +9,6 @@ import multer from "multer";
 import ffmpeg from "fluent-ffmpeg";
 import OpenAI from "openai";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = 3000;
 
@@ -36,10 +33,15 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Static files for uploads
 // Using a relative path from the current working directory is safer across dev/prod when bundled
 const uploadsDir = path.join(process.cwd(), 'uploads');
+const videosDir = path.join(uploadsDir, 'videos');
+const imagesDir = path.join(uploadsDir, 'images');
 
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Ensure directories exist
+[uploadsDir, videosDir, imagesDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 app.use('/uploads', express.static(uploadsDir));
 
@@ -49,7 +51,12 @@ const log = (msg: string) => console.log(`[${new Date().toISOString()}] ${msg}`)
 // Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+    // Determine subdirectory based on fieldname or mimetype
+    if (file.fieldname === 'file' || file.mimetype.startsWith('video/')) {
+      cb(null, videosDir);
+    } else {
+      cb(null, imagesDir);
+    }
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -77,14 +84,15 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
     }
 
     const filePath = req.file.path;
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Return the proper relative path for the client
+    const fileUrl = `/uploads/videos/${req.file.filename}`;
     
-    log(`File uploaded: ${req.file.filename} (${req.file.size} bytes)`);
+    log(`File uploaded: ${req.file.filename} saved to videos folder (${req.file.size} bytes)`);
 
     // Basic ffmpeg probe for metadata
     ffmpeg.ffprobe(filePath, (err, metadata) => {
       if (err) {
-        log(`Probe error: ${err.message}`);
+        log(`Probe error for ${req.file?.filename}: ${err.message}`);
         // Still return the URL even if probe fails
         return res.json({ url: fileUrl });
       }
@@ -108,7 +116,8 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 app.post("/api/upload-photo", upload.single("photo"), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No photo provided" });
-    res.json({ url: `/uploads/${req.file.filename}` });
+    // Photos go to /uploads/images/
+    res.json({ url: `/uploads/images/${req.file.filename}` });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

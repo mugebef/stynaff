@@ -4,8 +4,7 @@ module.exports = {
       name: 'stynaff',
       script: './server.ts',
       cwd: '/home/stynaff',
-      interpreter: 'node',
-      interpreter_args: '--import tsx',
+      interpreter: './node_modules/.bin/tsx',
       max_memory_restart: '1000M',
       env: {
         NODE_ENV: 'development',
