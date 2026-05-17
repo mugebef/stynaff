@@ -193,17 +193,27 @@ async function startServer() {
     log("Vite middleware initialized (dev mode)");
   } else {
     // Production serving
-    const distPath = path.join(process.cwd(), "dist");
+    const distPath = path.resolve(process.cwd(), "dist");
+    log(`Production mode: serving static files from ${distPath}`);
+    
     if (!fs.existsSync(distPath)) {
-      log("WARNING: dist folder not found. Run 'npm run build' first.");
+      log(`ERROR: dist folder not found at ${distPath}. Run 'npm run build' first.`);
     }
+
     app.use(express.static(distPath));
+    
     app.get("*", (req, res) => {
-      const indexPath = path.join(distPath, "index.html");
+      // Avoid catching API routes or other things that should have matched earlier
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: `API route ${req.path} not found` });
+      }
+
+      const indexPath = path.resolve(distPath, "index.html");
       if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
       } else {
-        res.status(404).send("Not Found");
+        log(`ERROR: index.html missing at ${indexPath}`);
+        res.status(404).send(`Not Found: The app is running in production mode but cannot find the compiled frontend. Expected at: ${indexPath}`);
       }
     });
     log("Static file serving initialized (production mode)");
