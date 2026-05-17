@@ -42,7 +42,11 @@ const projectRoot = (typeof __dirname !== 'undefined')
   ? path.resolve(__dirname, '..')
   : process.cwd();
 
-const uploadsDir = path.resolve(projectRoot, 'uploads');
+// Use the specific path requested for production
+const uploadsDir = isProduction 
+  ? '/home/styni.com/stynaff/uploads/' 
+  : path.resolve(projectRoot, 'uploads');
+
 const videosDir = path.resolve(uploadsDir, 'videos');
 const imagesDir = path.resolve(uploadsDir, 'images');
 
