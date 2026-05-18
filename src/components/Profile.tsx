@@ -794,7 +794,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 </div>
                 <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={`profile-gallery-${i}-${user.uid}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
+                    <div key={`profile-gallery-item-${user.uid}-${i}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
                       <img 
                         src={`https://picsum.photos/seed/${user.uid + i}/200`} 
                         alt="Gallery" 
@@ -817,7 +817,7 @@ export const Profile: React.FC<ProfileProps> = ({
                 ) : (
                   userPosts.map((post, index) => (
                     <PostCard 
-                      key={`timeline-post-${post.id || index}-${index}`}
+                      key={`profile-timeline-post-${post.id || index}-${index}-${post.authorId}`}
                       post={post}
                       currentUser={currentUser}
                       users={users}

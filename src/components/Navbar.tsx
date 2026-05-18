@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="hidden items-center gap-0.5 md:flex">
             {menus.map((menu, index) => (
               <button
-                key={`nav-menu-desktop-${menu.id}-${index}`}
+                key={`nav-menu-desktop-${menu.id}-${index}-${user?.uid || 'anon'}`}
                 onClick={() => onMenuClick(menu.id)}
                 className={`relative flex items-center justify-center rounded-xl px-2 lg:px-4 py-2 text-[10px] lg:text-xs font-black uppercase tracking-tighter lg:tracking-widest transition-all ${
                   activeMenu === menu.id
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           ) : (
                             notifications.map((notif, index) => (
                               <div 
-                                key={`notif-${notif.id || index}-${index}`}
+                                key={`navbar-notif-${notif.id || index}-${index}-${notif.type}-${user?.uid}`}
                                 onClick={() => {
                                   if (!notif.read) onMarkRead(notif.id);
                                   setIsNotificationsOpen(false);
@@ -253,7 +253,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex gap-1.5">
           {menus.map((menu, index) => (
             <button
-              key={`nav-menu-mobile-${menu.id}-${index}`}
+              key={`nav-menu-mobile-${menu.id}-${index}-${user?.uid || 'anon'}`}
               onClick={() => onMenuClick(menu.id)}
               className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-tight transition-all flex items-center justify-center ${
                 activeMenu === menu.id

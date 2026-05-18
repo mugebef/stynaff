@@ -108,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="space-y-1">
           {menuItems.map((item, index) => (
             <button
-              key={`sidebar-menu-${item.id}-${index}`}
+              key={`sidebar-nav-menu-${item.id}-${index}-${user?.uid || 'logged-out'}`}
               onClick={() => onMenuClick(item.id)}
               className={`flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-black uppercase tracking-widest transition-all group ${
                 activeMenu === item.id 
@@ -149,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <div className="space-y-5">
           {suggestedFriends.map((sUser, index) => (
-            <div key={`sidebar-suggestion-${sUser.uid || index}-${index}`} className="flex items-center justify-between gap-3">
+            <div key={`sidebar-suggest-${sUser.uid || index}-${index}-${user?.uid || 'anon'}`} className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-neutral-800 ring-2 ring-orange-900/20">
                   {sUser.photoURL ? (

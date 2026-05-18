@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare, CheckCircle, Image as ImageIcon, Mic, Paperclip, Smile, Reply, Trash2, Heart, Users, Shield, Sparkles } from 'lucide-react';
+import { Search, Send, User, MoreVertical, Phone, Video, Check, CheckCheck, ArrowLeft, MessageSquare, CheckCircle, Image as ImageIcon, Mic, Paperclip, Smile, Reply, Trash2, Heart, Users, Shield, Sparkles, Plus } from 'lucide-react';
 import { User as UserType, Message as MessageType } from '../types';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where, or, and, updateDoc, doc, limit, getDocs } from 'firebase/firestore';
@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from 'motion/react';
 interface ChatProps {
   currentUser: UserType;
   users: UserType[];
-  initialSelectedUser?: UserType | null;
+  selectedUser: UserType | null;
+  onSelectUser: (user: UserType | null) => void;
 }
 
 const LastMessage: React.FC<{ user: UserType, currentUser: UserType }> = ({ user, currentUser }) => {
@@ -25,10 +26,12 @@ const LastMessage: React.FC<{ user: UserType, currentUser: UserType }> = ({ user
       limit(1)
     );
 
-    return onSnapshot(q, (snap) => {
+    const unsubscribe = onSnapshot(q, (snap) => {
       if (!snap.empty) {
         setLastMsg({ id: snap.docs[0].id, ...snap.docs[0].data() } as MessageType);
       }
+    }, (error) => {
+      console.error("LastMessage onSnapshot error:", error);
     });
   }, [user.uid, currentUser.uid]);
 
@@ -73,7 +76,7 @@ const LastMessage: React.FC<{ user: UserType, currentUser: UserType }> = ({ user
           </p>
         </div>
         {lastMsg && lastMsg.receiverId === currentUser.uid && lastMsg.status !== 'seen' && (
-          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center rounded-full bg-[#00a884] text-white text-[11px] font-bold">
+          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center rounded-full bg-[#25d366] text-[#0b141a] text-[11px] font-bold">
             1
           </div>
         )}
@@ -82,29 +85,42 @@ const LastMessage: React.FC<{ user: UserType, currentUser: UserType }> = ({ user
   );
 };
 
-export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedUser }) => {
-  const [selectedUser, setSelectedUser] = React.useState<UserType | null>(initialSelectedUser || null);
+const DateSeparator: React.FC<{ date: Date }> = ({ date }) => {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
 
-  React.useEffect(() => {
-    if (initialSelectedUser) {
-      setSelectedUser(initialSelectedUser);
-    }
-  }, [initialSelectedUser]);
+  let label = date.toLocaleDateString();
+  if (date.toDateString() === now.toDateString()) label = 'TODAY';
+  else if (date.toDateString() === yesterday.toDateString()) label = 'YESTERDAY';
+
+  return (
+    <div className="my-6 flex justify-center">
+      <div className="rounded-lg bg-[#182229] px-3 py-1.5 text-[11.5px] font-medium uppercase tracking-wider text-[#8696a0] shadow-sm">
+        {label}
+      </div>
+    </div>
+  );
+};
+
+export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, onSelectUser }) => {
   const [messages, setMessages] = React.useState<MessageType[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isTyping, setIsTyping] = React.useState(false);
   const [otherUserTyping, setOtherUserTyping] = React.useState(false);
   const [smartReplies, setSmartReplies] = React.useState<string[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const lastSmartReplyMsgId = React.useRef<string | null>(null);
   const triggerInProgress = React.useRef<boolean>(false);
 
   // Filter out current user and apply search
   const chatUsers = users.filter(u => 
-    u.uid !== currentUser.uid && 
-    (u.displayName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+    u.uid && currentUser?.uid && u.uid !== currentUser.uid && 
+    ((u.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+     (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Handle typing indicator
@@ -140,9 +156,13 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       orderBy('createdAt', 'asc')
     );
 
+    setLoading(true);
+    setError(null);
+
     const unsubscribe = onSnapshot(q, (snap) => {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as MessageType));
       setMessages(msgs);
+      setLoading(false);
       
       // Mark received messages as seen
       msgs.forEach(m => {
@@ -169,6 +189,10 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
         lastSmartReplyMsgId.current = null;
         setSmartReplies([]);
       }
+    }, (err) => {
+      console.error("Messages onSnapshot error:", err);
+      setError("Failed to load messages. This might be due to a missing database index.");
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -379,7 +403,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
       {/* Sidebar - Chat List */}
       <div className={`w-full flex-col bg-[#111b21] md:flex md:w-80 lg:w-96 border-r border-white/5 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
         {/* Mobile-style Header */}
-        <div className="bg-[#202c33] p-4 flex items-center justify-between text-[#aebac1]">
+        <div className="bg-[#202c33] px-4 py-2.5 flex items-center justify-between text-[#aebac1]">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 border border-white/10 cursor-pointer">
               {currentUser.photoURL ? (
@@ -391,33 +415,34 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
               )}
             </div>
           </div>
-          <div className="flex gap-6 items-center">
-            <button className="hover:text-white transition-colors" title="Communities"><Users size={20} /></button>
-            <button className="hover:text-white transition-colors" title="Status"><Sparkles size={20} className="text-[#aebac1]" /></button>
-            <button className="hover:text-white transition-colors" title="New Chat"><MessageSquare size={20} /></button>
-            <button className="hover:text-white transition-colors" title="Menu"><MoreVertical size={20} /></button>
+          <div className="flex gap-1 items-center">
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors" title="Communities"><Users size={20} /></button>
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors" title="Status"><Sparkles size={20} className="text-[#aebac1]" /></button>
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors" title="Channels"><MessageSquare size={20} /></button>
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors" title="New Chat"><Plus size={20} /></button>
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors" title="Menu"><MoreVertical size={20} /></button>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="px-4 py-2 bg-[#111b21]">
-          <div className="flex items-center gap-4 bg-[#202c33] rounded-xl px-4 py-2">
-            <Search size={18} className="text-[#8696a0]" />
+        <div className="px-3 py-1.5 bg-[#111b21] border-b border-white/5">
+          <div className="flex items-center gap-3 bg-[#202c33] rounded-lg px-3 py-1.5 ring-1 ring-[#e9edef1a] transition-all focus-within:ring-orange-600/50">
+            <Search size={16} className="text-[#8696a0]" />
             <input 
               type="text" 
               placeholder="Search or start new chat"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none focus:ring-0 text-sm text-[#e9edef] w-full placeholder:text-[#8696a0]"
+              className="bg-transparent border-none focus:ring-0 text-[14px] text-[#e9edef] w-full placeholder:text-[#8696a0]"
             />
           </div>
         </div>
 
-        {/* Tabs - Mobile style */}
-        <div className="flex bg-[#111b21] text-[#aebac1] text-[11px] font-black uppercase tracking-[0.2em] border-b border-white/5">
-          <div className="flex-1 py-4 text-center border-b-4 border-orange-600 text-orange-500 bg-orange-600/5">Chats</div>
-          <div className="flex-1 py-4 text-center hover:bg-white/5 transition-colors cursor-pointer">Status</div>
-          <div className="flex-1 py-4 text-center hover:bg-white/5 transition-colors cursor-pointer">Calls</div>
+        {/* Filters - WhatsApp style */}
+        <div className="flex gap-2 px-3 py-2 bg-[#111b21]">
+          <button className="rounded-full bg-[#1e2a30] px-3 py-1 text-[13px] font-medium text-[#8696a0] hover:bg-[#202c33] transition-all">All</button>
+          <button className="rounded-full bg-[#1e2a30] px-3 py-1 text-[13px] font-medium text-[#8696a0] hover:bg-[#202c33] transition-all">Unread</button>
+          <button className="rounded-full bg-[#1e2a30] px-3 py-1 text-[13px] font-medium text-[#8696a0] hover:bg-[#202c33] transition-all">Groups</button>
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -428,8 +453,8 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
           ) : (
             chatUsers.map((user, index) => (
               <div
-                key={`chat-user-${user.uid || index}-${index}`}
-                onClick={() => setSelectedUser(user)}
+                key={`chat-user-${user.uid || index}-${currentUser.uid}-${index}`}
+                onClick={() => onSelectUser(user)}
                 className={`flex cursor-pointer items-center gap-4 px-4 py-4 transition-all hover:bg-[#202c33] border-b border-white/5 ${
                   selectedUser?.uid === user.uid ? 'bg-[#2a3942]' : ''
                 }`}
@@ -472,7 +497,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             <div className="relative z-20 flex items-center justify-between bg-[#202c33] px-3 py-2 shadow-md text-[#aebac1] border-l border-white/5 shrink-0">
               <div className="flex items-center gap-2 overflow-hidden flex-1">
                 <button 
-                  onClick={() => setSelectedUser(null)} 
+                  onClick={() => onSelectUser(null)} 
                   className="md:hidden p-2 text-[#e9edef] hover:bg-neutral-800 rounded-full transition-colors shrink-0"
                 >
                   <ArrowLeft size={24} />
@@ -509,7 +534,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             {/* Messages Area */}
             <div 
               ref={scrollRef} 
-              className="relative z-10 flex-1 overflow-y-auto p-6 md:p-10 space-y-3 custom-scrollbar"
+              className="relative z-10 flex-1 overflow-y-auto p-4 md:p-6 space-y-1 custom-scrollbar"
               style={{
                 backgroundImage: `url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')`,
                 backgroundBlendMode: 'overlay',
@@ -517,49 +542,87 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
                 backgroundSize: '400px'
               }}
             >
-              {messages.map((msg, idx) => {
-                const isFirstInGroup = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
-                return (
-                  <motion.div
-                    key={`chat-msg-${msg.id || idx}-${idx}`}
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}
-                  >
-                    <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-sm ${
-                      msg.senderId === currentUser.uid
-                        ? 'bg-[#005c4b] text-[#e3f6fc] rounded-lg rounded-tr-none'
-                        : 'bg-[#202c33] text-[#e9edef] rounded-lg rounded-tl-none'
-                    }`}>
-                      {/* Bubble Tail */}
-                      {isFirstInGroup && (
-                        <div className={`absolute top-0 h-3 w-3 ${
-                          msg.senderId === currentUser.uid 
-                            ? '-right-1.5 bg-[#005c4b]' 
-                            : '-left-1.5 bg-[#202c33]'
-                        }`} 
-                        style={{ 
-                          clipPath: msg.senderId === currentUser.uid ? 'polygon(0 0, 100% 0, 0 100%)' : 'polygon(0 0, 100% 0, 100% 100%)',
-                          zIndex: 0
-                        }}
-                        />
-                      )}
-                      
-                      <div className="flex flex-col relative z-10">
-                        <p className="text-[14.5px] leading-tight pr-16 whitespace-pre-wrap">{msg.content}</p>
-                        <div className="absolute bottom-[-2px] right-[-4px] flex items-center gap-1.5">
-                          <span className="text-[11px] text-[#8696a0]">
-                            {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
-                          </span>
-                          {msg.senderId === currentUser.uid && (
-                            msg.status === 'seen' ? <CheckCheck size={16} className="text-[#53bdeb]" /> : <Check size={16} className="text-[#8696a0]" />
+              {loading ? (
+                <div className="flex h-full items-center justify-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="h-8 w-8 rounded-full border-2 border-[#00a884] border-t-transparent"
+                    />
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#8696a0]">Loading messages...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="flex h-full items-center justify-center p-8 text-center text-[#ea580c]">
+                  <div className="max-w-xs">
+                    <p className="mb-2 text-sm font-black uppercase tracking-widest">Error</p>
+                    <p className="text-xs leading-relaxed opacity-80">{error}</p>
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="mt-4 rounded-full bg-orange-600 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center text-center opacity-50">
+                  <MessageSquare size={48} className="mb-4 text-[#8696a0]" />
+                  <p className="text-sm font-bold uppercase tracking-widest text-[#8696a0]">No messages yet</p>
+                  <p className="text-xs text-[#8696a0] mt-1">Start a conversation with {selectedUser.displayName}</p>
+                </div>
+              ) : (
+                messages.map((msg, idx) => {
+                  const isFirstInGroup = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
+                  const msgDate = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
+                  const prevMsgDate = idx > 0 && messages[idx - 1].createdAt?.toDate ? messages[idx - 1].createdAt.toDate() : null;
+                  const showDateSeparator = !prevMsgDate || msgDate.toDateString() !== prevMsgDate.toDateString();
+
+                  return (
+                    <React.Fragment key={`chat-msg-wrapper-${msg.id || idx}-${currentUser.uid}-${selectedUser.uid}-${idx}`}>
+                      {showDateSeparator && <DateSeparator date={msgDate} />}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        className={`flex ${msg.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-3' : 'mt-0.5'}`}
+                      >
+                        <div className={`relative max-w-[85%] md:max-w-[65%] px-2.5 py-1.5 shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] ${
+                          msg.senderId === currentUser.uid
+                            ? 'bg-[#005c4b] text-[#e3f6fc] rounded-lg rounded-tr-none'
+                            : 'bg-[#202c33] text-[#e9edef] rounded-lg rounded-tl-none'
+                        }`}>
+                          {/* Bubble Tail */}
+                          {isFirstInGroup && (
+                            <div className={`absolute top-0 h-4 w-4 ${
+                              msg.senderId === currentUser.uid 
+                                ? '-right-2 bg-[#005c4b]' 
+                                : '-left-2 bg-[#202c33]'
+                            }`} 
+                            style={{ 
+                              clipPath: msg.senderId === currentUser.uid ? 'polygon(0 0, 0 100%, 100% 0)' : 'polygon(0 0, 100% 0, 100% 100%)',
+                              zIndex: 0
+                            }}
+                            />
                           )}
+                          
+                          <div className="flex flex-col relative z-10 min-w-[60px]">
+                            <p className="text-[14.2px] leading-[1.4] pr-14 whitespace-pre-wrap">{msg.content}</p>
+                            <div className="absolute bottom-[-2px] right-[-4px] flex items-center gap-1">
+                              <span className="text-[11px] text-[#8696a0cc] font-medium leading-none mb-0.5">
+                                {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : ''}
+                              </span>
+                              {msg.senderId === currentUser.uid && (
+                                msg.status === 'seen' ? <CheckCheck size={15} className="text-[#53bdeb] mb-0.5" strokeWidth={2.5} /> : <Check size={15} className="text-[#8696a0cc] mb-0.5" strokeWidth={2.5} />
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                      </motion.div>
+                    </React.Fragment>
+                  );
+                })
+              )}
               {otherUserTyping && (
                 <motion.div 
                   initial={{ opacity: 0, x: -10 }}
@@ -639,24 +702,24 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, initialSelectedU
             </div>
           </>
         ) : (
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-12 bg-[#222e35]">
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-12 bg-[#222e35] border-b-[6px] border-[#00a884]">
             <div className="text-center max-w-lg">
-              <div className="mx-auto mb-10 flex h-56 w-56 items-center justify-center rounded-full bg-[#2a3942]/30 relative">
-                <div className="absolute inset-0 rounded-full border-4 border-orange-600/20 animate-ping"></div>
-                <MessageSquare size={110} className="text-[#8696a0]/10" />
+              <div className="mx-auto mb-10 flex h-64 w-64 items-center justify-center">
+                <img 
+                  src="https://static.whatsapp.net/rsrc.php/v3/yD/r/68Z70jCsq1R.png" 
+                  alt="WhatsApp Desktop" 
+                  className="w-full h-auto drop-shadow-2xl"
+                />
               </div>
-              <h3 className="text-4xl font-black text-[#e9edef] mb-6 tracking-tighter uppercase">STYN Messenger</h3>
-              <p className="text-[15px] text-[#8696a0] leading-relaxed font-medium">
-                Send and receive messages in real-time.<br/>
-                End-to-end encrypted for your privacy and security.
+              <h3 className="text-[32px] font-light text-[#e9edef] mb-4 tracking-tight">WhatsApp Web</h3>
+              <p className="text-[14px] text-[#8696a0] leading-relaxed mb-10">
+                Send and receive messages without keeping your phone online.<br/>
+                Use WhatsApp on up to 4 linked devices and 1 phone at the same time.
               </p>
-              <div className="mt-24 flex items-center justify-center gap-3 text-[#8696a0]/40">
-                <Shield size={16} />
-                <span className="text-xs font-black uppercase tracking-[0.2em]">Secure & Private</span>
+              <div className="flex items-center justify-center gap-2 text-[#8696a0] opacity-60">
+                <Shield size={14} />
+                <span className="text-[12px]">End-to-end encrypted</span>
               </div>
-            </div>
-            <div className="absolute bottom-12 w-full text-center">
-              <div className="h-1.5 w-32 bg-orange-600 mx-auto rounded-full opacity-30"></div>
             </div>
           </div>
         )}

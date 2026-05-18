@@ -1635,7 +1635,7 @@ export default function App() {
                     />
                   )}
                   {activeMenu === 'chat' && (
-                    <Chat user={user} users={users} selectedUser={selectedChatUser} onSelectUser={setSelectedChatUser} />
+                    <Chat currentUser={user} users={users} selectedUser={selectedChatUser} onSelectUser={setSelectedChatUser} />
                   )}
                   {activeMenu === 'upgrade' && (
                     <Upgrade user={user} onUpdateProfile={handleUpdateProfile} />
@@ -1733,8 +1733,8 @@ export default function App() {
                     <div className="rounded-3xl border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
                       <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggestions</h4>
                       <div className="space-y-4">
-                        {users.filter(u => u.uid !== user.uid && !user.following?.includes(u.uid)).slice(0, 5).map((u, i) => (
-                          <div key={`suggested-${u.uid || i}-${i}`} className="flex items-center justify-between">
+                        {users.filter(u => u.uid !== user?.uid && !user?.following?.includes(u.uid)).slice(0, 5).map((u, i) => (
+                          <div key={`suggested-${u.uid || i}-${i}-${u.displayName || ''}`} className="flex items-center justify-between">
                             <div 
                               className="flex items-center gap-3 cursor-pointer group"
                               onClick={() => {

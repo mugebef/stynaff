@@ -309,7 +309,7 @@ export const Reels: React.FC<ReelsProps> = ({
         >
           {reels.map((reel, index) => (
             <div 
-              key={`reel-item-${reel.id || index}-${index}-${reels.length}`} 
+              key={`reel-item-container-${reel.id || index}-${index}-${reels.length}-${currentUser.uid}`} 
               className="relative h-full w-full snap-start overflow-hidden"
               onClick={(e) => handleDoubleTap(e, reel.id)}
             >
@@ -755,7 +755,7 @@ export const Reels: React.FC<ReelsProps> = ({
                   </div>
                 ) : (
                   reels.find(r => r.id === showComments)?.comments.map((comment: any, index: number) => (
-                    <div key={`reel-comment-${comment.id || index}-${index}`} className="flex gap-3">
+                    <div key={`reel-comment-v2-${comment.id || index}-${index}-${showComments}`} className="flex gap-3">
                       <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800 border border-white/10">
                         {users.find(u => u.uid === comment.authorId)?.photoURL && (
                           <img src={users.find(u => u.uid === comment.authorId)?.photoURL} className="h-full w-full rounded-full object-cover" alt="" />
