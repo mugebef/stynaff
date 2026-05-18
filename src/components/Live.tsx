@@ -489,7 +489,7 @@ export const Live: React.FC = () => {
                 <AnimatePresence>
                   {reactions.map((reaction) => (
                     <motion.div
-                      key={reaction.id}
+                      key={`live-reaction-${reaction.id}-${selectedStream?.id}`}
                       initial={{ opacity: 1, y: 400, scale: 0 }}
                       animate={{ opacity: 0, y: 0, scale: 1.5, x: Math.sin(reaction.id) * 20 }}
                       exit={{ opacity: 0 }}
@@ -569,7 +569,7 @@ export const Live: React.FC = () => {
                 </div>
               )}
               {comments.map((comment, index) => (
-                <div key={`live-comment-${comment.id || index}-${index}`} className="flex gap-3 animate-in fade-in slide-in-from-bottom-2">
+                <div key={`live-viewer-comment-${comment.id || index}-${selectedStream?.id}-${index}`} className="flex gap-3 animate-in fade-in slide-in-from-bottom-2">
                   <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-[10px] font-bold text-neutral-500 uppercase">
                     {comment.user.charAt(0)}
                   </div>
@@ -633,7 +633,7 @@ export const Live: React.FC = () => {
             <div className="grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {streams.map((stream, index) => (
                 <motion.div 
-                  key={`live-stream-card-${stream.id || index}-${index}`}
+                  key={`live-stream-listing-card-${stream.id || index}-${index}-${auth.currentUser?.uid}`}
                   whileHover={{ y: -8 }}
                   onClick={() => setSelectedStream({ ...stream, isMine: stream.streamerId === auth.currentUser?.uid })}
                   className="group cursor-pointer overflow-hidden rounded-[32px] border border-white/5 bg-neutral-900 shadow-xl transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:border-orange-600/30"

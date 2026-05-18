@@ -191,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               if (!uid) return null;
               const displayName = typeof req === 'string' ? 'Unknown' : (req.fromName || req.displayName || 'User');
               return (
-                <div key={`sidebar-req-${uid}-${index}`} className="flex items-center justify-between gap-2">
+                <div key={`sidebar-req-item-${uid}-${user?.uid}-${index}`} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-800"></div>
                     <span className="truncate text-xs font-bold text-neutral-300">{displayName}</span>

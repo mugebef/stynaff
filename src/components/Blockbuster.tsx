@@ -84,7 +84,7 @@ export const Blockbuster: React.FC<BlockbusterProps> = ({ movies, currentUser, o
       ) : (
         movies.map((movie, index) => (
           <section 
-            key={`blockbuster-movie-${movie.id || index}-${index}`}
+            key={`blockbuster-movie-section-${movie.id}-${index}`}
             className="relative h-full w-full snap-start overflow-hidden flex flex-col bg-black"
           >
             {/* Background Content */}

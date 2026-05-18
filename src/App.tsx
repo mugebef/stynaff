@@ -1734,7 +1734,7 @@ export default function App() {
                       <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Suggestions</h4>
                       <div className="space-y-4">
                         {users.filter(u => u.uid !== user?.uid && !user?.following?.includes(u.uid)).slice(0, 5).map((u, i) => (
-                          <div key={`suggested-${u.uid || i}-${i}-${u.displayName || ''}`} className="flex items-center justify-between">
+                          <div key={`sidebar-right-suggested-${u.uid}-${user?.uid}-${i}`} className="flex items-center justify-between">
                             <div 
                               className="flex items-center gap-3 cursor-pointer group"
                               onClick={() => {

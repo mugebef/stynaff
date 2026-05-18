@@ -59,7 +59,7 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
       {/* Sponsored Section */}
       {ads.length > 0 ? (
         ads.map((ad, index) => (
-          <div key={`feed-ad-${ad.id || index}-${index}`} className="mb-8 rounded-[2rem] border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
+          <div key={`feed-ad-sponsored-${ad.id}-${index}-${currentUser?.uid}`} className="mb-8 rounded-[2rem] border border-white/5 bg-neutral-900 p-6 shadow-xl ring-1 ring-white/5">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg shadow-orange-900/20">
@@ -207,9 +207,9 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
           <h3 className="text-sm font-black uppercase tracking-widest text-white">Viral Hashtags</h3>
         </div>
         <div className="flex flex-wrap gap-2 p-6">
-          {['#STYN', '#SocialSuperApp', '#Viral', '#TrendingNow', '#TechInnovation', '#AfricaRising', '#UniqueExperience'].map((tag) => (
+          {['#STYN', '#SocialSuperApp', '#Viral', '#TrendingNow', '#TechInnovation', '#AfricaRising', '#UniqueExperience'].map((tag, tagIdx) => (
             <button 
-              key={tag}
+              key={`trending-tag-${tag}-${tagIdx}`}
               onClick={() => setContent(prev => prev + (prev.endsWith(' ') || prev === '' ? '' : ' ') + tag)}
               className="rounded-full bg-neutral-800 px-4 py-2 text-xs font-bold text-neutral-400 transition-all hover:bg-orange-600 hover:text-white active:scale-95"
             >
@@ -232,7 +232,7 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
         ) : (
           posts.map((post, index) => (
             <PostCard
-              key={`feed-post-${post.id || index}-${index}`}
+              key={`feed-post-card-${post.id}-${currentUser?.uid}-${index}`}
               post={post}
               currentUser={currentUser}
               users={users}
