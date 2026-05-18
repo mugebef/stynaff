@@ -438,7 +438,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
           </div>
         </div>
 
-        {/* Filters - WhatsApp style */}
+        {/* Filters - STYN style */}
         <div className="flex gap-2 px-3 py-2 bg-[#111b21]">
           <button className="rounded-full bg-[#1e2a30] px-3 py-1 text-[13px] font-medium text-[#8696a0] hover:bg-[#202c33] transition-all">All</button>
           <button className="rounded-full bg-[#1e2a30] px-3 py-1 text-[13px] font-medium text-[#8696a0] hover:bg-[#202c33] transition-all">Unread</button>
@@ -493,7 +493,7 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
       <div className={`flex flex-1 flex-col bg-[#0b141a] relative ${!selectedUser ? 'hidden md:flex' : 'fixed inset-0 z-[110] md:relative md:inset-auto md:z-0 flex'}`}>
         {selectedUser ? (
           <>
-            {/* Chat Header - WhatsApp Style */}
+            {/* Chat Header - STYN Style */}
             <div className="relative z-20 flex items-center justify-between bg-[#202c33] px-3 py-2 shadow-md text-[#aebac1] border-l border-white/5 shrink-0">
               <div className="flex items-center gap-2 overflow-hidden flex-1">
                 <button 
@@ -702,23 +702,21 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
             </div>
           </>
         ) : (
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-12 bg-[#222e35] border-b-[6px] border-[#00a884]">
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-12 bg-[#222e35] border-b-[6px] border-orange-600">
             <div className="text-center max-w-lg">
-              <div className="mx-auto mb-10 flex h-64 w-64 items-center justify-center">
-                <img 
-                  src="https://static.whatsapp.net/rsrc.php/v3/yD/r/68Z70jCsq1R.png" 
-                  alt="WhatsApp Desktop" 
-                  className="w-full h-auto drop-shadow-2xl"
-                />
+              <div className="mx-auto mb-10 flex h-64 w-64 items-center justify-center rounded-full bg-[#2a3942]/30 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/20 to-transparent animate-pulse"></div>
+                <MessageSquare size={120} className="text-[#8696a0]/20 relative z-10" />
+                <Sparkles size={40} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-orange-500 animate-bounce" />
               </div>
-              <h3 className="text-[32px] font-light text-[#e9edef] mb-4 tracking-tight">WhatsApp Web</h3>
-              <p className="text-[14px] text-[#8696a0] leading-relaxed mb-10">
-                Send and receive messages without keeping your phone online.<br/>
-                Use WhatsApp on up to 4 linked devices and 1 phone at the same time.
+              <h3 className="text-[32px] font-black text-[#e9edef] mb-4 tracking-tighter uppercase">STYN Messenger</h3>
+              <p className="text-[14px] text-[#8696a0] leading-relaxed mb-10 font-medium">
+                Connect with people across the globe in real-time.<br/>
+                Experience the next generation of social interaction on STYN.
               </p>
-              <div className="flex items-center justify-center gap-2 text-[#8696a0] opacity-60">
+              <div className="flex items-center justify-center gap-2 text-orange-500 opacity-60">
                 <Shield size={14} />
-                <span className="text-[12px]">End-to-end encrypted</span>
+                <span className="text-[12px] font-bold uppercase tracking-widest">Secure & End-to-End Encrypted</span>
               </div>
             </div>
           </div>

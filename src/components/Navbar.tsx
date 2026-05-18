@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 />
               ) : (
                 <span className="font-serif text-3xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors drop-shadow-md">
-                  Styn
+                  {APP_NAME}
                 </span>
               )}
             </div>
