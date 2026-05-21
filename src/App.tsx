@@ -452,6 +452,319 @@ export default function App() {
     return () => unsubscribe();
   }, [user]);
 
+  // Auto-seed Zimbabwe ladies if they do not exist yet
+  React.useEffect(() => {
+    if (!user) return;
+    const autoSeedZimLadies = async () => {
+      try {
+        const checkDoc = await getDoc(doc(db, 'users', 'fake_zim_1'));
+        if (!checkDoc.exists()) {
+          console.log("Seeding Zimbabwe fake profiles...");
+          const zimLadies: UserType[] = [
+            {
+              uid: 'fake_zim_1',
+              displayName: 'Chipo',
+              username: 'chipo_zim',
+              email: 'chipo@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_chipo/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Harare', country: 'Zimbabwe' },
+              bio: 'Winds of change in Harare 💫 Fashion design student at Chinhoyi Univ. I love soulful music and galleries.',
+              interests: ['Fashion', 'Music', 'Art'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 500,
+              profileViews: 120,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_2',
+              displayName: 'Tariro',
+              username: 'tariro_zim',
+              email: 'tariro@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_tariro/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Bulawayo', country: 'Zimbabwe' },
+              bio: "Tech enthusiast & software dev in Bulawayo 👩‍💻 Let's grab coffee and talk about AI and future dreams. Gym enthusiast too!",
+              interests: ['Tech', 'Coffee', 'Gym'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 450,
+              profileViews: 245,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_3',
+              displayName: 'Ruvimbo',
+              username: 'ruvimbo_zim',
+              email: 'ruvimbo@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_ruvimbo/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Harare', country: 'Zimbabwe' },
+              bio: "Dancing and life! 💃 Let's explore Harare's best eateries. Super friendly, love laughter and spontaneous adventures.",
+              interests: ['Dancing', 'Food', 'Adventure'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 300,
+              profileViews: 198,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_4',
+              displayName: 'Nyasha',
+              username: 'nyasha_zim',
+              email: 'nyasha@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_nyasha/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Mutare', country: 'Zimbabwe' },
+              bio: 'Nature lover and mountain explorer 🏔️ Born in beautiful Mutare. Looking for deep conversations & mutual respect.',
+              interests: ['Nature', 'Hiking', 'Books'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 600,
+              profileViews: 322,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_5',
+              displayName: 'Rufaro',
+              username: 'rufaro_zim',
+              email: 'rufaro@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_rufaro/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Gweru', country: 'Zimbabwe' },
+              bio: 'Graphic designer and foodie 🥘 Passionate about African storytelling and arts. Let\'s create beautiful memories together.',
+              interests: ['Design', 'Art', 'Movies'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 400,
+              profileViews: 154,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_6',
+              displayName: 'Danai',
+              username: 'danai_zim',
+              email: 'danai@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_danai/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Harare', country: 'Zimbabwe' },
+              bio: 'Business entrepreneur 💼 Love traveling around Africa, reading books, and sunset walks. Tell me your favorite playlist!',
+              interests: ['Business', 'Travel', 'Music'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 750,
+              profileViews: 410,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_7',
+              displayName: 'Vimbai',
+              username: 'vimbai_zim',
+              email: 'vimbai@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_vimbai/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Victoria Falls', country: 'Zimbabwe' },
+              bio: 'Living near the majestic falls! 🌊 Adrenaline junkie and nature guide. Love white-water rafting & cozy campfire talk.',
+              interests: ['Rafting', 'Nature', 'Travel'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 520,
+              profileViews: 289,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_8',
+              displayName: 'Sekai',
+              username: 'sekai_zim',
+              email: 'sekai@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_sekai/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Harare', country: 'Zimbabwe' },
+              bio: 'Creative writer & poet 📝 Deeply introverted but love authentic individual connections. Let\'s share our favorite books and art.',
+              interests: ['Writing', 'Poetry', 'Books'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 330,
+              profileViews: 175,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_9',
+              displayName: 'Tatenda',
+              username: 'tatenda_zim',
+              email: 'tatenda@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_tatenda/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Chitungwiza', country: 'Zimbabwe' },
+              bio: 'Bubbly nurse 🩺 Saving lives and keeping a huge smile. Love cooking traditional Shona food and playing volleyball.',
+              interests: ['Medical', 'Cooking', 'Volleyball'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 480,
+              profileViews: 212,
+              createdAt: new Date(),
+              isOnline: true
+            },
+            {
+              uid: 'fake_zim_10',
+              displayName: 'Tinotenda',
+              username: 'tinotenda_zim',
+              email: 'tinotenda@styn.com',
+              photoURL: 'https://picsum.photos/seed/zim_tinotenda/600/800',
+              role: 'user',
+              tier: 'Platinum',
+              isVerified: true,
+              verificationRequested: false,
+              gender: 'Female',
+              interestedIn: 'Male',
+              location: { city: 'Harare', country: 'Zimbabwe' },
+              bio: 'Photographer 📸 Catching perfect moments around Zimbabwe. Let\'s hang out and do a fun photo shoot or go to a concert!',
+              interests: ['Photography', 'Music', 'Festivals'],
+              friends: [],
+              friendRequests: [],
+              sentRequests: [],
+              followers: [],
+              following: [],
+              swipedLeft: [],
+              swipedRight: [],
+              matches: [],
+              walletBalance: 0,
+              points: 590,
+              profileViews: 301,
+              createdAt: new Date(),
+              isOnline: true
+            }
+          ];
+
+          for (const lady of zimLadies) {
+            await setDoc(doc(db, 'users', lady.uid), lady);
+          }
+          console.log("Successfully seeded 10 Zimbabwe fake profiles in firestore!");
+        }
+      } catch (err) {
+        console.error("Auto seeding error:", err);
+      }
+    };
+    autoSeedZimLadies();
+  }, [user]);
+
   // Ads Listener
   React.useEffect(() => {
     if (!user) return;
@@ -475,9 +788,10 @@ export default function App() {
 
       // Check for mutual match
       const targetSnap = await getDoc(targetRef);
-      const targetData = targetSnap.data() as UserType;
+      const isFake = targetUid.startsWith('fake_');
+      const targetData = targetSnap.exists() ? targetSnap.data() as UserType : null;
 
-      if (targetData.swipedRight?.includes(user.uid)) {
+      if (isFake || (targetData && targetData.swipedRight?.includes(user.uid))) {
         // It's a match!
         const matchId = [user.uid, targetUid].sort().join('_');
         await setDoc(doc(db, 'matches', matchId), {
@@ -1674,7 +1988,7 @@ export default function App() {
                   <div className="flex-1 min-w-0">
                     {activeMenu === 'feed' ? (
                       <Feed 
-                        user={user} 
+                        currentUser={user} 
                         posts={posts} 
                         ads={ads}
                         onPost={handlePost} 
@@ -1690,16 +2004,12 @@ export default function App() {
                             navigate('profile');
                           }
                         }}
+                        onFollow={handleFollow}
                       />
                     ) : (
                       <Dating 
-                        user={user} 
-                        users={users} 
+                        currentUser={user} 
                         onSwipe={handleSwipe} 
-                        onViewProfile={(target) => {
-                          setProfileUser(target);
-                          navigate('profile');
-                        }}
                       />
                     )}
                   </div>

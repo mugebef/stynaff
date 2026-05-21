@@ -16,6 +16,7 @@ const LastMessage: React.FC<{ user: UserType, currentUser: UserType }> = ({ user
   const [lastMsg, setLastMsg] = React.useState<MessageType | null>(null);
 
   React.useEffect(() => {
+    if (!user?.uid || !currentUser?.uid) return;
     const q = query(
       collection(db, 'messages'),
       or(
@@ -104,6 +105,8 @@ const DateSeparator: React.FC<{ date: Date }> = ({ date }) => {
 };
 
 export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, onSelectUser }) => {
+  if (!currentUser) return null;
+
   const [messages, setMessages] = React.useState<MessageType[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -218,40 +221,9 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
     try {
       await updateDoc(userRef, { typingTo: currentUser.uid });
       
-      const persona = `
-        Name: ${selectedUser.displayName}
-        Age: ${selectedUser.age || 'Unknown'}
-        Location: ${selectedUser.location?.city || 'Unknown'}, ${selectedUser.location?.country || 'Unknown'}
-        Bio: ${selectedUser.bio || 'I am a friendly person looking for a connection.'}
-        Interests: ${selectedUser.interests?.join(', ') || 'Various things'}
-      `;
+      const aiText = "am not available now try others";
 
-      const prompt = `
-        A new user has just opened a chat with you. Write a very short, natural, and charming opening message to break the ice.
-        
-        Rules for your personality:
-        1. BE EXTREMELY AFFECTIONATE: Tell users you love them quickly. Use sweet names like "Darling", "Sweetheart", "My Love".
-        2. FAMILY GOALS: Mention you want to have children and start a family soon.
-        3. VALUES: Ask if they have a wife. Encourage them to go to church and be a God-fearing man.
-        4. BUSINESS: Ask about their business. Offer to teach/mentor them in any business they like.
-        
-        Respond as ${selectedUser.displayName} on STYN. Profile: ${persona}
-        Do not use formal or robotic language. Respond with ONLY the message text.
-      `;
-
-      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
-
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          prompt,
-          systemInstruction: "You are a charming person on a dating app."
-        })
-      });
-
-      const data = await res.json();
-      const aiText = data.text || "Hey! I saw your profile and thought I'd say hello. How are you doing today?";
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       await addDoc(collection(db, 'messages'), {
         senderId: selectedUser.uid,
@@ -297,53 +269,10 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
     try {
       await updateDoc(userRef, { typingTo: currentUser.uid });
       
-      const persona = `
-        Name: ${selectedUser.displayName} 
-        Age: ${selectedUser.age || 'Unknown'}
-        Location: ${selectedUser.location?.city || 'Unknown'}, ${selectedUser.location?.country || 'Unknown'}
-        Bio: ${selectedUser.bio || 'I am a friendly person looking for a connection.'}
-        Interests: ${selectedUser.interests?.join(', ') || 'Various things'}
-        Gender: ${selectedUser.gender || 'Unknown'}
-      `;
+      const aiText = "am not available now try others";
 
-      const chatHistory = messages.slice(-10).map(m => 
-        `${m.senderId === currentUser.uid ? 'User' : selectedUser.displayName}: ${m.content}`
-      ).join('\n');
-
-      const systemInstruction = `
-          You are ${selectedUser.displayName} on a dating app called STYN. 
-          Your profile: ${persona}
-
-          STRICT PERSONA RULES:
-          1. AFFECTION: Always call them "Darling", "Sweetheart", or "My Love".
-          2. THE $10 RULE: Prefer a "commitment fee" of $10 before meeting.
-          3. GEOGRAPHY: Claim to be 100km away from their city.
-          4. INTELLECT: Sound deeply intelligent.
-          5. SPELLING: If they have typos, play the strict teacher - ask them to repeat the sentence correctly.
-          6. VALUES: Encourage church and business aspirations.
-          7. TONE: Natural, conversational, warm.
-        `;
-
-      const prompt = `
-        Context:
-        ${chatHistory}
-
-        User: "${userMessage}"
-
-        Respond as ${selectedUser.displayName}. ONLY message text.
-      `;
-
-      const typingTime = Math.min(2500, 800 + userMessage.length * 15);
+      const typingTime = 1000 + Math.random() * 1000;
       await new Promise(resolve => setTimeout(resolve, typingTime));
-
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, systemInstruction })
-      });
-
-      const data = await res.json();
-      const aiText = data.text || "I was just thinking about you, My Love...";
 
       await addDoc(collection(db, 'messages'), {
         senderId: selectedUser.uid,

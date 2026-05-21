@@ -19,9 +19,11 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
 
   React.useEffect(() => {
     const fetchMatches = async () => {
+      if (!currentUser?.uid) return;
       try {
+        setLoading(true);
         // Filter out users already swiped
-        const swiped = [...(currentUser.swipedLeft || []), ...(currentUser.swipedRight || [])];
+        const swiped = [...(currentUser?.swipedLeft || []), ...(currentUser?.swipedRight || [])];
         
         const q = query(
           collection(db, 'users'),
@@ -31,7 +33,12 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
         const snap = await getDocs(q);
         const potentialMatches = snap.docs
           .map(d => d.data() as User)
-          .filter(u => !swiped.includes(u.uid))
+          .filter(u => {
+            if (u.uid && u.uid.startsWith('fake_')) {
+              return true;
+            }
+            return !swiped.includes(u.uid);
+          })
           .filter(u => {
             // Strict gender matching: Male <-> Female
             if (currentUser.gender === 'Male') {
