@@ -120,11 +120,18 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
   const triggerInProgress = React.useRef<boolean>(false);
 
   // Filter out current user and apply search
-  const chatUsers = users.filter(u => 
-    u.uid && currentUser?.uid && u.uid !== currentUser.uid && 
-    ((u.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-     (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const chatUsers = React.useMemo(() => {
+    const seen = new Set<string>();
+    return users.filter(u => {
+      if (!u.uid || !currentUser?.uid || u.uid === currentUser.uid) return false;
+      if (seen.has(u.uid)) return false;
+      seen.add(u.uid);
+      return (
+        (u.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (u.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
+  }, [users, currentUser?.uid, searchQuery]);
 
   // Handle typing indicator
   React.useEffect(() => {
@@ -163,7 +170,14 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, users, selectedUser, on
     setError(null);
 
     const unsubscribe = onSnapshot(q, (snap) => {
-      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as MessageType));
+      const seen = new Set<string>();
+      const msgs: MessageType[] = [];
+      snap.docs.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          msgs.push({ id: d.id, ...d.data() } as MessageType);
+        }
+      });
       setMessages(msgs);
       setLoading(false);
       

@@ -447,7 +447,15 @@ export default function App() {
     if (!user) return;
     const q = query(collection(db, 'users'));
     const unsubscribe = onSnapshot(q, (snap) => {
-      setUsers(snap.docs.map(d => ({ ...d.data(), uid: d.id } as UserType)));
+      const seen = new Set<string>();
+      const deduped: UserType[] = [];
+      snap.docs.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          deduped.push({ ...d.data(), uid: d.id } as UserType);
+        }
+      });
+      setUsers(deduped);
     });
     return () => unsubscribe();
   }, [user]);
@@ -770,7 +778,15 @@ export default function App() {
     if (!user) return;
     const q = query(collection(db, 'sponsoredContent'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snap) => {
-      setAds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+      snap.docs.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          deduped.push({ id: d.id, ...d.data() });
+        }
+      });
+      setAds(deduped);
     });
     return () => unsubscribe();
   }, [user]);
@@ -826,10 +842,17 @@ export default function App() {
 
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const postsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Post[];
+      const seenIds = new Set<string>();
+      const postsData: Post[] = [];
+      snapshot.docs.forEach(doc => {
+        if (!seenIds.has(doc.id)) {
+          seenIds.add(doc.id);
+          postsData.push({
+            id: doc.id,
+            ...doc.data()
+          } as Post);
+        }
+      });
       
       const BLACKLISTED = [
         '1776795683945-922546171',
@@ -940,7 +963,15 @@ export default function App() {
       orderBy('createdAt', 'desc')
     );
     return onSnapshot(q, (snap) => {
-      setNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() } as Notification)));
+      const seen = new Set<string>();
+      const deduped: Notification[] = [];
+      snap.docs.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          deduped.push({ id: d.id, ...d.data() } as Notification);
+        }
+      });
+      setNotifications(deduped);
     });
   }, [user]);
 
@@ -956,7 +987,15 @@ export default function App() {
   React.useEffect(() => {
     const q = query(collection(db, 'movies'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMovies(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+      snapshot.docs.forEach(doc => {
+        if (!seen.has(doc.id)) {
+          seen.add(doc.id);
+          deduped.push({ id: doc.id, ...doc.data() });
+        }
+      });
+      setMovies(deduped);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'movies');
     });

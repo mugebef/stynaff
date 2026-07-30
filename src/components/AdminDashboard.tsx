@@ -44,7 +44,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       alert(`${mockUsers.length} mock profiles cleared.`);
       // Refresh
       const usersSnap = await getDocs(collection(db, 'users'));
-      setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as User)));
+      const seenUids = new Set<string>();
+      const dedupedUsers: User[] = [];
+      usersSnap.docs.forEach(d => {
+        if (!seenUids.has(d.id)) {
+          seenUids.add(d.id);
+          dedupedUsers.push({ ...d.data(), uid: d.id } as User);
+        }
+      });
+      setUsers(dedupedUsers);
     } catch (err) {
       console.error(err);
       alert('Failed to clear users');
@@ -100,8 +108,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         const usersSnap = await getDocs(collection(db, 'users'));
         const postsSnap = await getDocs(collection(db, 'posts'));
         
-        setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as User)));
-        setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Post)));
+        const seenUids = new Set<string>();
+        const dedupedUsers: User[] = [];
+        usersSnap.docs.forEach(d => {
+          if (!seenUids.has(d.id)) {
+            seenUids.add(d.id);
+            dedupedUsers.push({ ...d.data(), uid: d.id } as User);
+          }
+        });
+        setUsers(dedupedUsers);
+
+        const seenPostIds = new Set<string>();
+        const dedupedPosts: Post[] = [];
+        postsSnap.docs.forEach(d => {
+          if (!seenPostIds.has(d.id)) {
+            seenPostIds.add(d.id);
+            dedupedPosts.push({ id: d.id, ...d.data() } as Post);
+          }
+        });
+        setPosts(dedupedPosts);
       } catch (err) {
         console.error(err);
       } finally {
@@ -115,7 +140,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
     });
 
     const unsubAds = onSnapshot(collection(db, 'sponsoredContent'), (snap) => {
-      setAds(snap.docs.map(d => ({ id: d.id, ...d.data() } as SponsoredAd)));
+      const seenAdIds = new Set<string>();
+      const dedupedAds: SponsoredAd[] = [];
+      snap.docs.forEach(d => {
+        if (!seenAdIds.has(d.id)) {
+          seenAdIds.add(d.id);
+          dedupedAds.push({ id: d.id, ...d.data() } as SponsoredAd);
+        }
+      });
+      setAds(dedupedAds);
     });
 
     return () => {
@@ -194,7 +227,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
       alert('10 Fake users added successfully!');
       // Refresh user list
       const usersSnap = await getDocs(collection(db, 'users'));
-      setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as User)));
+      const seenUids = new Set<string>();
+      const dedupedUsers: User[] = [];
+      usersSnap.docs.forEach(d => {
+        if (!seenUids.has(d.id)) {
+          seenUids.add(d.id);
+          dedupedUsers.push({ ...d.data(), uid: d.id } as User);
+        }
+      });
+      setUsers(dedupedUsers);
     } catch (err) {
       console.error(err);
       alert('Failed to seed users');

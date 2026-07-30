@@ -31,9 +31,12 @@ export const Dating: React.FC<DatingProps> = ({ currentUser, onSwipe }) => {
           limit(50)
         );
         const snap = await getDocs(q);
+        const seenMatchIds = new Set<string>();
         const potentialMatches = snap.docs
           .map(d => ({ ...d.data(), uid: d.id } as User))
           .filter(u => {
+            if (!u.uid || seenMatchIds.has(u.uid)) return false;
+            seenMatchIds.add(u.uid);
             if (u.uid && u.uid.startsWith('fake_')) {
               return true;
             }

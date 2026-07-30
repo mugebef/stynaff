@@ -230,9 +230,9 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
             <p className="text-neutral-500">Follow more people to see what's happening!</p>
           </div>
         ) : (
-          posts.map((post, index) => (
+          posts.map((post) => (
             <PostCard
-              key={`feed-post-card-${post.id}-${currentUser?.uid}-${index}`}
+              key={`post-${post.id}`}
               post={post}
               currentUser={currentUser}
               users={users}

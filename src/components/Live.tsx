@@ -29,7 +29,15 @@ export const Live: React.FC = () => {
   React.useEffect(() => {
     const q = query(collection(db, 'live_streams'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setStreams(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+      snapshot.docs.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          deduped.push({ id: d.id, ...d.data() });
+        }
+      });
+      setStreams(deduped);
     });
     return () => unsubscribe();
   }, []);
@@ -46,7 +54,15 @@ export const Live: React.FC = () => {
       limit(50)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setComments(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+      snapshot.docs.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          deduped.push({ id: d.id, ...d.data() });
+        }
+      });
+      setComments(deduped);
     });
     return () => unsubscribe();
   }, [selectedStream?.id]);
