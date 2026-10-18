@@ -845,11 +845,12 @@ export default function App() {
       const seenIds = new Set<string>();
       const postsData: Post[] = [];
       snapshot.docs.forEach(doc => {
-        if (!seenIds.has(doc.id)) {
-          seenIds.add(doc.id);
+        const docId = doc.id;
+        if (docId && !seenIds.has(docId)) {
+          seenIds.add(docId);
           postsData.push({
-            id: doc.id,
-            ...doc.data()
+            ...doc.data(),
+            id: docId,
           } as Post);
         }
       });
@@ -862,12 +863,31 @@ export default function App() {
         '1776337851694-34368666',
         '1777223284892-630774047',
         '1776173516754-528542977',
-        '1777892867237-62070073'
+        '1777892867237-62070073',
+        '1778270303883-237857740',
+        '1778270506233-913381597',
+        '1778143324734-674147715',
+        '1777896122793-132736216',
+        '1778270421366-293645266',
+        '1777894935806-324422614',
+        '1791544237661-914370686',
+        '1778271065800-996120041',
+        '1779154887679-654107398',
+        '3vu2gMk25SfRd8F9Z9oF',
+        'kH1Ayg2lHfMw3BX99vqv',
+        '0crdWdfaxtKxEcKg6DF5',
+        'W90plzHMk8AkbqKDNnuU',
+        'HDQqCrGKIh9Ll4qo37ws',
+        '2iS1Dr9LfCWbKDIE48EL',
+        'NeYnEvcoDuEVRvYpkGMS',
+        'QFDsXDuSK2Zg3UnNBPye',
+        '7THuuVAr5uQmprA08bqb'
       ];
 
       const filteredPosts = postsData.filter(p => {
+        if (BLACKLISTED.some(badId => p.id === badId)) return false;
         if (!p.mediaUrl) return true;
-        return !BLACKLISTED.some(id => p.mediaUrl?.includes(id));
+        return !BLACKLISTED.some(badUrl => p.mediaUrl?.includes(badUrl));
       });
       
       const allFetchedPosts = filteredPosts;
@@ -885,7 +905,17 @@ export default function App() {
         return (b.likes?.length || 0) - (a.likes?.length || 0);
       });
       
-      setPosts(sortedPosts);
+      // Ensure strictly unique posts by document ID
+      const finalUniquePosts: Post[] = [];
+      const seenFinalIds = new Set<string>();
+      sortedPosts.forEach((post) => {
+        if (post && post.id && !seenFinalIds.has(post.id)) {
+          seenFinalIds.add(post.id);
+          finalUniquePosts.push(post);
+        }
+      });
+
+      setPosts(finalUniquePosts);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'posts');
     });
@@ -992,7 +1022,7 @@ export default function App() {
       snapshot.docs.forEach(doc => {
         if (!seen.has(doc.id)) {
           seen.add(doc.id);
-          deduped.push({ id: doc.id, ...doc.data() });
+          deduped.push({ ...doc.data(), id: doc.id });
         }
       });
       setMovies(deduped);

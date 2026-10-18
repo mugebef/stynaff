@@ -6,6 +6,7 @@ import { COUNTRIES_AND_CITIES, RELATIONSHIP_STATUSES } from '../constants';
 import { ImageCropper } from './ImageCropper';
 import { getCroppedImg } from '../lib/canvasUtils';
 import { motion, AnimatePresence } from 'motion/react';
+import { isOct2026File } from '../utils';
 
 const TierIcon = ({ tier, size = 16 }: { tier: string, size?: number }) => {
   switch (tier) {
@@ -83,12 +84,44 @@ export const Profile: React.FC<ProfileProps> = ({
   const [isCropping, setIsCropping] = React.useState(false);
   const [isPhotoZoomed, setIsPhotoZoomed] = React.useState(false);
   const [croppedAreaPixels, setCroppedAreaPixels] = React.useState<any>(null);
+  const [photoError, setPhotoError] = React.useState(false);
+
+  React.useEffect(() => {
+    setPhotoError(false);
+  }, [user.uid, user.photoURL]);
 
   const isOwnProfile = user.uid === currentUser.uid;
   const isAdmin = currentUser.role === 'admin';
   const isFollowing = currentUser.following?.includes(user.uid);
   const canEdit = isOwnProfile || isAdmin;
   const userPosts = posts.filter(p => p.authorId === user.uid);
+
+  // Keep files from Oct 2026 only. If old file or missing, show replacement saying No Profile.
+  const hasOct2026Photo = React.useMemo(() => {
+    if (photoPreview) return true; // Newly selected in this session (Oct 2026)
+    if (!user.photoURL || photoError) return false;
+    return isOct2026File(user.photoURL);
+  }, [photoPreview, user.photoURL, photoError]);
+
+  // Gallery photos from Oct 2026 only
+  const oct2026Photos = React.useMemo(() => {
+    const seenPhotoIds = new Set<string>();
+    return userPosts
+      .filter(p => {
+        if (!p || !p.id || !p.mediaUrl) return false;
+        if (seenPhotoIds.has(p.id)) return false;
+        seenPhotoIds.add(p.id);
+        if (isOct2026File(p.mediaUrl)) return true;
+        if (p.createdAt) {
+          const date = (p.createdAt as any)?.toDate ? (p.createdAt as any).toDate() : new Date(p.createdAt);
+          if (date && date.getFullYear() === 2026 && date.getMonth() === 9) {
+            return true;
+          }
+        }
+        return false;
+      })
+      .map(p => ({ id: p.id, url: p.mediaUrl! }));
+  }, [userPosts]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -213,7 +246,7 @@ export const Profile: React.FC<ProfileProps> = ({
       </AnimatePresence>
 
       <AnimatePresence>
-        {isPhotoZoomed && (user.photoURL || photoPreview) && (
+        {isPhotoZoomed && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -226,13 +259,25 @@ export const Profile: React.FC<ProfileProps> = ({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative max-h-full max-w-full overflow-hidden rounded-[3rem] shadow-2xl ring-1 ring-white/10"
+              onClick={(e) => e.stopPropagation()}
             >
-              <img 
-                src={photoPreview || user.photoURL} 
-                alt={user.displayName} 
-                className="max-h-[80vh] w-auto rounded-[3rem] object-contain shadow-2xl"
-                referrerPolicy="no-referrer"
-              />
+              {hasOct2026Photo ? (
+                <img 
+                  src={photoPreview || user.photoURL} 
+                  alt={user.displayName} 
+                  className="max-h-[80vh] w-auto rounded-[3rem] object-contain shadow-2xl"
+                  referrerPolicy="no-referrer"
+                  onError={() => setPhotoError(true)}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center p-10 md:p-14 bg-neutral-900 border border-white/10 rounded-[2.5rem] text-center min-w-[300px]">
+                  <div className="h-20 w-20 rounded-full bg-neutral-800 border-2 border-dashed border-orange-500/40 flex items-center justify-center mb-4 text-orange-500 shadow-inner">
+                    <UserIcon size={40} className="text-orange-500" />
+                  </div>
+                  <h4 className="text-2xl font-black text-white uppercase tracking-wider mb-1">No Profile</h4>
+                  <p className="text-xs text-neutral-400 font-medium">Only files from Oct 2026 are kept on profiles.</p>
+                </div>
+              )}
               <button 
                 onClick={(e) => { e.stopPropagation(); setIsPhotoZoomed(false); }}
                 className="absolute right-6 top-6 rounded-full bg-black/60 p-4 text-white backdrop-blur-md hover:bg-white/10 transition-all border border-white/10"
@@ -266,19 +311,28 @@ export const Profile: React.FC<ProfileProps> = ({
         <div className="flex flex-col items-center md:flex-row md:items-end md:gap-8">
           {/* Profile Photo */}
           <div 
-            className="relative -mt-16 h-32 w-32 md:-mt-32 md:h-56 md:w-56 overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border-4 md:border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] group cursor-pointer"
+            className="relative -mt-16 h-32 w-32 md:-mt-32 md:h-56 md:w-56 overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border-4 md:border-8 border-neutral-950 bg-neutral-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] group cursor-pointer flex items-center justify-center"
             onClick={() => !isEditing && setIsPhotoZoomed(true)}
           >
-            {photoPreview || user.photoURL ? (
+            {hasOct2026Photo ? (
               <img 
                 src={photoPreview || user.photoURL} 
                 alt={user.displayName} 
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
                 referrerPolicy="no-referrer"
+                onError={() => setPhotoError(true)}
               />
             ) : (
-              <div className={`flex h-full w-full items-center justify-center ${user.gender === 'Female' ? 'bg-pink-500/10 text-pink-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                <UserIcon size={100} />
+              <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-neutral-900 via-neutral-900 to-neutral-950 p-2 md:p-4 text-center select-none border border-white/5">
+                <div className="mb-1 md:mb-2 flex h-10 w-10 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-neutral-800/90 text-neutral-400 border border-white/10 shadow-inner group-hover:border-orange-500/40 transition-colors">
+                  <UserIcon className="h-5 w-5 md:h-8 md:w-8 text-neutral-400" />
+                </div>
+                <span className="text-xs md:text-base font-black uppercase tracking-wider text-white group-hover:text-orange-400 transition-colors">
+                  No Profile
+                </span>
+                <span className="text-[8px] md:text-[11px] font-semibold text-neutral-500 mt-0.5">
+                  Oct 2026 Only
+                </span>
               </div>
             )}
             {canEdit && (
@@ -288,10 +342,12 @@ export const Profile: React.FC<ProfileProps> = ({
             )}
             {canEdit && isEditing && (
               <label 
-                className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/60 text-white opacity-0 transition-opacity hover:opacity-100 backdrop-blur-sm"
+                className="absolute inset-0 z-10 flex cursor-pointer flex-col items-center justify-center bg-black/75 text-white opacity-0 transition-opacity hover:opacity-100 backdrop-blur-sm p-2 text-center"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Camera size={40} />
+                <Camera size={36} className="text-orange-500 mb-1" />
+                <span className="text-[10px] font-black uppercase tracking-wider">Change Photo</span>
+                <span className="text-[8px] text-neutral-400">Oct 2026 upload</span>
                 <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
               </label>
             )}
@@ -790,34 +846,63 @@ export const Profile: React.FC<ProfileProps> = ({
               <div className="rounded-2xl border border-white/5 bg-neutral-900 p-6 shadow-sm ring-1 ring-white/5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white">Photos</h3>
-                  <button className="text-sm font-bold text-orange-500 hover:underline">See all</button>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20">
+                    Oct 2026
+                  </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={`profile-gallery-item-${user.uid}-${i}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80">
-                      <img 
-                        src={`https://picsum.photos/seed/${user.uid + i}/200`} 
-                        alt="Gallery" 
-                        className="h-full w-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
+                {oct2026Photos.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl">
+                    {oct2026Photos.slice(0, 6).map((item) => (
+                      <div key={`photo-${item.id}`} className="aspect-square bg-neutral-800 transition-all hover:opacity-80 rounded-lg overflow-hidden">
+                        <img 
+                          src={item.url} 
+                          alt="Gallery" 
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-neutral-950/60 p-6 text-center">
+                    <div className="h-12 w-12 rounded-2xl bg-neutral-900 border border-white/10 flex items-center justify-center text-neutral-400 mb-2">
+                      <Camera size={22} className="text-neutral-500" />
                     </div>
-                  ))}
-                </div>
+                    <p className="text-xs font-black uppercase tracking-wider text-neutral-300">No Profile Photos</p>
+                    <p className="text-[10px] text-neutral-500 mt-1">Oct 2026 files only</p>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Timeline Posts */}
             <div className="lg:col-span-2">
               <div className="space-y-6">
-                {userPosts.length === 0 ? (
-                  <div className="rounded-2xl border border-white/5 bg-neutral-900 p-12 text-center shadow-sm">
-                    <p className="text-neutral-500">No posts on this timeline yet.</p>
-                  </div>
-                ) : (
-                  userPosts.map((post, index) => (
+                {(() => {
+                  const seenProfilePostIds = new Set<string>();
+                  const filteredTimelinePosts = userPosts.filter(post => {
+                    if (!post || !post.id) return false;
+                    if (seenProfilePostIds.has(post.id)) return false;
+                    seenProfilePostIds.add(post.id);
+
+                    // If post has an old media URL that is before Oct 2026, exclude old removed files
+                    if (post.mediaUrl && post.mediaUrl.includes('/uploads/')) {
+                      return isOct2026File(post.mediaUrl);
+                    }
+                    return true;
+                  });
+
+                  if (filteredTimelinePosts.length === 0) {
+                    return (
+                      <div className="rounded-2xl border border-white/5 bg-neutral-900 p-12 text-center shadow-sm">
+                        <p className="text-neutral-500 font-medium">No Oct 2026 posts on this timeline yet.</p>
+                      </div>
+                    );
+                  }
+
+                  return filteredTimelinePosts.map((post) => (
                     <PostCard 
-                      key={`profile-timeline-post-${post.id || index}-${index}-${post.authorId}`}
+                      key={`post-${post.id}`}
                       post={post}
                       currentUser={currentUser}
                       users={users}
@@ -826,8 +911,8 @@ export const Profile: React.FC<ProfileProps> = ({
                       onComment={onComment}
                       onBoost={onBoost}
                     />
-                  ))
-                )}
+                  ));
+                })()}
               </div>
             </div>
           </div>

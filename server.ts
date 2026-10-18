@@ -42,9 +42,10 @@ const projectRoot = (typeof __dirname !== 'undefined')
   ? path.resolve(__dirname, '..')
   : process.cwd();
 
-// Use the specific path requested for production
-const uploadsDir = isProduction 
-  ? '/home/styni.com/stynaff/uploads/' 
+// Resolve uploads directory safely
+const customProdUploads = '/home/styni.com/stynaff/uploads/';
+const uploadsDir = (isProduction && fs.existsSync(customProdUploads))
+  ? customProdUploads 
   : path.resolve(projectRoot, 'uploads');
 
 const videosDir = path.resolve(uploadsDir, 'videos');
@@ -57,7 +58,106 @@ const imagesDir = path.resolve(uploadsDir, 'images');
   }
 });
 
+// Oct 2026 UTC timestamp bounds
+const OCT_2026_START = new Date('2026-10-01T00:00:00.000Z').getTime();
+const OCT_2026_END = new Date('2026-10-31T23:59:59.999Z').getTime();
+
+// Check if a file is from October 2026 only
+function isOct2026File(filename: string, fullPath?: string): boolean {
+  if (filename === 'fallback.mp4') return true;
+  
+  // Check timestamp prefix in filename (e.g. 1791544237661-...)
+  const match = filename.match(/^(\d{13})-/);
+  if (match) {
+    const ts = parseInt(match[1], 10);
+    return ts >= OCT_2026_START && ts <= OCT_2026_END;
+  }
+
+  // If file exists on disk, check filesystem mtime
+  if (fullPath && fs.existsSync(fullPath)) {
+    try {
+      const stats = fs.statSync(fullPath);
+      const mtime = stats.mtime.getTime();
+      return mtime >= OCT_2026_START && mtime <= OCT_2026_END;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+// Clean old files: delete any files not from Oct 2026
+function cleanupOldFiles() {
+  [videosDir, imagesDir, uploadsDir].forEach(dir => {
+    if (fs.existsSync(dir)) {
+      try {
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+          const fullPath = path.resolve(dir, file);
+          try {
+            if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+              if (!isOct2026File(file, fullPath)) {
+                log(`[Oct 2026 Retention] Removing old pre-Oct 2026 file: ${file}`);
+                fs.unlinkSync(fullPath);
+              }
+            }
+          } catch (e: any) {
+            log(`Error checking file ${file}: ${e.message}`);
+          }
+        });
+      } catch (err: any) {
+        log(`Error reading directory ${dir} for cleanup: ${err.message}`);
+      }
+    }
+  });
+}
+
+// Run cleanup on startup to remove old files and keep files from Oct 2026 only
+cleanupOldFiles();
+
+// Dedicated video route with fallback support so missing video files never return HTML or crash video demuxers
+app.get('/uploads/videos/:filename', (req, res) => {
+  const filePath = path.resolve(videosDir, req.params.filename);
+  if (fs.existsSync(filePath)) {
+    if (isOct2026File(req.params.filename, filePath)) {
+      return res.sendFile(filePath);
+    } else {
+      // Remove old file and serve fallback
+      try { fs.unlinkSync(filePath); } catch {}
+    }
+  }
+  const fallbackPath = path.resolve(videosDir, 'fallback.mp4');
+  if (fs.existsSync(fallbackPath)) {
+    res.setHeader('Content-Type', 'video/mp4');
+    return res.sendFile(fallbackPath);
+  }
+  const rootFallback = path.resolve(projectRoot, 'public', 'fallback.mp4');
+  if (fs.existsSync(rootFallback)) {
+    res.setHeader('Content-Type', 'video/mp4');
+    return res.sendFile(rootFallback);
+  }
+  res.status(404).json({ error: 'Video not found' });
+});
+
+// Dedicated image route so missing images never return HTML
+app.get('/uploads/images/:filename', (req, res) => {
+  const filePath = path.resolve(imagesDir, req.params.filename);
+  if (fs.existsSync(filePath)) {
+    if (isOct2026File(req.params.filename, filePath)) {
+      return res.sendFile(filePath);
+    } else {
+      // Remove old pre-Oct 2026 file
+      try { fs.unlinkSync(filePath); } catch {}
+    }
+  }
+  res.status(404).json({ error: 'Image not found' });
+});
+
 app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ error: 'Upload not found' });
+});
 
 // Logging helper
 const log = (msg: string) => console.log(`[${new Date().toISOString()}] ${msg}`);
@@ -216,9 +316,9 @@ async function startServer() {
     app.use(express.static(distPath));
     
     app.get("*", (req, res) => {
-      // Avoid catching API routes or other things that should have matched earlier
-      if (req.path.startsWith('/api')) {
-        return res.status(404).json({ error: `API route ${req.path} not found` });
+      // Avoid catching API routes or uploads or other things that should have matched earlier
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+        return res.status(404).json({ error: `Route ${req.path} not found` });
       }
 
       const indexPath = path.resolve(distPath, "index.html");

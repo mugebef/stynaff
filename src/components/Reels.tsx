@@ -46,11 +46,17 @@ export const Reels: React.FC<ReelsProps> = ({
   
   // Recommendation & Filtering Logic
   const reels = React.useMemo(() => {
-    let list = posts.filter(p => (
-      p.isReel || 
-      p.mediaType === 'video' || 
-      (p.mediaUrl && (p.mediaUrl.toLowerCase().endsWith('.mp4') || p.mediaUrl.toLowerCase().endsWith('.mov')))
-    ));
+    const seenReelIds = new Set<string>();
+    let list = posts.filter(p => {
+      if (!p || !p.id) return false;
+      const isVideo = p.isReel || 
+        p.mediaType === 'video' || 
+        (p.mediaUrl && (p.mediaUrl.toLowerCase().endsWith('.mp4') || p.mediaUrl.toLowerCase().endsWith('.mov')));
+      if (!isVideo) return false;
+      if (seenReelIds.has(p.id)) return false;
+      seenReelIds.add(p.id);
+      return true;
+    });
     
     // Search Filter
     if (searchQuery.trim()) {
@@ -362,20 +368,16 @@ export const Reels: React.FC<ReelsProps> = ({
                       onEnded={skipToNextReel}
                       onError={(e) => {
                         const video = e.currentTarget;
-                        console.error(`Video load failed for reel ${reel.id}:`, video.error?.code, video.error?.message, getMediaSource(reel.mediaUrl));
-                        
-                        // Try to reload once if it fails
                         if (!video.dataset.retried) {
                           video.dataset.retried = 'true';
-                          setTimeout(() => { 
-                            video.load();
-                          }, 2000);
-                        } else {
-                          // After retrying twice, show error and auto-skip to next if it's the active one
-                          setVideoError(prev => new Set(prev).add(reel.id));
-                          if (index === activeIndex) {
-                            setTimeout(skipToNextReel, 3000);
-                          }
+                          video.src = '/fallback.mp4';
+                          video.load();
+                          return;
+                        }
+                        console.warn(`Video load failed for reel ${reel.id}:`, video.error?.code, video.error?.message);
+                        setVideoError(prev => new Set(prev).add(reel.id));
+                        if (index === activeIndex) {
+                          setTimeout(skipToNextReel, 3000);
                         }
                       }}
                       onClick={(e) => {

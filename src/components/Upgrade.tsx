@@ -5,10 +5,23 @@ import { motion } from 'motion/react';
 
 interface UpgradeProps {
   user: User;
-  onUpgrade: (tier: string) => void;
+  onUpgrade?: (tier: string) => void;
+  onUpdateProfile?: (updates: Partial<User>) => Promise<void>;
 }
 
-export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
+export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade, onUpdateProfile }) => {
+  const handleSelectTier = async (tierName: string) => {
+    if (onUpgrade) {
+      onUpgrade(tierName);
+    } else if (onUpdateProfile) {
+      try {
+        await onUpdateProfile({ tier: tierName });
+        alert(`Congratulations! You have upgraded to ${tierName} plan.`);
+      } catch (e: any) {
+        console.error(e);
+      }
+    }
+  };
   const tiers = [
     {
       name: 'Bronze',
@@ -94,7 +107,7 @@ export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade }) => {
             </ul>
 
             <button
-              onClick={() => onUpgrade(tier.name)}
+              onClick={() => handleSelectTier(tier.name)}
               disabled={user.tier === tier.name}
               className={`w-full rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 ${
                 user.tier === tier.name 

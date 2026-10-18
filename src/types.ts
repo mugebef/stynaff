@@ -95,9 +95,9 @@ export interface Transaction {
   id: string;
   userId: string;
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'points_conversion' | 'ad_payment' | 'verification_payment' | 'boost_payment' | 'gift';
+  type: 'deposit' | 'withdrawal' | 'points_conversion' | 'ad_payment' | 'verification_payment' | 'boost_payment' | 'gift' | 'points_purchase' | 'conversion' | 'boost_post';
   status: 'pending' | 'completed' | 'failed';
-  method: 'manual' | 'wallet';
+  method: 'paynow' | 'manual' | 'wallet' | string;
   createdAt: any;
 }
 

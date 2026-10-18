@@ -70,12 +70,18 @@ export const PostCard: React.FC<PostCardProps> = ({ post, currentUser, users, on
                 className="h-full w-full object-cover" 
                 loading="lazy"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) {
+                    const fallback = e.currentTarget.parentElement.querySelector('.avatar-fallback');
+                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                  }
+                }}
               />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-neutral-500">
-                <User size={20} />
-              </div>
-            )}
+            ) : null}
+            <div className={`avatar-fallback ${authorPhoto ? 'hidden' : 'flex'} h-full w-full items-center justify-center text-neutral-500`}>
+              <User size={20} />
+            </div>
           </div>
           <div>
             <div className="flex items-center gap-1.5">

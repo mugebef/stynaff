@@ -230,20 +230,30 @@ export const Feed: React.FC<FeedProps> = ({ posts, currentUser, users, onPost, o
             <p className="text-neutral-500">Follow more people to see what's happening!</p>
           </div>
         ) : (
-          posts.map((post) => (
-            <PostCard
-              key={`post-${post.id}`}
-              post={post}
-              currentUser={currentUser}
-              users={users}
-              onLike={onLike}
-              onDelete={onDelete}
-              onComment={onComment}
-              onBoost={onBoost}
-              onFollow={onFollow}
-              onShare={onShare}
-            />
-          ))
+          (() => {
+            const seenPostIds = new Set<string>();
+            return posts
+              .filter((post) => {
+                if (!post || !post.id) return false;
+                if (seenPostIds.has(post.id)) return false;
+                seenPostIds.add(post.id);
+                return true;
+              })
+              .map((post) => (
+                <PostCard
+                  key={`post-${post.id}`}
+                  post={post}
+                  currentUser={currentUser}
+                  users={users}
+                  onLike={onLike}
+                  onDelete={onDelete}
+                  onComment={onComment}
+                  onBoost={onBoost}
+                  onFollow={onFollow}
+                  onShare={onShare}
+                />
+              ));
+          })()
         )}
       </div>
     </div>

@@ -638,7 +638,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
         <div className="p-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {ads.map((ad, index) => (
-              <div key={`admin-ad-card-${ad.id || index}-${index}`} className="relative overflow-hidden rounded-2xl border border-white/5 bg-neutral-950 p-4 transition-all hover:shadow-md hover:border-orange-600/30">
+              <div key={`admin-ad-${ad.id || `idx-${index}`}`} className="relative overflow-hidden rounded-2xl border border-white/5 bg-neutral-950 p-4 transition-all hover:shadow-md hover:border-orange-600/30">
                 <div className="mb-4 aspect-video w-full overflow-hidden rounded-xl bg-neutral-900 border border-white/5">
                   <img src={ad.imageUrl} alt={ad.title} className="h-full w-full object-cover" />
                 </div>
@@ -750,7 +750,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onU
             </thead>
             <tbody className="divide-y divide-white/5">
               {posts.slice(0, 10).map((post, index) => (
-                <tr key={`admin-recent-post-row-${post.id || index}-${index}`} className="hover:bg-neutral-800 transition-colors">
+                <tr key={`admin-post-${post.id || `idx-${index}`}`} className="hover:bg-neutral-800 transition-colors">
                   <td className="px-6 py-4">
                     <p className="text-sm font-bold text-white">{post.authorName}</p>
                   </td>

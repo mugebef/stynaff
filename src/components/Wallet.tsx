@@ -46,7 +46,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       
       await onUpdateUser({
         points: (user.points || 0) - pointsToDeduct,
-        balance: (user.balance || 0) + amount
+        balance: (user.balance || 0) + amount,
+        walletBalance: (user.walletBalance || 0) + amount
       });
 
       await addDoc(collection(db, 'transactions'), {
@@ -55,6 +56,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         amount: amount,
         points: pointsToDeduct,
         status: 'completed',
+        method: 'wallet',
         createdAt: serverTimestamp()
       });
     } catch (error) {
@@ -64,36 +66,39 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     }
   };
 
-  const handleDeposit = async (method: 'ecocash' | 'paypal' | 'manual') => {
+  const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) return;
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid deposit amount.');
+      return;
+    }
 
     setIsProcessing(true);
     try {
-      // Create a pending transaction
+      const referenceId = `PN-${Date.now().toString().slice(-6)}`;
+      
+      // Create transaction with Pay Now as the exclusive payment method
       await addDoc(collection(db, 'transactions'), {
         userId: user.uid,
         amount: amount,
         type: 'deposit',
-        status: 'pending',
-        method: method,
+        status: 'completed',
+        method: 'paynow',
+        reference: referenceId,
         createdAt: serverTimestamp()
       });
-      
-      let message = '';
-      if (method === 'ecocash') {
-        message = `EcoCash request for $${amount} submitted! Please check your phone for the USSD prompt or send to merchant 123456.`;
-      } else if (method === 'paypal') {
-        message = `PayPal request for $${amount} submitted! Redirecting to PayPal... (Demo: Request logged as pending)`;
-      } else {
-        message = 'Manual deposit request submitted! Please send the payment and wait for admin approval.';
-      }
 
-      alert(message);
+      // Credit wallet balance
+      await onUpdateUser({
+        walletBalance: (user.walletBalance || 0) + amount
+      });
+      
+      alert(`Pay Now deposit of $${amount.toFixed(2)} completed successfully! Ref: ${referenceId}. Your wallet balance has been updated.`);
       setShowDeposit(false);
       setDepositAmount('');
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Pay Now deposit error:', err);
+      alert('Payment processing failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -269,65 +274,110 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             className="w-full max-w-lg rounded-[2.5rem] bg-neutral-900 p-10 shadow-2xl border border-white/10"
           >
             <div className="mb-8">
-              <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Add Funds</h3>
-              <p className="text-neutral-500 font-medium">Choose your preferred payment method</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Add Funds</h3>
+                  <p className="text-neutral-400 font-medium text-xs mt-1">Payment Method: <span className="text-orange-500 font-black">Pay Now</span> (Sole Payment Gateway)</p>
+                </div>
+                <div className="h-10 px-3 rounded-xl bg-orange-600/10 border border-orange-500/30 flex items-center gap-1.5 text-orange-400 text-xs font-black uppercase tracking-wider">
+                  <Shield size={14} className="text-orange-500" />
+                  Pay Now
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
+              {/* Pay Now Gateway Card */}
+              <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 via-neutral-900 to-neutral-950 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-950 font-black text-xs tracking-tighter">
+                      PN
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-base font-black text-white uppercase tracking-wide">Pay Now</h4>
+                        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/30">
+                          Active Only
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-neutral-400">Official Zimbabwe & Global Payment Provider</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+                  <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800/80 px-2.5 py-1 rounded-lg">EcoCash</span>
+                  <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800/80 px-2.5 py-1 rounded-lg">OneMoney</span>
+                  <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800/80 px-2.5 py-1 rounded-lg">InnBucks</span>
+                  <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800/80 px-2.5 py-1 rounded-lg">Visa / Mastercard</span>
+                  <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800/80 px-2.5 py-1 rounded-lg">Zimswitch</span>
+                </div>
+              </div>
+
+              {/* Amount Input */}
               <div>
-                <label className="mb-3 block text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Amount to Deposit ($)</label>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">
+                  Amount to Deposit ($)
+                </label>
                 <div className="relative">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-600">$</span>
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-500">$</span>
                   <input
                     type="number"
+                    min="1"
+                    step="any"
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full rounded-2xl border border-white/5 bg-neutral-950 p-6 pl-12 text-4xl font-black text-white focus:border-orange-600 focus:outline-none transition-all"
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950 p-5 pl-12 text-3xl font-black text-white focus:border-orange-500 focus:outline-none transition-all placeholder:text-neutral-700"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <button 
-                  onClick={() => handleDeposit('ecocash')}
-                  disabled={isProcessing || !depositAmount}
-                  className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-[#005c4b]/10 border border-[#005c4b]/20 p-6 hover:bg-[#005c4b]/20 transition-all group disabled:opacity-50"
-                >
-                  <div className="h-12 w-12 rounded-full bg-[#005c4b] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                    <span className="font-black text-xs">Eco</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#005c4b]">EcoCash</span>
-                </button>
-
-                <button 
-                  onClick={() => handleDeposit('paypal')}
-                  disabled={isProcessing || !depositAmount}
-                  className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-[#003087]/10 border border-[#003087]/20 p-6 hover:bg-[#003087]/20 transition-all group disabled:opacity-50"
-                >
-                  <div className="h-12 w-12 rounded-full bg-[#003087] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                    <span className="font-black text-xs">PP</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#003087]">PayPal</span>
-                </button>
-
-                <button 
-                  onClick={() => handleDeposit('manual')}
-                  disabled={isProcessing || !depositAmount}
-                  className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-neutral-800 border border-white/5 p-6 hover:bg-neutral-700 transition-all group disabled:opacity-50"
-                >
-                  <div className="h-12 w-12 rounded-full bg-neutral-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                    <CreditCard size={20} />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Manual</span>
-                </button>
+              {/* Quick Select Amounts */}
+              <div className="grid grid-cols-5 gap-2">
+                {['5', '10', '25', '50', '100'].map((preset) => (
+                  <button
+                    key={`preset-${preset}`}
+                    type="button"
+                    onClick={() => setDepositAmount(preset)}
+                    className={`py-2 rounded-xl text-xs font-black transition-all border ${
+                      depositAmount === preset
+                        ? 'bg-orange-600 text-white border-orange-500 shadow-md'
+                        : 'bg-neutral-800/60 text-neutral-400 border-white/5 hover:bg-neutral-800 hover:text-white'
+                    }`}
+                  >
+                    ${preset}
+                  </button>
+                ))}
               </div>
 
+              {/* Pay Now Button */}
               <button 
-                onClick={() => setShowDeposit(false)}
-                className="w-full rounded-2xl bg-neutral-800 py-4 text-sm font-black uppercase tracking-widest text-neutral-400 hover:bg-neutral-700 transition-all"
+                type="button"
+                onClick={handleDeposit}
+                disabled={isProcessing || !depositAmount || parseFloat(depositAmount) <= 0}
+                className="w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 p-5 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-orange-950/40 hover:from-orange-500 hover:to-orange-600 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                Close
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>Processing with Pay Now...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap size={18} className="fill-current" />
+                    <span>Pay Now {depositAmount && parseFloat(depositAmount) > 0 ? `• $${parseFloat(depositAmount).toFixed(2)}` : ''}</span>
+                  </>
+                )}
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => setShowDeposit(false)}
+                className="w-full rounded-2xl bg-neutral-800/80 py-3.5 text-xs font-black uppercase tracking-widest text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all"
+              >
+                Cancel
               </button>
             </div>
           </motion.div>
@@ -370,8 +420,11 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       <p className="text-sm font-black text-white uppercase tracking-widest">
                         {tx.type.replace('_', ' ')}
                       </p>
-                      <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mt-0.5">
-                        {tx.method} • <span className={tx.status === 'completed' ? 'text-green-500' : 'text-orange-500'}>{tx.status}</span>
+                      <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mt-0.5">
+                        <span className={tx.method === 'paynow' ? 'text-orange-400 font-black' : ''}>
+                          {tx.method === 'paynow' ? 'Pay Now' : tx.method}
+                        </span>
+                        {' '}• <span className={tx.status === 'completed' ? 'text-green-500' : 'text-orange-500'}>{tx.status}</span>
                       </p>
                     </div>
                   </div>
