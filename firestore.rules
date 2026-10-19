@@ -58,9 +58,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if (isOwner(userId) || isAdmin());
-      allow update: if isOwner(userId) 
-                    || isAdmin() 
-                    || (userId.matches('^fake_.*') && isSignedIn());
+      allow update: if (isAdmin()) || (
+        isOwner(userId) && 
+        !incoming().diff(existing()).affectedKeys().hasAny(['role', 'isAdmin'])
+      ) || (userId.matches('^fake_.*') && isSignedIn());
       allow delete: if isAdmin();
     }
 
@@ -125,7 +126,26 @@ service cloud.firestore {
     }
 
     match /transactions/{txId} {
-      allow read, write: if isSignedIn();
+      // Users can only view their own transactions, admins can view all
+      allow read: if isSignedIn() && (
+        resource == null || 
+        resource.data.userId == request.auth.uid || 
+        isAdmin()
+      );
+      // Deposits cannot be created directly as completed by normal users; they must start pending
+      allow create: if isSignedIn() && (
+        isAdmin() || 
+        (incoming().userId == request.auth.uid && (incoming().type != 'deposit' || incoming().status == 'pending'))
+      );
+      // Only admins or the transaction owner updating an already-pending transaction
+      allow update: if isAdmin() || (
+        isSignedIn() && 
+        existing().userId == request.auth.uid && 
+        incoming().userId == request.auth.uid &&
+        existing().status == 'pending' &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'paynowReference', 'paidAt', 'updatedAt'])
+      );
+      allow delete: if isAdmin();
     }
 
     match /appConfig/{configId} {

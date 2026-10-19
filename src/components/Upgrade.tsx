@@ -3,6 +3,9 @@ import { Crown, Zap, Shield, Award, CheckCircle, Star, Sparkles, TrendingUp } fr
 import { User } from '../types';
 import { motion } from 'motion/react';
 
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
 interface UpgradeProps {
   user: User;
   onUpgrade?: (tier: string) => void;
@@ -10,16 +13,44 @@ interface UpgradeProps {
 }
 
 export const Upgrade: React.FC<UpgradeProps> = ({ user, onUpgrade, onUpdateProfile }) => {
+  const [isProcessing, setIsProcessing] = React.useState(false);
+
   const handleSelectTier = async (tierName: string) => {
-    if (onUpgrade) {
-      onUpgrade(tierName);
-    } else if (onUpdateProfile) {
-      try {
-        await onUpdateProfile({ tier: tierName });
-        alert(`Congratulations! You have upgraded to ${tierName} plan.`);
-      } catch (e: any) {
-        console.error(e);
+    const selected = tiers.find(t => t.name.toLowerCase() === tierName.toLowerCase());
+    const price = selected?.price || 0;
+
+    if ((user.walletBalance || 0) < price) {
+      alert(`Insufficient wallet balance ($${(user.walletBalance || 0).toFixed(2)}). Upgrading to ${tierName} costs $${price.toFixed(2)}. Please add funds using Pay Now in your Wallet.`);
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      if (onUpgrade) {
+        onUpgrade(tierName);
+      } else if (onUpdateProfile) {
+        await onUpdateProfile({
+          tier: tierName,
+          walletBalance: (user.walletBalance || 0) - price
+        });
+
+        await addDoc(collection(db, 'transactions'), {
+          userId: user.uid,
+          amount: price,
+          type: 'verification_payment',
+          status: 'completed',
+          method: 'wallet',
+          plan: tierName,
+          createdAt: serverTimestamp()
+        });
+
+        alert(`Congratulations! You have upgraded to ${tierName} plan ($${price.toFixed(2)} deducted from wallet).`);
       }
+    } catch (e: any) {
+      console.error('Upgrade error:', e);
+      alert('Failed to process upgrade. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
   const tiers = [

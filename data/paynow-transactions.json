@@ -1,0 +1,249 @@
+[
+  {
+    "id": "PN-TXN-1792412336749-M57WNE",
+    "userId": "user_alice_01",
+    "userEmail": "alice@example.com",
+    "amount": 25,
+    "currency": "USD",
+    "status": "pending",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336749-M57WNE",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336749-M57WNE",
+    "credited": false,
+    "createdAt": "2026-10-19T12:18:56.749Z",
+    "updatedAt": "2026-10-19T12:18:56.749Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.749Z",
+        "details": {
+          "amount": 25,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336749-M57WNE",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336749-M57WNE"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PN-TXN-1792412336751-8JYZUE",
+    "userId": "user_bob_02",
+    "userEmail": "bob@example.com",
+    "amount": 15,
+    "currency": "USD",
+    "status": "pending",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336751-8JYZUE",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336751-8JYZUE",
+    "credited": false,
+    "createdAt": "2026-10-19T12:18:56.751Z",
+    "updatedAt": "2026-10-19T12:18:56.751Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.751Z",
+        "details": {
+          "amount": 15,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336751-8JYZUE",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336751-8JYZUE"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PN-TXN-1792412336753-GF8TT1",
+    "userId": "user_charlie_03",
+    "userEmail": "charlie@example.com",
+    "amount": 50,
+    "currency": "USD",
+    "status": "pending",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336753-GF8TT1",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336753-GF8TT1",
+    "credited": false,
+    "createdAt": "2026-10-19T12:18:56.754Z",
+    "updatedAt": "2026-10-19T12:18:56.754Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.754Z",
+        "details": {
+          "amount": 50,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336753-GF8TT1",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336753-GF8TT1"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PN-TXN-1792412336755-RCOH8Q",
+    "userId": "user_dan_04",
+    "userEmail": "dan@example.com",
+    "amount": 100,
+    "currency": "USD",
+    "status": "pending",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336755-RCOH8Q",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336755-RCOH8Q",
+    "credited": false,
+    "createdAt": "2026-10-19T12:18:56.755Z",
+    "updatedAt": "2026-10-19T12:18:56.755Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.755Z",
+        "details": {
+          "amount": 100,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336755-RCOH8Q",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336755-RCOH8Q"
+        }
+      },
+      {
+        "event": "AMOUNT_MISMATCH_REJECTED",
+        "timestamp": "2026-10-19T12:18:56.756Z",
+        "details": {
+          "expected": 100,
+          "received": 1,
+          "paynowReference": "998877"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PN-TXN-1792412336757-AD8KKM",
+    "userId": "user_eve_05",
+    "userEmail": "eve@example.com",
+    "amount": 10,
+    "currency": "USD",
+    "status": "failed",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336757-AD8KKM",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336757-AD8KKM",
+    "credited": false,
+    "createdAt": "2026-10-19T12:18:56.757Z",
+    "updatedAt": "2026-10-19T12:18:56.757Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.757Z",
+        "details": {
+          "amount": 10,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336757-AD8KKM",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336757-AD8KKM"
+        }
+      },
+      {
+        "event": "PAYMENT_FAILED_OR_CANCELLED",
+        "timestamp": "2026-10-19T12:18:56.757Z",
+        "details": {
+          "reason": "Paynow reported status: Cancelled",
+          "source": "paynow_webhook"
+        }
+      }
+    ]
+  },
+  {
+    "id": "PN-TXN-1792412336758-CWOOEN",
+    "userId": "user_frank_06",
+    "userEmail": "frank@example.com",
+    "amount": 30,
+    "currency": "USD",
+    "status": "completed",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336758-CWOOEN",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336758-CWOOEN",
+    "credited": true,
+    "createdAt": "2026-10-19T12:18:56.758Z",
+    "updatedAt": "2026-10-19T12:18:56.758Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.758Z",
+        "details": {
+          "amount": 30,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336758-CWOOEN",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336758-CWOOEN"
+        }
+      },
+      {
+        "event": "PAYMENT_VERIFIED_AND_CREDITED",
+        "timestamp": "2026-10-19T12:18:56.758Z",
+        "details": {
+          "source": "paynow_webhook",
+          "paynowReference": "PAYNOW-REAL-999",
+          "amount": 30
+        }
+      }
+    ],
+    "paynowReference": "PAYNOW-REAL-999",
+    "paidAt": "2026-10-19T12:18:56.758Z"
+  },
+  {
+    "id": "PN-TXN-1792412336759-H1W080",
+    "userId": "user_grace_07",
+    "userEmail": "grace@example.com",
+    "amount": 40,
+    "currency": "USD",
+    "status": "completed",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336759-H1W080",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336759-H1W080",
+    "credited": true,
+    "createdAt": "2026-10-19T12:18:56.759Z",
+    "updatedAt": "2026-10-19T12:18:56.759Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.759Z",
+        "details": {
+          "amount": 40,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336759-H1W080",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336759-H1W080"
+        }
+      },
+      {
+        "event": "PAYMENT_VERIFIED_AND_CREDITED",
+        "timestamp": "2026-10-19T12:18:56.759Z",
+        "details": {
+          "source": "paynow_webhook",
+          "paynowReference": "PAYNOW-DUP-1",
+          "amount": 40
+        }
+      },
+      {
+        "event": "DUPLICATE_CONFIRMATION_IGNORED",
+        "timestamp": "2026-10-19T12:18:56.759Z",
+        "details": {
+          "source": "paynow_webhook",
+          "paynowReference": "PAYNOW-DUP-1"
+        }
+      }
+    ],
+    "paynowReference": "PAYNOW-DUP-1",
+    "paidAt": "2026-10-19T12:18:56.759Z"
+  },
+  {
+    "id": "PN-TXN-1792412336760-DIJCFR",
+    "userId": "user_helen_08",
+    "userEmail": "helen@example.com",
+    "amount": 20,
+    "currency": "USD",
+    "status": "pending",
+    "method": "paynow",
+    "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336760-DIJCFR",
+    "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336760-DIJCFR",
+    "credited": false,
+    "createdAt": "2026-10-19T12:18:56.760Z",
+    "updatedAt": "2026-10-19T12:18:56.760Z",
+    "auditTrail": [
+      {
+        "event": "PAYMENT_INITIATED",
+        "timestamp": "2026-10-19T12:18:56.760Z",
+        "details": {
+          "amount": 20,
+          "pollUrl": "PAYNOW_RESULT_URL=https://styni.com/api/paynow/result/mock-poll?ref=PN-TXN-1792412336760-DIJCFR",
+          "redirectUrl": "https://www.paynow.co.zw/Payment/BillPaymentLink/?guid=PN-TXN-1792412336760-DIJCFR"
+        }
+      }
+    ]
+  }
+]

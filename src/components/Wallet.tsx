@@ -3,7 +3,7 @@ import { Wallet as WalletIcon, DollarSign, Award, TrendingUp, ArrowUpRight, Arro
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Transaction } from '../types';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, updateDoc, doc } from 'firebase/firestore';
 
 interface WalletProps {
   user: User;
@@ -66,39 +66,185 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     }
   };
 
+  const [pendingTx, setPendingTx] = React.useState<{
+    reference: string;
+    amount: number;
+    redirectUrl?: string;
+    pollUrl?: string;
+    status: 'initiated' | 'verifying' | 'completed' | 'failed';
+    message?: string;
+  } | null>(null);
+  const [verifyingRef, setVerifyingRef] = React.useState<string | null>(null);
+
+  const fetchTransactions = async () => {
+    try {
+      const q = query(
+        collection(db, 'transactions'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc'),
+        limit(15)
+      );
+      const snap = await getDocs(q);
+      setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchTransactions();
+  }, [user.uid]);
+
+  // Server-side Paynow payment status verification
+  const verifyPaynowPayment = async (reference: string, expectedAmount?: number) => {
+    setVerifyingRef(reference);
+    try {
+      const res = await fetch('/api/payments/paynow/check-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference, userId: user.uid }),
+      });
+
+      const data = await res.json();
+
+      if (data.status === 'completed') {
+        const verifiedAmount = data.amount || expectedAmount || 0;
+        
+        // Find corresponding transaction in Firestore and update
+        const q = query(
+          collection(db, 'transactions'),
+          where('userId', '==', user.uid),
+          where('reference', '==', reference)
+        );
+        const snap = await getDocs(q);
+        for (const docSnap of snap.docs) {
+          if (docSnap.data().status !== 'completed') {
+            await updateDoc(docSnap.ref, {
+              status: 'completed',
+              paynowReference: data.paynowReference || 'VERIFIED-PN',
+              paidAt: serverTimestamp(),
+            });
+          }
+        }
+
+        // Credit user wallet only after server-verified confirmation
+        if (data.credited) {
+          await onUpdateUser({
+            walletBalance: (user.walletBalance || 0) + verifiedAmount,
+          });
+        }
+
+        if (pendingTx && pendingTx.reference === reference) {
+          setPendingTx({
+            ...pendingTx,
+            status: 'completed',
+            message: `Payment of $${verifiedAmount.toFixed(2)} verified and credited successfully!`,
+          });
+        }
+
+        alert(`Paynow Payment Verified! $${verifiedAmount.toFixed(2)} added to your wallet. Ref: ${reference}`);
+        await fetchTransactions();
+      } else if (data.status === 'failed' || data.status === 'cancelled') {
+        const q = query(
+          collection(db, 'transactions'),
+          where('userId', '==', user.uid),
+          where('reference', '==', reference)
+        );
+        const snap = await getDocs(q);
+        for (const docSnap of snap.docs) {
+          await updateDoc(docSnap.ref, { status: 'failed' });
+        }
+
+        if (pendingTx && pendingTx.reference === reference) {
+          setPendingTx({
+            ...pendingTx,
+            status: 'failed',
+            message: 'Transaction failed or was cancelled on Paynow.',
+          });
+        }
+
+        alert(`Paynow payment ${data.status}. No funds were credited.`);
+        await fetchTransactions();
+      } else {
+        // Still pending
+        if (pendingTx && pendingTx.reference === reference) {
+          setPendingTx(prev => prev ? {
+            ...prev,
+            message: 'Payment is still awaiting confirmation from Paynow. If you have completed checkout, please wait a moment and click Verify.',
+          } : null);
+        }
+        alert('Payment is still pending on Paynow. Please complete your checkout, then click Verify.');
+      }
+    } catch (err: any) {
+      console.error('Error verifying Paynow status:', err);
+      alert('Unable to reach server to verify Paynow status. Please try again.');
+    } finally {
+      setVerifyingRef(null);
+    }
+  };
+
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid deposit amount.');
+    if (isNaN(amount) || amount < 1) {
+      alert('Please enter a valid deposit amount (minimum $1.00 USD).');
       return;
     }
 
     setIsProcessing(true);
     try {
-      const referenceId = `PN-${Date.now().toString().slice(-6)}`;
+      // 1. Call server-side Paynow integration to initiate official transaction
+      const res = await fetch('/api/payments/paynow/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid,
+          userEmail: user.email || `${user.uid}@styn.app`,
+          amount: amount,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to initiate Paynow payment');
+      }
+
+      const reference = data.reference;
       
-      // Create transaction with Pay Now as the exclusive payment method
+      // 2. Record initial PENDING transaction in Firestore (NEVER marked completed until verified)
       await addDoc(collection(db, 'transactions'), {
         userId: user.uid,
         amount: amount,
         type: 'deposit',
-        status: 'completed',
+        status: 'pending',
         method: 'paynow',
-        reference: referenceId,
-        createdAt: serverTimestamp()
+        reference: reference,
+        pollUrl: data.pollUrl || '',
+        redirectUrl: data.redirectUrl || '',
+        createdAt: serverTimestamp(),
       });
 
-      // Credit wallet balance
-      await onUpdateUser({
-        walletBalance: (user.walletBalance || 0) + amount
+      // 3. Set active pending tracker in UI
+      setPendingTx({
+        reference: reference,
+        amount: amount,
+        redirectUrl: data.redirectUrl,
+        pollUrl: data.pollUrl,
+        status: 'initiated',
+        message: 'Paynow checkout initialized. Please complete payment on Paynow.',
       });
-      
-      alert(`Pay Now deposit of $${amount.toFixed(2)} completed successfully! Ref: ${referenceId}. Your wallet balance has been updated.`);
-      setShowDeposit(false);
+
+      // 4. Open Paynow redirect URL
+      if (data.redirectUrl) {
+        window.open(data.redirectUrl, '_blank');
+      }
+
       setDepositAmount('');
+      await fetchTransactions();
     } catch (err: any) {
-      console.error('Pay Now deposit error:', err);
-      alert('Payment processing failed. Please try again.');
+      console.error('Paynow initiation error:', err);
+      alert(`Paynow error: ${err.message || 'Payment initiation failed'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -315,69 +461,141 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 </div>
               </div>
 
-              {/* Amount Input */}
-              <div>
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">
-                  Amount to Deposit ($)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-500">$</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="any"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full rounded-2xl border border-white/10 bg-neutral-950 p-5 pl-12 text-3xl font-black text-white focus:border-orange-500 focus:outline-none transition-all placeholder:text-neutral-700"
-                  />
-                </div>
-              </div>
+              {pendingTx ? (
+                <div className="rounded-2xl border border-orange-500/40 bg-neutral-950 p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-orange-400">Active Paynow Session</span>
+                    <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-widest rounded ${
+                      pendingTx.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
+                    }`}>
+                      {pendingTx.status}
+                    </span>
+                  </div>
 
-              {/* Quick Select Amounts */}
-              <div className="grid grid-cols-5 gap-2">
-                {['5', '10', '25', '50', '100'].map((preset) => (
+                  <div className="p-4 rounded-xl bg-neutral-900 border border-white/5 space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-neutral-500 font-bold">Transaction Ref:</span>
+                      <span className="text-white font-mono font-bold">{pendingTx.reference}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-neutral-500 font-bold">Amount:</span>
+                      <span className="text-emerald-400 font-black">${pendingTx.amount.toFixed(2)} USD</span>
+                    </div>
+                    {pendingTx.message && (
+                      <p className="text-xs text-neutral-400 mt-2 pt-2 border-t border-white/5 leading-relaxed">
+                        {pendingTx.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {pendingTx.redirectUrl && pendingTx.status !== 'completed' && (
+                    <a
+                      href={pendingTx.redirectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-600 hover:bg-orange-700 p-3.5 text-xs font-black uppercase tracking-wider text-white transition-all shadow-lg shadow-orange-950/30"
+                    >
+                      <ExternalLink size={16} />
+                      <span>Open Paynow Checkout</span>
+                    </a>
+                  )}
+
+                  {pendingTx.status !== 'completed' && (
+                    <button
+                      type="button"
+                      onClick={() => verifyPaynowPayment(pendingTx.reference, pendingTx.amount)}
+                      disabled={verifyingRef === pendingTx.reference}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-neutral-800 hover:bg-neutral-700 p-3.5 text-xs font-black uppercase tracking-wider text-white transition-all disabled:opacity-50"
+                    >
+                      {verifyingRef === pendingTx.reference ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin text-orange-500" />
+                          <span>Verifying with Paynow...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw size={16} className="text-orange-500" />
+                          <span>Verify Payment with Paynow</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
                   <button
-                    key={`preset-${preset}`}
                     type="button"
-                    onClick={() => setDepositAmount(preset)}
-                    className={`py-2 rounded-xl text-xs font-black transition-all border ${
-                      depositAmount === preset
-                        ? 'bg-orange-600 text-white border-orange-500 shadow-md'
-                        : 'bg-neutral-800/60 text-neutral-400 border-white/5 hover:bg-neutral-800 hover:text-white'
-                    }`}
+                    onClick={() => setPendingTx(null)}
+                    className="w-full text-center text-xs font-bold text-neutral-500 hover:text-neutral-400 pt-1"
                   >
-                    ${preset}
+                    Start a New Deposit
                   </button>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <>
+                  {/* Amount Input */}
+                  <div>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400">
+                      Amount to Deposit ($)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-neutral-500">$</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full rounded-2xl border border-white/10 bg-neutral-950 p-5 pl-12 text-3xl font-black text-white focus:border-orange-500 focus:outline-none transition-all placeholder:text-neutral-700"
+                      />
+                    </div>
+                  </div>
 
-              {/* Pay Now Button */}
+                  {/* Quick Select Amounts */}
+                  <div className="grid grid-cols-5 gap-2">
+                    {['5', '10', '25', '50', '100'].map((preset) => (
+                      <button
+                        key={`preset-${preset}`}
+                        type="button"
+                        onClick={() => setDepositAmount(preset)}
+                        className={`py-2 rounded-xl text-xs font-black transition-all border ${
+                          depositAmount === preset
+                            ? 'bg-orange-600 text-white border-orange-500 shadow-md'
+                            : 'bg-neutral-800/60 text-neutral-400 border-white/5 hover:bg-neutral-800 hover:text-white'
+                        }`}
+                      >
+                        ${preset}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Pay Now Button */}
+                  <button 
+                    type="button"
+                    onClick={handleDeposit}
+                    disabled={isProcessing || !depositAmount || parseFloat(depositAmount) < 1}
+                    className="w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 p-5 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-orange-950/40 hover:from-orange-500 hover:to-orange-600 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        <span>Creating Paynow Session...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap size={18} className="fill-current" />
+                        <span>Pay Now {depositAmount && parseFloat(depositAmount) > 0 ? `• $${parseFloat(depositAmount).toFixed(2)}` : ''}</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+
               <button 
                 type="button"
-                onClick={handleDeposit}
-                disabled={isProcessing || !depositAmount || parseFloat(depositAmount) <= 0}
-                className="w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 p-5 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-orange-950/40 hover:from-orange-500 hover:to-orange-600 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    <span>Processing with Pay Now...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap size={18} className="fill-current" />
-                    <span>Pay Now {depositAmount && parseFloat(depositAmount) > 0 ? `• $${parseFloat(depositAmount).toFixed(2)}` : ''}</span>
-                  </>
-                )}
-              </button>
-
-              <button 
-                type="button"
-                onClick={() => setShowDeposit(false)}
+                onClick={() => { setShowDeposit(false); setPendingTx(null); }}
                 className="w-full rounded-2xl bg-neutral-800/80 py-3.5 text-xs font-black uppercase tracking-widest text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all"
               >
-                Cancel
+                Close
               </button>
             </div>
           </motion.div>
@@ -388,7 +606,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       <div className="rounded-[2.5rem] border border-white/5 bg-neutral-900/30 shadow-2xl ring-1 ring-white/5 backdrop-blur-xl overflow-hidden">
         <div className="border-b border-white/5 p-8 flex items-center justify-between">
           <h2 className="text-2xl font-black text-white uppercase tracking-tight">Activity</h2>
-          <button className="text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors">View All</button>
+          <button onClick={fetchTransactions} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors">
+            <RefreshCw size={12} />
+            Refresh
+          </button>
         </div>
         <div className="p-8">
           {loading ? (
@@ -426,6 +647,21 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         </span>
                         {' '}• <span className={tx.status === 'completed' ? 'text-green-500' : 'text-orange-500'}>{tx.status}</span>
                       </p>
+                      {tx.method === 'paynow' && tx.status === 'pending' && tx.reference && (
+                        <button
+                          type="button"
+                          onClick={() => verifyPaynowPayment(tx.reference!, tx.amount)}
+                          disabled={verifyingRef === tx.reference}
+                          className="mt-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-orange-400 hover:text-orange-300 bg-orange-600/10 hover:bg-orange-600/20 px-2 py-0.5 rounded-lg border border-orange-500/30 transition-all"
+                        >
+                          {verifyingRef === tx.reference ? (
+                            <Loader2 size={10} className="animate-spin text-orange-400" />
+                          ) : (
+                            <RefreshCw size={10} className="text-orange-400" />
+                          )}
+                          <span>Verify with Paynow</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -435,7 +671,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       {tx.type === 'deposit' || tx.type === 'points_conversion' || tx.type === 'points_purchase' ? '+' : '-'}${tx.amount.toFixed(2)}
                     </p>
                     <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mt-0.5">
-                      {tx.createdAt?.toDate().toLocaleDateString()}
+                      {tx.createdAt?.toDate ? tx.createdAt.toDate().toLocaleDateString() : 'Recent'}
                     </p>
                   </div>
                 </div>

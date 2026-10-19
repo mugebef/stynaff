@@ -8,6 +8,8 @@ import fs from "fs";
 import multer from "multer";
 import ffmpeg from "fluent-ffmpeg";
 import OpenAI from "openai";
+import { PaynowService } from "./server/paynow.js";
+import { PaymentLedger } from "./server/payment-ledger.js";
 
 const app = express();
 const PORT = 3000;
@@ -293,6 +295,100 @@ app.post("/api/ai/generate-replies", async (req, res) => {
   } catch (error: any) {
     res.json(["Nice one!", "Doing great!", "Love this!"]); // Fallback
   }
+});
+
+// --- PAYNOW OFFICIAL PAYMENT GATEWAY ROUTES ---
+
+// Paynow Configuration status (safe, no secrets)
+app.get("/api/payments/paynow/config", (req, res) => {
+  const paynow = PaynowService.getInstance();
+  res.json({
+    configured: paynow.isConfigured(),
+    ...paynow.getConfig()
+  });
+});
+
+// Initiate a Paynow Payment (Server-side generated transaction)
+app.post("/api/payments/paynow/initiate", async (req, res) => {
+  try {
+    const { userId, userEmail, amount } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    const paynow = PaynowService.getInstance();
+    const result = await paynow.initiatePayment({
+      userId,
+      userEmail: userEmail || `${userId}@user.styn.app`,
+      amount: parseFloat(amount)
+    });
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    log(`[Paynow] Payment initiated: reference=${result.reference}, user=${userId}, amount=$${amount}`);
+    res.json(result);
+  } catch (err: any) {
+    log(`[Paynow] Initiate error: ${err.message}`);
+    res.status(500).json({ error: err.message || "Failed to initiate payment" });
+  }
+});
+
+// Paynow Webhook / Status Update (resulturl) - Server-side cryptographically verified
+app.post("/api/payments/paynow/webhook", async (req, res) => {
+  try {
+    log(`[Paynow Webhook] Received payload: ${JSON.stringify(req.body)}`);
+    const paynow = PaynowService.getInstance();
+    const result = await paynow.handleWebhook(req.body);
+    
+    if (!result.success) {
+      log(`[Paynow Webhook] Verification failed: ${result.message}`);
+      return res.status(result.statusCode).send(result.message);
+    }
+
+    log(`[Paynow Webhook] Status update processed: ${result.message}`);
+    res.status(result.statusCode).send(result.message);
+  } catch (err: any) {
+    log(`[Paynow Webhook] Error processing webhook: ${err.message}`);
+    res.status(500).send("Webhook processing error");
+  }
+});
+
+// Check payment status via server-side Paynow polling
+app.post("/api/payments/paynow/check-status", async (req, res) => {
+  try {
+    const { reference, userId } = req.body;
+    if (!reference || !userId) {
+      return res.status(400).json({ error: "reference and userId are required" });
+    }
+
+    const paynow = PaynowService.getInstance();
+    const result = await paynow.pollStatus(reference, userId);
+
+    if (result.status === 'completed' && result.transaction) {
+      const receipt = paynow.generateReceipt(result.transaction);
+      return res.json({
+        ...result,
+        receipt
+      });
+    }
+
+    res.json(result);
+  } catch (err: any) {
+    log(`[Paynow Poll] Error: ${err.message}`);
+    res.status(500).json({ error: err.message || "Failed to check status" });
+  }
+});
+
+// Get user payment transactions from server ledger
+app.get("/api/payments/paynow/transactions", (req, res) => {
+  const userId = req.query.userId as string;
+  if (!userId) {
+    return res.status(400).json({ error: "userId parameter is required" });
+  }
+  const txs = PaymentLedger.getUserTransactions(userId);
+  res.json({ transactions: txs });
 });
 
 // Start Server helper

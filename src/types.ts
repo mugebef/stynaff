@@ -98,6 +98,10 @@ export interface Transaction {
   type: 'deposit' | 'withdrawal' | 'points_conversion' | 'ad_payment' | 'verification_payment' | 'boost_payment' | 'gift' | 'points_purchase' | 'conversion' | 'boost_post';
   status: 'pending' | 'completed' | 'failed';
   method: 'paynow' | 'manual' | 'wallet' | string;
+  reference?: string;
+  paynowReference?: string;
+  pollUrl?: string;
+  redirectUrl?: string;
   createdAt: any;
 }
 

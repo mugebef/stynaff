@@ -82,6 +82,23 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "When the stream started" }
       },
       "required": ["title", "streamerId", "streamerName", "status", "createdAt"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial and ledger transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique transaction ID" },
+        "userId": { "type": "string", "description": "UID of the user associated with transaction" },
+        "amount": { "type": "number", "description": "Transaction amount in USD" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "points_conversion", "ad_payment", "verification_payment", "boost_payment", "gift", "points_purchase", "conversion", "boost_post"], "description": "Type of transaction" },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"], "description": "Payment status" },
+        "method": { "type": "string", "description": "Payment provider (paynow, wallet, points)" },
+        "reference": { "type": "string", "description": "Internal transaction reference ID" },
+        "paynowReference": { "type": "string", "description": "Paynow gateway reference ID" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when transaction was created" }
+      },
+      "required": ["userId", "amount", "type", "status", "method", "createdAt"]
     }
   },
   "firestore": {
@@ -108,6 +125,10 @@
     "/live_streams/{streamId}/comments/{commentId}": {
       "schema": "Comment",
       "description": "Real-time comments on a live stream"
+    },
+    "/transactions/{txId}": {
+      "schema": "Transaction",
+      "description": "Audited payment and deposit transaction records"
     }
   }
 }
